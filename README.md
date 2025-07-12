@@ -35,58 +35,59 @@ usage: cli.py [-h] (--shape_recognition | --color_recognition | --ans | --one_co
 
 > **Note**: train_num and test_num refer to the number of image _sets_ created. An image set is a group of images that comb all the possible parameter combinations. So, for shapes and colors, an image set is of about 200 images, whereas for ANS is of around 75 images, of course always depending on the other parameters.
 
-### Examples
+## Examples
 
-Shape recognition – *circle vs star* in yellow:
+### Shape recognition – *circle vs star* in yellow
 ```bash
 python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
 ```
 
-![Yellow circle](assets/examples/circle.png){ width=220 }
-![Yellow star](assets/examples/star.png){ width=220 }
+<img src="assets/examples/circle.png" alt="Yellow circle" width="220"/>
+<img src="assets/examples/star.png" alt="Yellow star" width="220"/>
 
-Colour recognition – yellow vs blue circles (no positional jitter):
+### Colour recognition – yellow vs blue circles (no positional jitter)
 ```bash
 python -m cogstim.cli --color_recognition --no-jitter
 ```
 
-![Yellow circle](assets/examples/circle.png){ width=220 }
-![Blue circle](assets/examples/circle_blue.png){ width=220 }
+<img src="assets/examples/circle.png" alt="Yellow circle" width="220"/>
+<img src="assets/examples/circle_blue.png" alt="Blue circle" width="220"/>
 
-Approximate Number System (ANS) dataset with easy ratios only:
+###  Approximate Number System (ANS) dataset with easy ratios only
 ```bash
 python -m cogstim.cli --ans --easy --train_num 100 --test_num 40
 ```
 
-![ANS equalized](assets/examples/ans_equalized.png){ width=220 }
-![ANS non-equalized](assets/examples/ans.png){ width=220 }
+<img src="assets/examples/ans_equalized.png" alt="ANS equalized" width="220"/>
+<img src="assets/examples/ans.png" alt="ANS non-equalized" width="220"/>
 
 > Note that on the left image, total surfaces are equalized, and, on the right image, dot size is random.
 
-Single-colour dot arrays numbered 1-5, total surface area held constant:
+### Single-colour dot arrays numbered 1-5, total surface area held constant
 ```bash
 python -m cogstim.cli --one_colour --min_point_num 1 --max_point_num 5
 ```
 
-![Two circles](assets/examples/dots_two.png){ width=220 }
-![Five circles](assets/examples/dots_five.png){ width=220 }
+<img src="assets/examples/dots_two.png" alt="Two circles" width="220"/>
+<img src="assets/examples/dots_five.png" alt="Five circles" width="220"/>
 
-Custom dataset – green/red triangles & squares:
+### Custom dataset – green/red triangles & squares
 ```bash
 python -m cogstim.cli --custom --shapes triangle square --colors red green
 ```
 
-![Red triangle](assets/examples/triangle_red.png){ width=220 }
-![Green square](assets/examples/square_green.png){ width=220 }
+<img src="assets/examples/triangle_red.png" alt="Red triangle" width="220"/>
+<img src="assets/examples/square_green.png" alt="Green square" width="220"/>
 
-Lines dataset – rotated stripe patterns:
+### Lines dataset – rotated stripe patterns
 ```bash
 python -m cogstim.cli --lines --train_num 50 --test_num 20 --angles 0 45 90 135 --min_stripes 3 --max_stripes 5
 ```
 
-![Vertical lines](assets/examples/lines_vertical.png){ width=220 }
-![Horizontal lines](assets/examples/lines_horizontal.png){ width=220 }
+<img src="assets/examples/lines_vertical.png" alt="Vertical lines" width="220"/>
+<img src="assets/examples/lines_horizontal.png" alt="Horizontal lines" width="220"/>
 
+## Output
 The generated folder structure is organised by *phase / class*, e.g.
 ```
 images/two_shapes/

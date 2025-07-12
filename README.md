@@ -14,10 +14,7 @@ All stimuli are generated as 512 × 512 px PNG files ready to be fed into machin
 ## Installation
 
 ```bash
-# Python ≥ 3.9 is required
-pip install cogstim  # once published to PyPI
-# or, from a local checkout / Git repository
-pip install -e .
+pip install cogstim  
 ```
 
 The main runtime dependencies are `Pillow`, `numpy`, and `tqdm`. They are installed automatically through the `pyproject.toml`.
@@ -36,49 +33,38 @@ usage: cli.py [-h] (--shape_recognition | --color_recognition | --ans | --one_co
               [--min_spacing MIN_SPACING] [--max_attempts MAX_ATTEMPTS]
 ```
 
+> **Note**: train_num and test_num refer to the number of image _sets_ created. An image set is a group of images that comb all the possible parameter combinations. So, for shapes and colors, an image set is of about 200 images, whereas for ANS is of around 75 images, of course always depending on the other parameters.
+
 ### Examples
 
 Shape recognition – *circle vs star* in yellow:
 ```bash
-python -m cogstim.cli \
-    --shape_recognition \
-    --train_num 60 --test_num 20
+python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
 ```
 
 Colour recognition – yellow vs blue circles (no positional jitter):
 ```bash
-python -m cogstim.cli \
-    --color_recognition --no-jitter
+python -m cogstim.cli --color_recognition --no-jitter
 ```
 
 Approximate Number System (ANS) dataset with easy ratios only:
 ```bash
-python -m cogstim.cli \
-    --ans --easy \
-    --train_num 100 --test_num 40
+python -m cogstim.cli --ans --easy --train_num 100 --test_num 40
 ```
 
 Single-colour dot arrays numbered 1-5, total surface area held constant:
 ```bash
-python -m cogstim.cli \
-    --one_colour \
-    --min_point_num 1 --max_point_num 5 \
-    --total_area 20000
+python -m cogstim.cli --one_colour --min_point_num 1 --max_point_num 5
 ```
 
 Custom dataset – green/red triangles & squares:
 ```bash
-python -m cogstim.cli \
-    --custom --shapes triangle square --colors red green
+python -m cogstim.cli --custom --shapes triangle square --colors red green
 ```
 
 Lines dataset – rotated stripe patterns:
 ```bash
-python -m cogstim.cli \
-    --lines \
-    --train_num 50 --test_num 20 \
-    --angles 0 45 90 135 \
-    --min_stripes 3 --max_stripes 5
+python -m cogstim.cli --lines --train_num 50 --test_num 20 --angles 0 45 90 135 --min_stripes 3 --max_stripes 5
 ```
 
 The generated folder structure is organised by *phase / class*, e.g.
@@ -91,8 +77,6 @@ images/two_shapes/
       ├── circle/
       └── star/
 ```
-
-Similar helpers exist for dot-array datasets (`PointsGenerator` and `OneColourImageGenerator`).
 
 ## License
 

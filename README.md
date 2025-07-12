@@ -43,8 +43,8 @@ python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
 ```
 
 <table><tr>
-  <td><img src="assets/examples/circle.png" alt="Yellow circle" width="220"/></td>
-  <td><img src="assets/examples/star.png" alt="Yellow star" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/circle.png" alt="Yellow circle" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/star.png" alt="Yellow star" width="220"/></td>
 </tr></table>
 
 ### Colour recognition – yellow vs blue circles (no positional jitter)
@@ -53,8 +53,8 @@ python -m cogstim.cli --color_recognition --no-jitter
 ```
 
 <table><tr>
-  <td><img src="assets/examples/circle.png" alt="Yellow circle" width="220"/></td>
-  <td><img src="assets/examples/circle_blue.png" alt="Blue circle" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/circle.png" alt="Yellow circle" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/circle_blue.png" alt="Blue circle" width="220"/></td>
 </tr></table>
 
 ###  Approximate Number System (ANS) dataset with easy ratios only
@@ -63,8 +63,8 @@ python -m cogstim.cli --ans --easy --train_num 100 --test_num 40
 ```
 
 <table><tr>
-  <td><img src="assets/examples/ans_equalized.png" alt="ANS equalized" width="220"/></td>
-  <td><img src="assets/examples/ans.png" alt="ANS non-equalized" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/ans_equalized.png" alt="ANS equalized" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/ans.png" alt="ANS non-equalized" width="220"/></td>
 </tr></table>
 
 > Note that on the left image, total surfaces are equalized, and, on the right image, dot size is random.
@@ -75,8 +75,8 @@ python -m cogstim.cli --one_colour --min_point_num 1 --max_point_num 5
 ```
 
 <table><tr>
-  <td><img src="assets/examples/dots_two.png" alt="Two circles" width="220"/></td>
-  <td><img src="assets/examples/dots_five.png" alt="Five circles" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/dots_two.png" alt="Two circles" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/dots_five.png" alt="Five circles" width="220"/></td>
 </tr></table>
 
 ### Custom dataset – green/red triangles & squares
@@ -85,8 +85,8 @@ python -m cogstim.cli --custom --shapes triangle square --colors red green
 ```
 
 <table><tr>
-  <td><img src="assets/examples/triangle_red.png" alt="Red triangle" width="220"/></td>
-  <td><img src="assets/examples/square_green.png" alt="Green square" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/triangle_red.png" alt="Red triangle" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/square_green.png" alt="Green square" width="220"/></td>
 </tr></table>
 
 ### Lines dataset – rotated stripe patterns
@@ -95,8 +95,8 @@ python -m cogstim.cli --lines --train_num 50 --test_num 20 --angles 0 45 90 135 
 ```
 
 <table><tr>
-  <td><img src="assets/examples/lines_vertical.png" alt="Vertical lines" width="220"/></td>
-  <td><img src="assets/examples/lines_horizontal.png" alt="Horizontal lines" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/lines_vertical.png" alt="Vertical lines" width="220"/></td>
+  <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/lines_horizontal.png" alt="Horizontal lines" width="220"/></td>
 </tr></table>
 
 ## Output

@@ -7,7 +7,7 @@ import logging
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
-from cogstim.points import NumberPoints, PointLayoutError
+from cogstim.dots_core import NumberPoints, PointLayoutError
 
 # Configure logging
 logging.basicConfig(

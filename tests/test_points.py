@@ -1,5 +1,5 @@
 from PIL import Image
-from cogstim.points import NumberPoints
+from cogstim.dots_core import NumberPoints
 
 
 def _make_number_points(init_size: int = 512):

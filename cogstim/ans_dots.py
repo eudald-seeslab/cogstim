@@ -1,6 +1,6 @@
 import os
 from PIL import Image
-from cogstim.points import NumberPoints, PointLayoutError
+from cogstim.dots_core import NumberPoints, PointLayoutError
 from tqdm import tqdm
 import logging
 

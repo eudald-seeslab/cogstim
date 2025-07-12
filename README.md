@@ -7,6 +7,7 @@ CogStim is a small Python toolkit that produces **synthetic image datasets** com
 * Approximate Number System (ANS) dot arrays with two colours.
 * Single-colour dot arrays for number-discrimination tasks.
 * Custom combinations of geometrical *shapes × colours*.
+* Rotated stripe patterns ("lines" dataset) for orientation discrimination.
 
 All stimuli are generated as 512 × 512 px PNG files ready to be fed into machine-learning pipelines or presented in behavioural experiments.
 
@@ -26,10 +27,13 @@ The main runtime dependencies are `Pillow`, `numpy`, and `tqdm`. They are instal
 After installation the `cli` module is available as the *single entry-point* to create datasets. Run it either via `python -m cogstim.cli …` or directly if the `cogstim` package is on your `$PYTHONPATH`.
 
 ```text
-usage: cli.py [-h] (--shape_recognition | --color_recognition | --ans | --one_colour | --custom) [--shapes {circle,star,triangle,square} ...]
+usage: cli.py [-h] (--shape_recognition | --color_recognition | --ans | --one_colour | --lines | --custom) [--shapes {circle,star,triangle,square} ...]
               [--colors {yellow,blue,red,green} ...] [--train_num TRAIN_NUM] [--test_num TEST_NUM] [--output_dir OUTPUT_DIR]
               [--min_surface MIN_SURFACE] [--max_surface MAX_SURFACE] [--no-jitter] [--easy]
               [--version_tag VERSION_TAG] [--min_point_num MIN_POINT_NUM] [--max_point_num MAX_POINT_NUM]
+              [--angles ANGLES [ANGLES ...]] [--min_stripes MIN_STRIPES] [--max_stripes MAX_STRIPES]
+              [--img_size IMG_SIZE] [--tag TAG] [--min_thickness MIN_THICKNESS] [--max_thickness MAX_THICKNESS]
+              [--min_spacing MIN_SPACING] [--max_attempts MAX_ATTEMPTS]
 ```
 
 ### Examples
@@ -66,6 +70,15 @@ Custom dataset – green/red triangles & squares:
 ```bash
 python -m cogstim.cli \
     --custom --shapes triangle square --colors red green
+```
+
+Lines dataset – rotated stripe patterns:
+```bash
+python -m cogstim.cli \
+    --lines \
+    --train_num 50 --test_num 20 \
+    --angles 0 45 90 135 \
+    --min_stripes 3 --max_stripes 5
 ```
 
 The generated folder structure is organised by *phase / class*, e.g.

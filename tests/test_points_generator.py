@@ -1,4 +1,4 @@
-from cogstim.points_creator import PointsGenerator, GENERAL_CONFIG
+from cogstim.ans_dots import PointsGenerator, GENERAL_CONFIG
 from pathlib import Path
 
 

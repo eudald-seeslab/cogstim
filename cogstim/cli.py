@@ -23,11 +23,12 @@ import argparse
 import os
 
 # Generators
-from cogstim.shapes_creator import ShapesGenerator
-from cogstim.points_creator import (
+from cogstim.shapes import ShapesGenerator
+from cogstim.ans_dots import (
     PointsGenerator,
     GENERAL_CONFIG as ANS_GENERAL_CONFIG,
 )
+from cogstim.lines import StripePatternGenerator
 
 
 # ---------------------------------------------------------------------------
@@ -47,6 +48,7 @@ def parse_arguments() -> argparse.Namespace:
     ds_group.add_argument("--ans", action="store_true", help="Generate dot-array images for Approximate Number System task")
     ds_group.add_argument("--one_colour", action="store_true", help="Generate single-colour dot-array images (number discrimination without colour cue)")
     ds_group.add_argument("--custom", action="store_true", help="Custom combination of shapes and colours (provide --shapes and --colors)")
+    ds_group.add_argument("--lines", action="store_true", help="Generate images with rotated stripe/line patterns")  # NEW DATASET FLAG
 
     # Custom shapes/colours (only if --custom)
     parser.add_argument("--shapes", nargs="+", choices=["circle", "star", "triangle", "square"], help="Shapes to include (only with --custom)")
@@ -67,6 +69,17 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--version_tag", type=str, default="", help="Optional version tag appended to filenames (dot-array datasets)")
     parser.add_argument("--min_point_num", type=int, default=1, help="Minimum number of points per colour (dot-array datasets)")
     parser.add_argument("--max_point_num", type=int, default=10, help="Maximum number of points per colour (dot-array datasets)")
+
+    # Line-pattern-specific parameters  # NEW ARGUMENT GROUP
+    parser.add_argument("--angles", type=int, nargs="+", default=[0, 45, 90, 135], help="Rotation angles for stripe patterns (lines dataset)")
+    parser.add_argument("--min_stripes", type=int, default=2, help="Minimum number of stripes per image (lines dataset)")
+    parser.add_argument("--max_stripes", type=int, default=10, help="Maximum number of stripes per image (lines dataset)")
+    parser.add_argument("--img_size", type=int, default=512, help="Image size in pixels (lines dataset)")
+    parser.add_argument("--tag", type=str, default="", help="Optional tag appended to filenames (lines dataset)")
+    parser.add_argument("--min_thickness", type=int, default=10, help="Minimum stripe thickness (lines dataset)")
+    parser.add_argument("--max_thickness", type=int, default=30, help="Maximum stripe thickness (lines dataset)")
+    parser.add_argument("--min_spacing", type=int, default=5, help="Minimum spacing between stripes (lines dataset)")
+    parser.add_argument("--max_attempts", type=int, default=10000, help="Maximum attempts to place non-overlapping stripes (lines dataset)")
 
     return parser.parse_args()
 
@@ -139,6 +152,31 @@ def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> No
         generator.generate_images()
 
 
+def generate_lines_dataset(args: argparse.Namespace) -> None:
+    """Generate train/test stripe-pattern line datasets using StripePatternGenerator."""
+
+    base_dir_default = "images/lines"
+    base_dir = args.output_dir or base_dir_default
+
+    for phase, num_sets in (("train", args.train_num), ("test", args.test_num)):
+        cfg = {
+            "output_dir": os.path.join(base_dir, phase),
+            "img_sets": num_sets,
+            "angles": args.angles,
+            "min_stripe_num": args.min_stripes,
+            "max_stripe_num": args.max_stripes,
+            "img_size": args.img_size,
+            "tag": args.tag,
+            "min_thickness": args.min_thickness,
+            "max_thickness": args.max_thickness,
+            "min_spacing": args.min_spacing,
+            "max_attempts": args.max_attempts,
+            "background_color": "#000000",
+        }
+        generator = StripePatternGenerator(cfg)
+        generator.create_images()
+
+
 # ---------------------------------------------------------------------------
 # Main entry
 # ---------------------------------------------------------------------------
@@ -151,6 +189,8 @@ def main() -> None:
         generate_dot_array_dataset(args, one_colour=False)
     elif args.one_colour:
         generate_dot_array_dataset(args, one_colour=True)
+    elif args.lines:  # NEW BRANCH FOR LINES DATASET
+        generate_lines_dataset(args)
     else:  # shapes datasets
         generator = build_shapes_generator(args)
         generator.generate_images()

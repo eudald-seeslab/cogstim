@@ -1,4 +1,4 @@
-from cogstim.shapes_creator import ShapesGenerator
+from cogstim.shapes import ShapesGenerator
 from cogstim.helpers import COLOUR_MAP
 import tempfile
 

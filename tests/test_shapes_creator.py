@@ -7,7 +7,7 @@ def test_draw_shape_circle():
     with tempfile.TemporaryDirectory() as tmpdir:
         sg = ShapesGenerator(
             shapes=["circle"],
-            colors=["yellow"],
+            colours=["yellow"],
             task_type="two_shapes",
             img_dir=tmpdir,
             train_num=1,
@@ -15,6 +15,7 @@ def test_draw_shape_circle():
             jitter=False,
             min_surface=10000,
             max_surface=10001,
+            background_colour="black",
         )
         img, dist, angle = sg.draw_shape("circle", 10000, COLOUR_MAP["yellow"], jitter=False)
 

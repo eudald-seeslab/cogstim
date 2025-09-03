@@ -67,14 +67,14 @@ class OneColourImageGenerator:
         number_points = NumberPoints(
             img,
             self.config["init_size"],
-            yellow=self.config["yellow"],
-            blue=None,
+            colour_1=self.config["colour_1"],
+            colour_2=None,
             min_point_radius=self.config["min_point_radius"],
             max_point_radius=self.config["max_point_radius"],
             attempts_limit=self.config["attempts_limit"],
         )
 
-        point_array = number_points.design_n_points(n, self.config["colour"])
+        point_array = number_points.design_n_points(n, "colour_1")
 
         if self.total_area is not None:
             point_array = number_points.fix_total_area(point_array, self.total_area)

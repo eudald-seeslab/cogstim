@@ -13,6 +13,9 @@ GENERAL_CONFIG = {
     "colour_1": "yellow",
     "colour_2": "blue",
     "attempts_limit": 2000,
+    "background_colour": "black",
+    "min_point_radius": SIZES["min_point_radius"],
+    "max_point_radius": SIZES["max_point_radius"],
 }
 
 
@@ -45,28 +48,32 @@ class PointsGenerator:
         os.makedirs(
             os.path.join(self.config["IMG_DIR"], self.config["colour_1"]), exist_ok=True
         )
-        os.makedirs(
-            os.path.join(self.config["IMG_DIR"], self.config["colour_2"]), exist_ok=True
-        )
+        if not self.config["ONE_COLOUR"]:
+            os.makedirs(
+                os.path.join(self.config["IMG_DIR"], self.config["colour_2"]), exist_ok=True
+            )
 
     def create_image(self, n1, n2, equalized):
         img = Image.new(
             "RGB",
             (SIZES["init_size"], SIZES["init_size"]),
-            color=COLOUR_MAP["black"],
+            color=self.config["background_colour"],
         )
+        # Map configured colours to drawer colours. In one-colour mode, only pass colour_1.
+        colour_2 = None if self.config["ONE_COLOUR"] else COLOUR_MAP[self.config["colour_2"]]
+
         number_points = NumberPoints(
             img,
             SIZES["init_size"],
-            yellow=COLOUR_MAP["yellow"],
-            blue=COLOUR_MAP["blue"],
-            min_point_radius=SIZES["min_point_radius"],
-            max_point_radius=SIZES["max_point_radius"],
+            colour_1=COLOUR_MAP[self.config["colour_1"]],
+            colour_2=colour_2,
+            min_point_radius=self.config["min_point_radius"],
+            max_point_radius=self.config["max_point_radius"],
             attempts_limit=self.config["attempts_limit"],
         )
-        point_array = number_points.design_n_points(n1, self.config["colour_1"])
+        point_array = number_points.design_n_points(n1, "colour_1")
         point_array = number_points.design_n_points(
-            n2, self.config["colour_2"], point_array=point_array
+            n2, "colour_2", point_array=point_array
         )
         if equalized and not self.config["ONE_COLOUR"]:
             point_array = number_points.equalize_areas(point_array)
@@ -108,7 +115,8 @@ class PointsGenerator:
         max_p = self.config["max_point_num"]
 
         if self.config["ONE_COLOUR"]:
-            return [(0, a) for a in range(1, max_p + 1)]
+            # For one-colour mode, we only need a single count per image
+            return [(a, 0) for a in range(min_p, max_p + 1)]
 
         positions = []
         # Note that we don't need the last value of 'a', since 'b' will always be greater.
@@ -125,15 +133,19 @@ class PointsGenerator:
 
     def generate_images(self):
         positions = self.get_positions()
-        multiplier = 2 if self.config["ONE_COLOUR"] else 4
+        multiplier = 1 if self.config["ONE_COLOUR"] else 4
         total_images = self.num_images * len(positions) * multiplier
         logging.info(
             f"Generating {total_images} images: {self.num_images} sets x {len(positions)} combinations x {multiplier} variants in '{self.config['IMG_DIR']}'."
         )
         for i in tqdm(range(self.num_images)):
             for pair in positions:
-                self.create_and_save(pair[0], pair[1], equalized=False, tag=i)
-                self.create_and_save(pair[1], pair[0], equalized=False, tag=i)
-                if not self.config["ONE_COLOUR"]:
+                if self.config["ONE_COLOUR"]:
+                    # One-colour mode: use first value as the count, ignore second
+                    self.create_and_save(pair[0], 0, equalized=False, tag=i)
+                else:
+                    # Two-colour mode: both orders, equalized and non-equalized
+                    self.create_and_save(pair[0], pair[1], equalized=False, tag=i)
+                    self.create_and_save(pair[1], pair[0], equalized=False, tag=i)
                     self.create_and_save(pair[0], pair[1], equalized=True, tag=i)
                     self.create_and_save(pair[1], pair[0], equalized=True, tag=i)

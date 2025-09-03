@@ -16,9 +16,6 @@ All stimuli are generated as 512 × 512 px PNG files ready to be fed into machin
 ```bash
 pip install cogstim  
 ```
-
-The main runtime dependencies are `Pillow`, `numpy`, and `tqdm`. They are installed automatically through the `pyproject.toml`.
-
 ## Command-line interface
 
 After installation the `cli` module is available as the *single entry-point* to create datasets. Run it either via `python -m cogstim.cli …` or directly if the `cogstim` package is on your `$PYTHONPATH`.
@@ -34,6 +31,7 @@ usage: cli.py [-h] (--shape_recognition | --color_recognition | --ans | --one_co
 ```
 
 > **Note**: train_num and test_num refer to the number of image _sets_ created. An image set is a group of images that comb all the possible parameter combinations. So, for shapes and colors, an image set is of about 200 images, whereas for ANS is of around 75 images, of course always depending on the other parameters.
+> **Note**: All cli arguments use British spelling.
 
 ## Examples
 

@@ -20,7 +20,7 @@ def test_stripe_pattern_generator_single_set():
             "max_thickness": 6,  # ensure low < high for randint
             "min_spacing": 2,
             "max_attempts": 100,
-            "background_color": "#000000",
+            "background_colour": "#000000",
         }
 
         generator = StripePatternGenerator(cfg)

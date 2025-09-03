@@ -29,7 +29,7 @@ class StripePatternGenerator:
         self.max_attempts = config["max_attempts"]
         self.img_sets = config["img_sets"]
         self.tag = config["tag"]
-
+        self.background_colour = config["background_colour"]
         # Calculate circumscribed size for rotation
         self.c_size = int(self.size / 2 * np.sqrt(2)) * 2
 
@@ -61,9 +61,7 @@ class StripePatternGenerator:
 
     def create_rotated_stripes(self, num_stripes, angle):
         """Create an image with the specified number of stripes at the given angle."""
-        img = Image.new(
-            "RGB", (self.c_size, self.c_size), color=self.config["background_color"]
-        )
+        img = Image.new("RGB", (self.c_size, self.c_size), color=self.background_colour)
         draw = ImageDraw.Draw(img)
 
         # Generate random stripe thicknesses
@@ -205,7 +203,7 @@ def main():
         "max_thickness": args.max_thickness,
         "min_spacing": args.min_spacing,
         "max_attempts": args.max_attempts,
-        "background_color": "#000000",
+        "background_colour": "#000000",
     }
 
     try:

@@ -28,7 +28,7 @@ class ShapesGenerator:
     def __init__(
         self,
         shapes,
-        colors,
+        colours,
         task_type,
         img_dir,
         train_num,
@@ -36,10 +36,12 @@ class ShapesGenerator:
         jitter,
         min_surface,
         max_surface,
+        background_colour,
     ):
         self.shapes = shapes if isinstance(shapes, list) else [shapes]
-        self.colors = {col: COLOUR_MAP[col] for col in colors}
+        self.colors = {col: COLOUR_MAP[col] for col in colours}
         self.task_type = task_type
+        self.background_colour = background_colour
 
         # Set directory based on task if not provided explicitly
         if img_dir is not None:
@@ -50,7 +52,7 @@ class ShapesGenerator:
             elif task_type == "two_colors":
                 self.img_dir = "images/two_colors"
             else:
-                self.img_dir = f"images/{'_'.join(self.shapes)}_{'_'.join(colors)}"
+                self.img_dir = f"images/{'_'.join(self.shapes)}_{'_'.join(colours)}"
 
         # Override default generation params
         self.train_num = train_num
@@ -236,7 +238,7 @@ class ShapesGenerator:
                                 self.img_paths[f"{phase}_{shape}"],
                             )
                     elif self.task_type == "two_colors":
-                        # For color recognition: circle in each color is a class
+                        # For colour recognition: circle in each colour is a class
                         for color_name, color_code in self.colors.items():
                             image, dist, angle = self.draw_shape(
                                 self.colour_task_base_shape, surface, color_code, self.jitter

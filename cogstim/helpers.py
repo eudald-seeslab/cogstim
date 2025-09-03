@@ -5,6 +5,7 @@ COLOUR_MAP = {
     "red": "#ff0000",
     "green": "#00ff00",
     "gray": "#808080",
+    "white": "#ffffff",
 }
 
 SIZES = {

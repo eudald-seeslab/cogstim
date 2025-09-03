@@ -17,12 +17,12 @@ class NumberPoints:
     # We consider equal areas if their (r1 - r2) / r1 ratio differs by less than this number:
     area_tolerance = 0.001
 
-    def __init__(self, img, init_size, yellow, blue, min_point_radius=8, max_point_radius=16, attempts_limit=10):
+    def __init__(self, img, init_size, colour_1, colour_2, min_point_radius=8, max_point_radius=16, attempts_limit=10):
         self.img = img
         self.init_size = init_size
         self.draw = ImageDraw.Draw(img)
-        self.yellow = yellow
-        self.blue = blue
+        self.colour_1 = colour_1
+        self.colour_2 = colour_2
         self.min_point_radius = min_point_radius
         self.max_point_radius = max_point_radius
         self.attempts_limit = attempts_limit
@@ -75,7 +75,12 @@ class NumberPoints:
         x2 = point[0] + point[2]
         y1 = point[1] - point[2]
         y2 = point[1] + point[2]
-        self.draw.ellipse((x1, y1, x2, y2), fill= self.yellow if colour == "yellow" else self.blue)
+        # If only one colour is configured, always use colour_1
+        if self.colour_2 is None:
+            fill_colour = self.colour_1
+        else:
+            fill_colour = self.colour_1 if colour == "colour_1" else self.colour_2
+        self.draw.ellipse((x1, y1, x2, y2), fill=fill_colour)
 
     def draw_points(self, point_array):
         [self._draw_point(a[0], a[1]) for a in point_array]
@@ -89,12 +94,14 @@ class NumberPoints:
         return (big - small) / big < self.area_tolerance
 
     def _get_areas(self, point_array):
-        yellow_area = self.compute_area(point_array, "yellow")
-        blue_area = self.compute_area(point_array, "blue")
+        colour_1_area = self.compute_area(point_array, "colour_1")
+        colour_2_area = self.compute_area(point_array, "colour_2")
 
         # Who is big and who is small
-        small = "blue" if yellow_area > blue_area else "yellow"
-        big_area, small_area = (yellow_area, blue_area) if small == "blue" else (blue_area, yellow_area)
+        small = "colour_2" if colour_1_area > colour_2_area else "colour_1"
+        big_area, small_area = (
+            (colour_1_area, colour_2_area) if small == "colour_2" else (colour_2_area, colour_1_area)
+        )
 
         return small, big_area, small_area
 
@@ -130,7 +137,7 @@ class NumberPoints:
 
     
     def fix_total_area(self, point_array, target_area):
-        current_area = self.compute_area(point_array, "yellow")
+        current_area = self.compute_area(point_array, "colour_1")
         if current_area > target_area:
             raise PointLayoutError("Current area is already bigger than target area")
 

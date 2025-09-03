@@ -16,6 +16,11 @@ classifiers     = [
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+dependencies    = [
+  "Pillow>=9.0.0",
+  "numpy>=1.21.0",
+  "tqdm>=4.60.0",
+]
 
 [project.urls]
 Homepage   = "https://github.com/eudald-seeslab/cogstim"

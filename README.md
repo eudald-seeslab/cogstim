@@ -21,8 +21,8 @@ pip install cogstim
 After installation the `cli` module is available as the *single entry-point* to create datasets. Run it either via `python -m cogstim.cli …` or directly if the `cogstim` package is on your `$PYTHONPATH`.
 
 ```text
-usage: cli.py [-h] (--shape_recognition | --color_recognition | --ans | --one_colour | --lines | --custom) [--shapes {circle,star,triangle,square} ...]
-              [--colors {yellow,blue,red,green} ...] [--train_num TRAIN_NUM] [--test_num TEST_NUM] [--output_dir OUTPUT_DIR]
+usage: cli.py [-h] (--shape_recognition | --colour_recognition | --ans | --one_colour | --lines | --custom) [--shapes {circle,star,triangle,square} ...]
+              [--colours {yellow,blue,red,green} ...] [--train_num TRAIN_NUM] [--test_num TEST_NUM] [--output_dir OUTPUT_DIR]
               [--min_surface MIN_SURFACE] [--max_surface MAX_SURFACE] [--no-jitter] [--easy]
               [--version_tag VERSION_TAG] [--min_point_num MIN_POINT_NUM] [--max_point_num MAX_POINT_NUM]
               [--angles ANGLES [ANGLES ...]] [--min_stripes MIN_STRIPES] [--max_stripes MAX_STRIPES]

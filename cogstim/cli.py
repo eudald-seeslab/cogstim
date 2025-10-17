@@ -29,6 +29,7 @@ from cogstim.ans_dots import (
     GENERAL_CONFIG as ANS_GENERAL_CONFIG,
 )
 from cogstim.lines import StripePatternGenerator
+from cogstim.fixation import FixationGenerator
 
 
 # ---------------------------------------------------------------------------
@@ -49,6 +50,7 @@ def parse_arguments() -> argparse.Namespace:
     ds_group.add_argument("--one_colour", action="store_true", help="Generate single-colour dot-array images (number discrimination without colour cue)")
     ds_group.add_argument("--custom", action="store_true", help="Custom combination of shapes and colours (provide --shapes and --colors)")
     ds_group.add_argument("--lines", action="store_true", help="Generate images with rotated stripe/line patterns")  # NEW DATASET FLAG
+    ds_group.add_argument("--fixation", action="store_true", help="Generate fixation target images (A, B, C, AB, AC, BC, ABC)")
 
     # Custom shapes/colours (only if --custom)
     parser.add_argument("--shapes", nargs="+", choices=["circle", "star", "triangle", "square"], help="Shapes to include (only with --custom)")
@@ -59,6 +61,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--test_num", type=int, default=50, help="Number of image sets for testing")
     parser.add_argument("--output_dir", type=str, default=None, help="Root output directory (default depends on dataset type)")
     parser.add_argument("--background_colour", type=str, default="black", help="Background colour for generated images (default: black)")
+    parser.add_argument("--symbol_colour", type=str, default="white", choices=["yellow", "blue", "red", "green", "black", "white", "gray"], help="Fixation symbol colour (single colour)")
 
     # Shape-specific parameters
     parser.add_argument("--min_surface", type=int, default=10000, help="Minimum shape surface area (shapes datasets)")
@@ -84,6 +87,15 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--max_thickness", type=int, default=30, help="Maximum stripe thickness (lines dataset)")
     parser.add_argument("--min_spacing", type=int, default=5, help="Minimum spacing between stripes (lines dataset)")
     parser.add_argument("--max_attempts", type=int, default=10000, help="Maximum attempts to place non-overlapping stripes (lines dataset)")
+
+    # Fixation-specific parameters
+    parser.add_argument("--types", nargs="+", default=["A", "B", "C", "AB", "AC", "BC", "ABC"], choices=["A", "B", "C", "AB", "AC", "BC", "ABC"], help="Fixation target types to generate")
+    parser.add_argument("--all_types", action="store_true", help="Generate all fixation types (A, B, C, AB, AC, BC, ABC)")
+    parser.add_argument("--dot_radius_px", type=int, default=12, help="Radius of the central dot in pixels (A/ABC)")
+    parser.add_argument("--disk_radius_px", type=int, default=32, help="Radius of the filled disk in pixels (B/AB/BC/ABC)")
+    parser.add_argument("--cross_thickness_px", type=int, default=16, help="Bar thickness for the cross in pixels (C/AC/BC/ABC)")
+    parser.add_argument("--cross_arm_px", type=int, default=128, help="Half-length of each cross arm from the center in pixels")
+    parser.add_argument("--jitter_px", type=int, default=0, help="Max positional jitter of the fixation center in pixels")
 
     return parser.parse_args()
 
@@ -190,6 +202,29 @@ def generate_lines_dataset(args: argparse.Namespace) -> None:
         generator.create_images()
 
 
+def generate_fixation_dataset(args: argparse.Namespace) -> None:
+    """Generate train/test fixation-target datasets using FixationGenerator."""
+
+    all_types = ["A", "B", "C", "AB", "AC", "BC", "ABC"]
+    selected_types = all_types if args.all_types else args.types
+    cfg = {
+        "output_dir": args.output_dir or "images/fixation",
+        "img_sets": 1,
+        "types": selected_types,
+        "img_size": args.img_size,
+        "dot_radius_px": args.dot_radius_px,
+        "disk_radius_px": args.disk_radius_px,
+        "cross_thickness_px": args.cross_thickness_px,
+        "cross_arm_px": args.cross_arm_px,
+        "jitter_px": args.jitter_px,
+        "background_colour": args.background_colour,
+        "symbol_colour": args.symbol_colour,
+        "tag": args.tag,
+    }
+    generator = FixationGenerator(cfg)
+    generator.create_images()
+
+
 # ---------------------------------------------------------------------------
 # Main entry
 # ---------------------------------------------------------------------------
@@ -204,6 +239,8 @@ def main() -> None:
         generate_dot_array_dataset(args, one_colour=True)
     elif args.lines:  # NEW BRANCH FOR LINES DATASET
         generate_lines_dataset(args)
+    elif args.fixation:
+        generate_fixation_dataset(args)
     else:  # shapes datasets
         generator = build_shapes_generator(args)
         generator.generate_images()

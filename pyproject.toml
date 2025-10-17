@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name            = "cogstim"
-version         = "0.2.0"
+version         = "0.2.1"
 description     = "Visual cognitive-stimulus generator (ANS dots, shapes, gratings)"
 readme          = "README.md"
 requires-python = ">=3.9"
-license         = "MIT"
+license         = { file = "LICENCE" }
 authors         = [{name = "Eudald Correig-Fraga", email = "eudald.correig@urv.cat"}]
 classifiers     = [
   "Development Status :: 3 - Alpha",

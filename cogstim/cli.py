@@ -30,6 +30,7 @@ from cogstim.ans_dots import (
 )
 from cogstim.lines import StripePatternGenerator
 from cogstim.fixation import FixationGenerator
+from cogstim.match_to_sample import MatchToSampleGenerator, GENERAL_CONFIG as MTS_GENERAL_CONFIG
 
 
 # ---------------------------------------------------------------------------
@@ -51,6 +52,7 @@ def parse_arguments() -> argparse.Namespace:
     ds_group.add_argument("--custom", action="store_true", help="Custom combination of shapes and colours (provide --shapes and --colors)")
     ds_group.add_argument("--lines", action="store_true", help="Generate images with rotated stripe/line patterns")  # NEW DATASET FLAG
     ds_group.add_argument("--fixation", action="store_true", help="Generate fixation target images (A, B, C, AB, AC, BC, ABC)")
+    ds_group.add_argument("--match_to_sample", action="store_true", help="Generate match-to-sample dot-array pairs (sample/match)")
 
     # Custom shapes/colours (only if --custom)
     parser.add_argument("--shapes", nargs="+", choices=["circle", "star", "triangle", "square"], help="Shapes to include (only with --custom)")
@@ -69,7 +71,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--no-jitter", dest="no_jitter", action="store_true", help="Disable positional jitter for shapes datasets")
 
     # Dot-array-specific parameters
-    parser.add_argument("--easy", action="store_true", help="Use easier ratios only for dot-array datasets")
+    parser.add_argument("--ratios", type=str, choices=["easy", "hard", "all"], default="all", help="Ratio set to use for dot-array datasets")
     parser.add_argument("--version_tag", type=str, default="", help="Optional version tag appended to filenames (dot-array datasets)")
     parser.add_argument("--min_point_num", type=int, default=1, help="Minimum number of points per colour (dot-array datasets)")
     parser.add_argument("--max_point_num", type=int, default=10, help="Maximum number of points per colour (dot-array datasets)")
@@ -155,17 +157,20 @@ def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> No
     base_dir = args.output_dir or base_dir_default
 
     for phase, num_sets in (("train", args.train_num), ("test", args.test_num)):
-        cfg = ANS_GENERAL_CONFIG | {
-            "NUM_IMAGES": num_sets,
-            "IMG_DIR": os.path.join(base_dir, phase),
-            "EASY": args.easy,
-            "ONE_COLOUR": one_colour,
-            "version_tag": args.version_tag,
-            "min_point_num": args.min_point_num,
-            "max_point_num": args.max_point_num,
-            "background_colour": args.background_colour,
-            "min_point_radius": args.min_point_radius,
-            "max_point_radius": args.max_point_radius,
+        cfg = {
+            **ANS_GENERAL_CONFIG,
+            **{
+                "NUM_IMAGES": num_sets,
+                "IMG_DIR": os.path.join(base_dir, phase),
+                "ratios": args.ratios,
+                "ONE_COLOUR": one_colour,
+                "version_tag": args.version_tag,
+                "min_point_num": args.min_point_num,
+                "max_point_num": args.max_point_num,
+                "background_colour": args.background_colour,
+                "min_point_radius": args.min_point_radius,
+                "max_point_radius": args.max_point_radius,
+            },
         }
 
         # Override colours for one-colour mode to use selected dot colour
@@ -174,6 +179,31 @@ def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> No
             cfg["colour_2"] = None
 
         generator = PointsGenerator(cfg)
+        generator.generate_images()
+
+
+def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
+    base_dir_default = "images/match_to_sample"
+    base_dir = args.output_dir or base_dir_default
+
+    for phase, num_sets in (("train", args.train_num), ("test", args.test_num)):
+        cfg = {
+            **MTS_GENERAL_CONFIG,
+            **{
+                "NUM_IMAGES": num_sets,
+                "IMG_DIR": os.path.join(base_dir, phase),
+                "ratios": args.ratios,
+                "version_tag": args.version_tag,
+                "min_point_num": args.min_point_num,
+                "max_point_num": args.max_point_num,
+                "background_colour": args.background_colour,
+                "min_point_radius": args.min_point_radius,
+                "max_point_radius": args.max_point_radius,
+                "dot_colour": args.dot_colour,
+            },
+        }
+
+        generator = MatchToSampleGenerator(cfg)
         generator.generate_images()
 
 
@@ -237,11 +267,13 @@ def main() -> None:
         generate_dot_array_dataset(args, one_colour=False)
     elif args.one_colour:
         generate_dot_array_dataset(args, one_colour=True)
-    elif args.lines:  # NEW BRANCH FOR LINES DATASET
+    elif args.lines:
         generate_lines_dataset(args)
     elif args.fixation:
         generate_fixation_dataset(args)
-    else:  # shapes datasets
+    elif args.match_to_sample:
+        generate_match_to_sample_dataset(args)
+    else:
         generator = build_shapes_generator(args)
         generator.generate_images()
 

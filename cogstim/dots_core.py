@@ -109,6 +109,10 @@ class NumberPoints:
     def _increase_radius(point, increase=1):
         return (point[0][0], point[0][1], point[0][2] + increase), point[1]
 
+    @staticmethod
+    def _set_radius(point, new_radius):
+        return (point[0][0], point[0][1], new_radius), point[1]
+
     def equalize_areas(self, point_array):
 
         # Who is big and who is small
@@ -164,3 +168,76 @@ class NumberPoints:
                 raise PointLayoutError("Overlapping points created")
             
         return point_array
+
+    def scale_total_area(self, point_array, target_area):
+        """Scale all radii by a common factor so the total area matches target_area.
+
+        This method allows both shrinking and enlarging dots and may exceed the
+        configured max radius if needed. It validates boundary and overlap after scaling.
+        """
+        current_area = self.compute_area(point_array, "colour_1")
+        if current_area == 0:
+            raise PointLayoutError("Current area is zero; cannot scale radii")
+
+        scale_factor = np.sqrt(target_area / current_area)
+        scaled = [
+            self._set_radius(p, p[0][2] * scale_factor)
+            for p in point_array
+        ]
+
+        # Boundary check
+        for point in scaled:
+            if not self._check_within_boundaries(point[0]):
+                raise PointLayoutError("Scaled point is outside boundaries")
+
+        # Overlap check
+        for pair in itertools.combinations(scaled, 2):
+            if not self._check_points_not_overlapping(pair[0][0], pair[1][0]):
+                raise PointLayoutError("Overlapping points after scaling")
+
+        return scaled
+
+    def scale_by_factor(self, point_array, factor, round_radii=True):
+        """Scale all radii by a multiplicative factor.
+
+        - If round_radii is True, radii are rounded to nearest integer pixels.
+        - Validates boundaries and overlaps after scaling.
+        """
+        if factor <= 0:
+            raise PointLayoutError("Scale factor must be positive")
+
+        scaled = []
+        for p in point_array:
+            new_r = p[0][2] * factor
+            if round_radii:
+                new_r = int(round(new_r))
+                # Prevent zero radius due to rounding
+                new_r = max(new_r, 1)
+            scaled.append(self._set_radius(p, new_r))
+
+        # Boundary check
+        for point in scaled:
+            if not self._check_within_boundaries(point[0]):
+                raise PointLayoutError("Scaled point is outside boundaries")
+
+        # Overlap check
+        for pair in itertools.combinations(scaled, 2):
+            if not self._check_points_not_overlapping(pair[0][0], pair[1][0]):
+                raise PointLayoutError("Overlapping points after scaling")
+
+        return scaled
+
+    # --- New helpers for incremental equalization fallback ---
+    def increase_all_radii(self, point_array, increment=1):
+        """Return a new point array with all radii increased by `increment`."""
+        return [self._increase_radius(p, increment) for p in point_array]
+
+    def validate_layout(self, point_array):
+        """Return True if all points are within boundaries and non-overlapping."""
+        for point in point_array:
+            if not self._check_within_boundaries(point[0]):
+                return False
+        for pair in itertools.combinations(point_array, 2):
+            if not self._check_points_not_overlapping(pair[0][0], pair[1][0]):
+                return False
+        return True

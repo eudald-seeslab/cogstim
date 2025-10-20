@@ -5,6 +5,7 @@ from tqdm import tqdm
 import logging
 
 from cogstim.helpers import COLOUR_MAP, SIZES
+from cogstim.config import ANS_EASY_RATIOS, ANS_HARD_RATIOS
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,17 +20,7 @@ GENERAL_CONFIG = {
 }
 
 
-EASY_RATIOS = [1 / 5, 1 / 4, 1 / 3, 2 / 5, 1 / 2, 3 / 5, 2 / 3, 3 / 4]
-HARD_RATIOS = [
-    4 / 5,
-    5 / 6,
-    6 / 7,
-    7 / 8,
-    8 / 9,
-    9 / 10,
-    10 / 11,
-    11 / 12,
-]
+## Ratios moved to cogstim.config for reuse
 
 
 class TerminalPointLayoutError(ValueError):
@@ -42,7 +33,16 @@ class PointsGenerator:
         # Expect NUM_IMAGES key specifying how many tagged repetitions per phase
         self.num_images = config["NUM_IMAGES"]
         self.setup_directories()
-        self.ratios = EASY_RATIOS if self.config["EASY"] else EASY_RATIOS + HARD_RATIOS
+        ratios = self.config["ratios"]
+        match ratios:
+            case "easy":
+                self.ratios = ANS_EASY_RATIOS
+            case "hard":
+                self.ratios = ANS_HARD_RATIOS
+            case "all":
+                self.ratios = ANS_EASY_RATIOS + ANS_HARD_RATIOS
+            case _:
+                raise ValueError(f"Invalid ratio mode: {ratios}")
 
     def setup_directories(self):
         os.makedirs(self.config["IMG_DIR"], exist_ok=True)

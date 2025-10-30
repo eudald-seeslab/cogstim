@@ -1,16 +1,19 @@
-import os
 import math
 import random
+from pathlib import Path
+from typing import Dict
+
 from PIL import Image, ImageDraw
 import numpy as np
 from tqdm import tqdm
 
+from cogstim.base_generator import BaseGenerator
 from cogstim.helpers import COLOUR_MAP
 
 random.seed(1714)
 
 
-class ShapesGenerator:
+class ShapesGenerator(BaseGenerator):
     """
     A class for generating images with geometric shapes for machine learning tasks.
 
@@ -45,14 +48,14 @@ class ShapesGenerator:
 
         # Set directory based on task if not provided explicitly
         if img_dir is not None:
-            self.img_dir = img_dir
+            resolved_dir = img_dir
         else:
             if task_type == "two_shapes":
-                self.img_dir = "images/two_shapes"
+                resolved_dir = "images/two_shapes"
             elif task_type == "two_colors":
-                self.img_dir = "images/two_colors"
+                resolved_dir = "images/two_colors"
             else:
-                self.img_dir = f"images/{'_'.join(self.shapes)}_{'_'.join(colours)}"
+                resolved_dir = f"images/{'_'.join(self.shapes)}_{'_'.join(colours)}"
 
         # Override default generation params
         self.train_num = train_num
@@ -60,25 +63,42 @@ class ShapesGenerator:
         self.min_surface = min_surface
         self.max_surface = max_surface
         self.jitter = jitter
-        self.img_paths = {}
+        config: Dict[str, object] = {
+            "IMG_DIR": resolved_dir,
+            "train_num": train_num,
+            "test_num": test_num,
+            "min_surface": min_surface,
+            "max_surface": max_surface,
+            "jitter": jitter,
+            "task_type": task_type,
+            "shapes": self.shapes,
+            "colours": colours,
+        }
+        super().__init__(config=config, output_dir=resolved_dir)
+        self.img_dir = str(self.output_dir)
+        # Maintain backwards-compatible attribute reference
+        self.img_paths = self.output_paths
 
-    def create_dirs(self):
+    def setup_directories(self):
         """Creates class directories for train and test sets."""
+        directories = {}
         for t in ["train", "test"]:
             if self.task_type == "two_shapes":
                 classes = self.shapes  # classes are shapes
             elif self.task_type == "two_colors":
-                classes = self.colors.keys()  # classes are colors
+                classes = self.colors.keys()  # classes are colours
             else:
-                # For custom, each shape-color combination is a class
+                # For custom, each shape-colour combination is a class
                 classes = [
                     f"{shape}_{color}" for shape in self.shapes for color in self.colors
                 ]
 
             for class_name in classes:
                 path_key = f"{t}_{class_name}"
-                self.img_paths[path_key] = os.path.join(self.img_dir, t, class_name)
-                os.makedirs(self.img_paths[path_key], exist_ok=True)
+                directories[path_key] = (t, class_name)
+
+        super().setup_directories(directories)
+        self.img_paths = self.output_paths
 
     @staticmethod
     def get_radius_from_surface(shape: str, surface: float) -> float:
@@ -192,10 +212,8 @@ class ShapesGenerator:
         return image, distance, angle
 
     def save_image(self, image, shape, surface, dist_from_center, angle, it, path):
-        file_path = os.path.join(
-            path,
-            f"{shape}_{surface}_{dist_from_center}_{angle}_{it}.png",
-        )
+        target_dir = Path(path)
+        file_path = target_dir / f"{shape}_{surface}_{dist_from_center}_{angle}_{it}.png"
         image.save(file_path)
 
     def generate_images(self):
@@ -212,7 +230,7 @@ class ShapesGenerator:
             else len(self.shapes) * len(self.colors)
         )
 
-        self.create_dirs()
+        self.setup_directories()
 
         for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
             total_phase = num_images * surfaces * combos

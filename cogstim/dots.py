@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
 import random
 import logging
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
+from cogstim.base_generator import BaseGenerator
 from cogstim.dots_core import NumberPoints, PointLayoutError
 
 # Configure logging
@@ -21,11 +21,13 @@ class TerminalPointLayoutError(ValueError):
     pass
 
 
-class OneColourImageGenerator:
+class OneColourImageGenerator(BaseGenerator):
     """Generates images with configurable colored points."""
 
     def __init__(self, config):
-        self.config = config
+        super().__init__(config=config)
+        # Keep config path consistent for legacy access patterns
+        self.config["IMG_DIR"] = str(self.output_dir)
         self.nmin = self.config["min_point_num"]
         self.nmax = self.config["max_point_num"]
         self.total_area = self.config["total_area"]
@@ -52,9 +54,10 @@ class OneColourImageGenerator:
 
     def setup_directories(self):
         """Create necessary directories for saving images."""
-        os.makedirs(self.config["IMG_DIR"], exist_ok=True)
-        for c in range(self.nmin, self.nmax + 1):
-            os.makedirs(os.path.join(self.config["IMG_DIR"], str(c)), exist_ok=True)
+        directories = {
+            str(c): (str(c),) for c in range(self.nmin, self.nmax + 1)
+        }
+        super().setup_directories(directories)
 
     def create_image(self, n):
         """Create a single image with n points."""
@@ -105,7 +108,8 @@ class OneColourImageGenerator:
     def create_and_save_once(self, name, n):
         """Create and save a single image without retry logic."""
         img = self.create_image(n)
-        img.save(os.path.join(self.config["IMG_DIR"], str(n), name))
+        target_dir = self.get_output_path(str(n))
+        img.save(target_dir / name)
 
     def generate_images(self):
         """Generate the full set of images based on configuration."""

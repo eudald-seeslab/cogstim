@@ -22,7 +22,7 @@ pip install cogstim
 After installation the `cli` module is available as the *single entry-point* to create datasets. Run it either via `python -m cogstim.cli …` or directly if the `cogstim` package is on your `$PYTHONPATH`.
 
 ```text
-usage: cli.py [-h] (--shape_recognition | --colour_recognition | --ans | --one_colour | --lines | --fixation | --custom)
+usage: cli.py [-h] (--shape_recognition | --colour_recognition | --ans | --one_colour | --lines | --fixation | --match_to_sample | --custom)
               [--shapes {circle,star,triangle,square} ...]
               [--colours {yellow,blue,red,green,black,white,gray} ...]
               [--train_num TRAIN_NUM] [--test_num TEST_NUM] [--output_dir OUTPUT_DIR]
@@ -78,6 +78,21 @@ python -m cogstim.cli --ans --easy --train_num 100 --test_num 40
 > Note that on the left image, total surfaces are equalized, and, on the right image, dot size is random.
 
 This is based on Halberda et al. (2008).
+
+### Match-to-sample (MTS) – dot arrays (sample/match) with controlled total surface
+```bash
+python -m cogstim.cli --match_to_sample \
+  --easy \
+  --train_num 50 --test_num 20 \
+  --min_point_num 1 --max_point_num 10 \
+  --dot_colour yellow
+```
+
+- Generates pairs of images per trial: `s_*.png` (sample) and `m_*.png` (match).
+- For half of the trials, total dot surface is equalized between sample and match; for the other half, dot sizes are random.
+- The target total surface for the match is derived from the sample image of the same trial.
+- Unequal pairs are built from the same ratio set used by ANS, with both orders (n→m and m→n) included, and equal (n=m) trials added to balance labels.
+- Output layout: `images/match_to_sample/{train|test}/s_img_{n}_{m}_{k}[...].png` and corresponding `m_img_...`.
 
 ### Single-colour dot arrays numbered 1-5, total surface area held constant
 ```bash

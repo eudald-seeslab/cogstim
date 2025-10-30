@@ -6,6 +6,7 @@ def test_points_generator_creates_images(tmp_path):
     cfg = GENERAL_CONFIG | {
         "NUM_IMAGES": 1,
         "IMG_DIR": str(tmp_path),
+        "ratios": "easy",
         "EASY": True,
         "ONE_COLOUR": True,
         "version_tag": "",

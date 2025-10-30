@@ -28,7 +28,7 @@ def get_test_images_dir():
 class TestANSImageGeneration:
     """Test ANS dot array image generation end-to-end."""
 
-    def test_ans_easy_ratios_generation(self, tmp_path):
+    def test_ans_easy_ratios_generation(self):
         """Test ANS generation with easy ratios."""
         test_images_dir = get_test_images_dir()
         config = {
@@ -76,7 +76,7 @@ class TestANSImageGeneration:
                 non_white = np.any(arr != [255, 255, 255], axis=-1)
                 assert np.any(non_white), "Image appears to be all white"
 
-    def test_ans_hard_ratios_generation(self, tmp_path):
+    def test_ans_hard_ratios_generation(self):
         """Test ANS generation with hard ratios."""
         test_images_dir = get_test_images_dir()
         config = {
@@ -109,7 +109,7 @@ class TestANSImageGeneration:
         assert len(yellow_images) > 0
         assert len(blue_images) > 0
 
-    def test_ans_one_colour_generation(self, tmp_path):
+    def test_ans_one_colour_generation(self):
         """Test ANS generation in one-colour mode."""
         test_images_dir = get_test_images_dir()
         config = {
@@ -149,7 +149,7 @@ class TestANSImageGeneration:
 class TestMatchToSampleImageGeneration:
     """Test match-to-sample image generation end-to-end."""
 
-    def test_mts_easy_ratios_generation(self, tmp_path):
+    def test_mts_easy_ratios_generation(self):
         """Test MTS generation with easy ratios."""
         test_images_dir = get_test_images_dir()
         config = {
@@ -192,7 +192,7 @@ class TestMatchToSampleImageGeneration:
                 non_white = np.any(arr != [255, 255, 255], axis=-1)
                 assert np.any(non_white), "Sample image appears to be all white"
 
-    def test_mts_hard_ratios_generation(self, tmp_path):
+    def test_mts_hard_ratios_generation(self):
         """Test MTS generation with hard ratios."""
         test_images_dir = get_test_images_dir()
         config = {
@@ -223,7 +223,7 @@ class TestMatchToSampleImageGeneration:
         assert len(sample_images) > 0
         assert len(match_images) > 0
 
-    def test_mts_equalized_pairs(self, tmp_path):
+    def test_mts_equalized_pairs(self):
         """Test MTS generation with area equalization."""
         test_images_dir = get_test_images_dir()
         config = {
@@ -262,7 +262,7 @@ class TestMatchToSampleImageGeneration:
 class TestShapesImageGeneration:
     """Test shape image generation end-to-end."""
 
-    def test_shapes_generation(self, tmp_path):
+    def test_shapes_generation(self):
         """Test shape generation."""
         test_images_dir = get_test_images_dir()
         generator = ShapesGenerator(
@@ -302,7 +302,7 @@ class TestShapesImageGeneration:
 class TestLinesImageGeneration:
     """Test line pattern image generation end-to-end."""
 
-    def test_lines_generation(self, tmp_path):
+    def test_lines_generation(self):
         """Test line pattern generation."""
         test_images_dir = get_test_images_dir()
         config = {
@@ -346,7 +346,7 @@ class TestLinesImageGeneration:
 class TestFixationImageGeneration:
     """Test fixation target image generation end-to-end."""
 
-    def test_fixation_generation(self, tmp_path):
+    def test_fixation_generation(self):
         """Test fixation target generation."""
         test_images_dir = get_test_images_dir()
         config = {
@@ -365,7 +365,7 @@ class TestFixationImageGeneration:
         }
         
         generator = FixationGenerator(config)
-        generator.create_images()
+        generator.generate_images()
         
         # Check that images were created
         output_dir = Path(test_images_dir / "fixation")
@@ -389,7 +389,7 @@ class TestFixationImageGeneration:
 class TestCLIIntegration:
     """Test CLI integration with actual image generation."""
 
-    def test_cli_ans_generation(self, tmp_path):
+    def test_cli_ans_generation(self):
         """Test CLI ANS generation."""
         from cogstim.cli import main
         import sys
@@ -427,7 +427,7 @@ class TestCLIIntegration:
         train_images = list(yellow_train.glob("*.png")) + list(blue_train.glob("*.png"))
         assert len(train_images) > 0
 
-    def test_cli_match_to_sample_generation(self, tmp_path):
+    def test_cli_match_to_sample_generation(self):
         """Test CLI match-to-sample generation."""
         from cogstim.cli import main
         import sys
@@ -461,7 +461,7 @@ class TestCLIIntegration:
         assert len(train_samples) > 0
         assert len(train_matches) > 0
 
-    def test_cli_one_colour_generation(self, tmp_path):
+    def test_cli_one_colour_generation(self):
         """Test CLI one-colour generation."""
         from cogstim.cli import main
         import sys
@@ -500,7 +500,7 @@ class TestCLIIntegration:
 class TestImageProperties:
     """Test properties of generated images."""
 
-    def test_image_dimensions_consistency(self, tmp_path):
+    def test_image_dimensions_consistency(self):
         """Test that all generated images have consistent dimensions."""
         test_images_dir = get_test_images_dir()
         # Generate different types of images
@@ -549,7 +549,7 @@ class TestImageProperties:
                 assert img.size == (512, 512), f"Image {img_path} has wrong size: {img.size}"
                 assert img.mode == "RGB", f"Image {img_path} has wrong mode: {img.mode}"
 
-    def test_image_content_diversity(self, tmp_path):
+    def test_image_content_diversity(self):
         """Test that generated images have diverse content."""
         test_images_dir = get_test_images_dir()
         config = {
@@ -587,7 +587,7 @@ class TestImageProperties:
                 assert not np.array_equal(image_arrays[i], image_arrays[j]), \
                     f"Images {i} and {j} are identical"
 
-    def test_image_file_properties(self, tmp_path):
+    def test_image_file_properties(self):
         """Test file properties of generated images."""
         test_images_dir = get_test_images_dir()
         config = {

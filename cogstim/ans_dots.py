@@ -1,9 +1,12 @@
 import os
+from pathlib import Path
+
 from PIL import Image
 from cogstim.dots_core import NumberPoints, PointLayoutError
 from tqdm import tqdm
 import logging
 
+from cogstim.base_generator import BaseGenerator
 from cogstim.helpers import COLOUR_MAP, SIZES
 from cogstim.config import ANS_EASY_RATIOS, ANS_HARD_RATIOS
 
@@ -27,11 +30,11 @@ class TerminalPointLayoutError(ValueError):
     pass
 
 
-class PointsGenerator:
+class PointsGenerator(BaseGenerator):
     def __init__(self, config):
-        self.config = config
+        super().__init__(config=config)
         # Expect NUM_IMAGES key specifying how many tagged repetitions per phase
-        self.num_images = config["NUM_IMAGES"]
+        self.num_images = self.config["NUM_IMAGES"]
         self.setup_directories()
         ratios = self.config["ratios"]
         match ratios:
@@ -45,14 +48,22 @@ class PointsGenerator:
                 raise ValueError(f"Invalid ratio mode: {ratios}")
 
     def setup_directories(self):
-        os.makedirs(self.config["IMG_DIR"], exist_ok=True)
-        os.makedirs(
-            os.path.join(self.config["IMG_DIR"], self.config["colour_1"]), exist_ok=True
-        )
+        base_dir = self.config["IMG_DIR"]
+        os.makedirs(base_dir, exist_ok=True)
+
+        # Reset and repopulate output path registry
+        self.output_paths = {}
+
+        colour_1 = self.config["colour_1"]
+        path_colour_1 = Path(base_dir) / colour_1
+        os.makedirs(os.path.join(base_dir, colour_1), exist_ok=True)
+        self.output_paths[colour_1] = path_colour_1
+
         if not self.config["ONE_COLOUR"]:
-            os.makedirs(
-                os.path.join(self.config["IMG_DIR"], self.config["colour_2"]), exist_ok=True
-            )
+            colour_2 = self.config["colour_2"]
+            path_colour_2 = Path(base_dir) / colour_2
+            os.makedirs(os.path.join(base_dir, colour_2), exist_ok=True)
+            self.output_paths[colour_2] = path_colour_2
 
     def create_image(self, n1, n2, equalized):
         img = Image.new(
@@ -103,13 +114,15 @@ class PointsGenerator:
 
     def create_and_save_once(self, name, n1, n2, equalized):
         img = self.create_image(n1, n2, equalized)
-        img.save(
-            os.path.join(
-                self.config["IMG_DIR"],
-                self.config["colour_1"] if n1 > n2 else self.config["colour_2"],
-                name,
+        if self.config["ONE_COLOUR"]:
+            target_dir = self.get_output_path(self.config["colour_1"])
+        else:
+            preferred_colour = (
+                self.config["colour_1"] if n1 > n2 else self.config["colour_2"]
             )
-        )
+            target_dir = self.get_output_path(preferred_colour)
+
+        img.save(target_dir / name)
 
     def get_positions(self):
         min_p = self.config["min_point_num"]

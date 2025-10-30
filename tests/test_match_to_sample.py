@@ -12,7 +12,7 @@ from cogstim.match_to_sample import (
 )
 from cogstim.config import MTS_EASY_RATIOS, MTS_HARD_RATIOS
 from cogstim.mts_helpers.planner import GenerationPlan
-from cogstim.mts_helpers.factory import create_numberpoints_image, generate_random_points
+from cogstim.dots_core import create_numberpoints_image, generate_random_points
 from cogstim.mts_helpers.geometry import equalize_pair as geometry_equalize_pair
 from cogstim.mts_helpers.io import save_image_pair
 
@@ -127,7 +127,7 @@ class TestHelperFunctions:
         with patch.object(np_obj, 'design_n_points') as mock_design:
             mock_design.return_value = [((100, 100, 10), "colour_1")]
             points = generate_random_points(np_obj, 3)
-            mock_design.assert_called_once_with(3, "colour_1")
+            mock_design.assert_called_once_with(3, "colour_1", point_array=None)
             assert points == [((100, 100, 10), "colour_1")]
 
     def test_equalize_total_area_success(self):

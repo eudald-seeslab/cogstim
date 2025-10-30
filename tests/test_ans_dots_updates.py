@@ -93,25 +93,6 @@ class TestPointsGeneratorRatiosMode:
             with pytest.raises(ValueError, match="Invalid ratio mode: invalid"):
                 PointsGenerator(config)
 
-    def test_legacy_easy_flag_precedence(self):
-        """Test that explicit ratios takes precedence over legacy EASY flag."""
-        config = {
-            **GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
-            "IMG_DIR": "/tmp/test",
-            "ratios": "hard",  # Explicit ratios
-            "EASY": True,  # Legacy flag
-            "ONE_COLOUR": False,
-            "min_point_num": 1,
-            "max_point_num": 10,
-        }
-        
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
-            # Should use hard ratios despite EASY=True
-            assert generator.ratios == ANS_HARD_RATIOS
-
-
 class TestPointsGeneratorOneColourMode:
     """Test one-colour mode functionality."""
 

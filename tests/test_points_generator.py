@@ -7,7 +7,6 @@ def test_points_generator_creates_images(tmp_path):
         "NUM_IMAGES": 1,
         "IMG_DIR": str(tmp_path),
         "ratios": "easy",
-        "EASY": True,
         "ONE_COLOUR": True,
         "version_tag": "",
         "min_point_num": 1,

@@ -1,6 +1,6 @@
 import itertools
 from random import randint
-from PIL import ImageDraw
+from PIL import Image, ImageDraw
 import numpy as np
 
 np.random.seed(1234)
@@ -241,3 +241,74 @@ class NumberPoints:
             if not self._check_points_not_overlapping(pair[0][0], pair[1][0]):
                 return False
         return True
+
+
+# --- Consolidated utilities for dot placement and image creation ---
+
+def create_numberpoints_image(bg_colour: str, dot_colour: str, min_radius: int, max_radius: int, 
+                               attempts_limit: int, init_size: int = None, colour_2=None):
+    """Create a PIL Image and NumberPoints instance for dot placement.
+    
+    This is a unified utility for creating a blank dot-array image canvas and initializing
+    a NumberPoints object for random dot placement. Supports both single-colour and two-colour modes.
+    
+    Args:
+        bg_colour: Background color (name or hex string)
+        dot_colour: Primary dot color (name or hex string, or tuple for colour_1)
+        min_radius: Minimum dot radius in pixels
+        max_radius: Maximum dot radius in pixels
+        attempts_limit: Maximum attempts for point placement
+        init_size: Image size (defaults to 512 if not provided)
+        colour_2: Optional second color for two-colour mode (can be None, name, hex, or tuple)
+    
+    Returns:
+        Tuple of (PIL.Image, NumberPoints instance)
+    """
+    from cogstim.helpers import COLOUR_MAP, SIZES
+    
+    if init_size is None:
+        init_size = SIZES["init_size"]
+    
+    # Handle colour mapping: if dot_colour is a string name, map it; otherwise use as-is
+    if isinstance(dot_colour, str) and dot_colour in COLOUR_MAP:
+        mapped_colour_1 = COLOUR_MAP[dot_colour]
+    else:
+        mapped_colour_1 = dot_colour
+    
+    # Handle colour_2: if provided as string name, map it; if None, stays None
+    mapped_colour_2 = None
+    if colour_2 is not None:
+        if isinstance(colour_2, str) and colour_2 in COLOUR_MAP:
+            mapped_colour_2 = COLOUR_MAP[colour_2]
+        else:
+            mapped_colour_2 = colour_2
+    
+    img = Image.new("RGB", (init_size, init_size), color=bg_colour)
+    np_obj = NumberPoints(
+        img,
+        init_size,
+        colour_1=mapped_colour_1,
+        colour_2=mapped_colour_2,
+        min_point_radius=min_radius,
+        max_point_radius=max_radius,
+        attempts_limit=attempts_limit,
+    )
+    return img, np_obj
+
+
+def generate_random_points(np_obj: NumberPoints, n_points: int, colour: str = "colour_1", 
+                           point_array=None):
+    """Generate n random points on a NumberPoints canvas without overlaps.
+    
+    This is a unified utility for placing random dots on a NumberPoints canvas.
+    
+    Args:
+        np_obj: NumberPoints instance to place points on
+        n_points: Number of points to generate
+        colour: Colour identifier to use ("colour_1" or "colour_2")
+        point_array: Optional existing point array to add to
+    
+    Returns:
+        List of point tuples: [((x, y, radius), colour), ...]
+    """
+    return np_obj.design_n_points(n_points, colour, point_array=point_array)

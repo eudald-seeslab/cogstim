@@ -29,7 +29,7 @@ usage: cli.py [-h] (--shape_recognition | --colour_recognition | --ans | --one_c
               [--background_colour BACKGROUND_COLOUR]
               [--symbol_colour {yellow,blue,red,green,black,white,gray}]
               [--min_surface MIN_SURFACE] [--max_surface MAX_SURFACE] [--no-jitter]
-              [--easy] [--version_tag VERSION_TAG] [--min_point_num MIN_POINT_NUM] [--max_point_num MAX_POINT_NUM]
+              [--ratios {easy,hard,all}] [--version_tag VERSION_TAG] [--min_point_num MIN_POINT_NUM] [--max_point_num MAX_POINT_NUM]
               [--min_point_radius MIN_POINT_RADIUS] [--max_point_radius MAX_POINT_RADIUS]
               [--dot_colour {yellow,blue,red,green,black,white,gray}]
               [--angles ANGLES [ANGLES ...]] [--min_stripes MIN_STRIPES] [--max_stripes MAX_STRIPES]
@@ -67,7 +67,7 @@ python -m cogstim.cli --colour_recognition --no-jitter
 
 ###  Approximate Number System (ANS) dataset with easy ratios only
 ```bash
-python -m cogstim.cli --ans --easy --train_num 100 --test_num 40
+python -m cogstim.cli --ans --ratios easy --train_num 100 --test_num 40
 ```
 
 <table><tr>
@@ -82,7 +82,7 @@ This is based on Halberda et al. (2008).
 ### Match-to-sample (MTS) – dot arrays (sample/match) with controlled total surface
 ```bash
 python -m cogstim.cli --match_to_sample \
-  --easy \
+  --ratios easy \
   --train_num 50 --test_num 20 \
   --min_point_num 1 --max_point_num 10 \
   --dot_colour yellow

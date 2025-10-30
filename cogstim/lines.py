@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
 import logging
 import numpy as np
 from PIL import Image, ImageDraw
 from tqdm import tqdm
+
+from cogstim.base_generator import BaseGenerator
 
 # Configure logging
 logging.basicConfig(
@@ -13,29 +14,31 @@ logging.basicConfig(
 )
 
 
-class StripePatternGenerator:
+class StripePatternGenerator(BaseGenerator):
     """Generates images with rotated stripe patterns."""
 
     def __init__(self, config):
-        self.config = config
-        self.min_thickness = config["min_thickness"]
-        self.max_thickness = config["max_thickness"]
-        self.min_spacing = config["min_spacing"]
-        self.min_stripe_num = config["min_stripe_num"]
-        self.max_stripe_num = config["max_stripe_num"]
-        self.size = config["img_size"]
-        self.dir_path = config["output_dir"]
-        self.angles = config["angles"]
-        self.max_attempts = config["max_attempts"]
-        self.img_sets = config["img_sets"]
-        self.tag = config["tag"]
-        self.background_colour = config["background_colour"]
+        super().__init__(config=config)
+        # Ensure downstream code reads path from resolved directory
+        self.config["output_dir"] = str(self.output_dir)
+        self.min_thickness = self.config["min_thickness"]
+        self.max_thickness = self.config["max_thickness"]
+        self.min_spacing = self.config["min_spacing"]
+        self.min_stripe_num = self.config["min_stripe_num"]
+        self.max_stripe_num = self.config["max_stripe_num"]
+        self.size = self.config["img_size"]
+        self.dir_path = str(self.output_dir)
+        self.angles = self.config["angles"]
+        self.max_attempts = self.config["max_attempts"]
+        self.img_sets = self.config["img_sets"]
+        self.tag = self.config["tag"]
+        self.background_colour = self.config["background_colour"]
         # Calculate circumscribed size for rotation
         self.c_size = int(self.size / 2 * np.sqrt(2)) * 2
 
     def create_images(self):
         """Generate the complete set of images with different angles and stripe counts."""
-        self._create_directories()
+        self.setup_directories()
 
         total_images = (
             self.img_sets
@@ -51,7 +54,8 @@ class StripePatternGenerator:
                         img = self.create_rotated_stripes(num_stripes, angle)
                         tag_suffix = f"_{self.tag}" if self.tag else ""
                         filename = f"img_{num_stripes}_{i}{tag_suffix}.png"
-                        img.save(os.path.join(self.dir_path, str(angle), filename))
+                        angle_dir = self.get_output_path(str(angle))
+                        img.save(angle_dir / filename)
                     except Exception as e:
                         logging.error(
                             f"Failed to generate image: angle={angle}, stripes={num_stripes}, set={i}"
@@ -125,11 +129,18 @@ class StripePatternGenerator:
                     return True
         return False
 
-    def _create_directories(self):
+    def setup_directories(self):
         """Create output directories for each angle."""
-        os.makedirs(self.dir_path, exist_ok=True)
-        for angle in self.angles:
-            os.makedirs(os.path.join(self.dir_path, str(angle)), exist_ok=True)
+        directories = {str(angle): (str(angle),) for angle in self.angles}
+        super().setup_directories(directories)
+
+    # ------------------------------------------------------------------
+    # Compatibility shims
+    # ------------------------------------------------------------------
+    def generate_images(self) -> None:
+        """Alias for :meth:`create_images` to satisfy the base interface."""
+
+        self.create_images()
 
 
 def parse_args():

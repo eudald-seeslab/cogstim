@@ -10,7 +10,7 @@ python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
 python -m cogstim.cli --colour_recognition --no-jitter
 
 # ANS (dot arrays)
-python -m cogstim.cli --ans --train_num 100 --test_num 40 --easy
+python -m cogstim.cli --ans --train_num 100 --test_num 40 --ratios easy
 
 # One-colour dot arrays
 python -m cogstim.cli --one_colour --train_num 80 --test_num 20
@@ -229,7 +229,7 @@ def generate_lines_dataset(args: argparse.Namespace) -> None:
             "background_colour": args.background_colour,
         }
         generator = StripePatternGenerator(cfg)
-        generator.create_images()
+        generator.generate_images()
 
 
 def generate_fixation_dataset(args: argparse.Namespace) -> None:
@@ -252,7 +252,7 @@ def generate_fixation_dataset(args: argparse.Namespace) -> None:
         "tag": args.tag,
     }
     generator = FixationGenerator(cfg)
-    generator.create_images()
+    generator.generate_images()
 
 
 # ---------------------------------------------------------------------------

@@ -22,7 +22,9 @@ class TestOneColourImageGenerator:
             "total_area": None,
             "min_point_radius": 8,
             "max_point_radius": 16,
-            "IMG_DIR": "/tmp/test",
+            "output_dir": "/tmp/test",
+            "train_num": 1,
+            "test_num": 1,
             "init_size": 512,
             "mode": "RGB",
             "background_colour": "black",
@@ -47,7 +49,9 @@ class TestOneColourImageGenerator:
             "total_area": None,
             "min_point_radius": 8,
             "max_point_radius": 16,
-            "IMG_DIR": "/tmp/test",
+            "output_dir": "/tmp/test",
+            "train_num": 1,
+            "test_num": 1,
             "init_size": 512,
             "mode": "RGB",
             "background_colour": "black",
@@ -67,7 +71,9 @@ class TestOneColourImageGenerator:
             "total_area": 1,  # Too small
             "min_point_radius": 8,
             "max_point_radius": 16,
-            "IMG_DIR": "/tmp/test",
+            "output_dir": "/tmp/test",
+            "train_num": 1,
+            "test_num": 1,
             "init_size": 512,
             "mode": "RGB",
             "background_colour": "black",
@@ -87,7 +93,9 @@ class TestOneColourImageGenerator:
             "total_area": 1000000,  # Too large
             "min_point_radius": 8,
             "max_point_radius": 16,
-            "IMG_DIR": "/tmp/test",
+            "output_dir": "/tmp/test",
+            "train_num": 1,
+            "test_num": 1,
             "init_size": 512,
             "mode": "RGB",
             "background_colour": "black",
@@ -107,7 +115,9 @@ class TestOneColourImageGenerator:
             "total_area": None,
             "min_point_radius": 8,
             "max_point_radius": 16,
-            "IMG_DIR": "/tmp/test",
+            "output_dir": "/tmp/test",
+            "train_num": 1,
+            "test_num": 1,
             "init_size": 512,
             "mode": "RGB",
             "background_colour": "black",
@@ -119,16 +129,9 @@ class TestOneColourImageGenerator:
         with patch('os.makedirs') as mock_makedirs:
             generator = OneColourImageGenerator(config)
 
-            # Should create main directory and subdirs for 1, 2, 3
-            expected_calls = [
-                ((config["IMG_DIR"],), {"exist_ok": True}),
-                ((os.path.join(config["IMG_DIR"], "1"),), {"exist_ok": True}),
-                ((os.path.join(config["IMG_DIR"], "2"),), {"exist_ok": True}),
-                ((os.path.join(config["IMG_DIR"], "3"),), {"exist_ok": True}),
-            ]
-
-            # Check that makedirs was called (exact call order may vary)
-            assert mock_makedirs.call_count == 4
+            # Should create train and test subdirs for 1, 2, 3
+            # With train/test structure: output_dir, train/1, train/2, train/3, test/1, test/2, test/3
+            assert mock_makedirs.call_count == 7  # base + 3 train + 3 test
 
     @patch('cogstim.dots.NumberPoints')
     def test_create_image_without_total_area(self, mock_np_class):
@@ -139,7 +142,9 @@ class TestOneColourImageGenerator:
             "total_area": None,
             "min_point_radius": 8,
             "max_point_radius": 16,
-            "IMG_DIR": "/tmp/test",
+            "output_dir": "/tmp/test",
+            "train_num": 1,
+            "test_num": 1,
             "init_size": 512,
             "mode": "RGB",
             "background_colour": "black",
@@ -189,7 +194,9 @@ class TestOneColourImageGenerator:
             "total_area": valid_total_area,
             "min_point_radius": 8,
             "max_point_radius": 16,
-            "IMG_DIR": "/tmp/test",
+            "output_dir": "/tmp/test",
+            "train_num": 1,
+            "test_num": 1,
             "init_size": 512,
             "mode": "RGB",
             "background_colour": "black",
@@ -220,7 +227,9 @@ class TestOneColourImageGenerator:
             "total_area": None,
             "min_point_radius": 8,
             "max_point_radius": 16,
-            "IMG_DIR": "/tmp/test",
+            "output_dir": "/tmp/test",
+            "train_num": 1,
+            "test_num": 1,
             "init_size": 512,
             "mode": "RGB",
             "background_colour": "black",
@@ -234,13 +243,13 @@ class TestOneColourImageGenerator:
 
         with patch('os.makedirs'):
             generator = OneColourImageGenerator(config)
-            generator.create_and_save_once("test.png", 3)
+            generator.create_and_save_once("test.png", 3, "train")
 
             # Should call create_image
             mock_create_image.assert_called_once_with(3)
 
-            # Should save image to correct path
-            expected_path = os.path.join("/tmp/test", "3", "test.png")
+            # Should save image to correct path (now with phase)
+            expected_path = os.path.join("/tmp/test", "train", "3", "test.png")
             mock_image.save.assert_called_once_with(expected_path)
 
     def test_generate_images(self):
@@ -251,14 +260,17 @@ class TestOneColourImageGenerator:
             "total_area": None,
             "min_point_radius": 8,
             "max_point_radius": 16,
-            "IMG_DIR": "/tmp/test",
+            "output_dir": "/tmp/test",
+            "train_num": 1,
+            "test_num": 1,
             "init_size": 512,
             "mode": "RGB",
             "background_colour": "black",
             "colour_1": (255, 255, 0),
             "attempts_limit": 100,
             "version_tag": "",
-            "IMAGE_SET_NUM": 2,
+            "train_num": 1,
+            "test_num": 1,
         }
 
         with patch('os.makedirs'), \
@@ -268,17 +280,16 @@ class TestOneColourImageGenerator:
             generator.generate_images()
 
             # Should call create_and_save for each combination:
-            # 2 sets × 3 point counts (2, 3, 4) = 6 calls
+            # (train: 1 set + test: 1 set) × 3 point counts (2, 3, 4) = 6 calls
             assert mock_save.call_count == 6
 
             # Check that calls were made with correct parameters
-            # The calls should be: (2, tag='0'), (3, tag='0'), (4, tag='0'),
-            #                      (2, tag='1'), (3, tag='1'), (4, tag='1')
-            call_info = [(call[0][0], call[1]['tag']) for call in mock_save.call_args_list]
+            # Calls should include phase parameter
+            call_info = [(call[0][0], call[1]['phase'], call[1]['tag']) for call in mock_save.call_args_list]
 
             expected_calls = [
-                (2, 0), (3, 0), (4, 0),
-                (2, 1), (3, 1), (4, 1)
+                (2, 'train', 0), (3, 'train', 0), (4, 'train', 0),
+                (2, 'test', 0), (3, 'test', 0), (4, 'test', 0)
             ]
 
             assert call_info == expected_calls
@@ -320,12 +331,14 @@ class TestDotsCLI:
         with patch('argparse.ArgumentParser.parse_args') as mock_parse:
             mock_args = MagicMock(
                 img_set_num=10,
-                img_dir="/tmp/test",
+                output_dir="/tmp/test",
                 total_area=1000,
                 seed=1234,
                 version_tag="test",
                 min_points=2,
                 max_points=4,
+                train_num=10,
+                test_num=2,
             )
             mock_parse.return_value = mock_args
 
@@ -338,8 +351,9 @@ class TestDotsCLI:
             mock_generator_class.assert_called_once()
             config = mock_generator_class.call_args[0][0]
 
-            assert config["IMAGE_SET_NUM"] == 10
-            assert config["IMG_DIR"] == "/tmp/test"
+            assert config["train_num"] == 10
+            assert config["test_num"] == 2  # Default is train_num // 5 but test shows 20
+            assert config["output_dir"] == "/tmp/test"
             assert config["total_area"] == 1000
             assert config["version_tag"] == "test"
             assert config["min_point_num"] == 2

@@ -1,1 +1,1 @@
-__all__ = ["points", "shapes", "lines"]
+__all__ = ["shapes", "ans_dots", "dots", "lines", "match_to_sample", "fixation", "base_generator"]

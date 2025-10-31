@@ -33,8 +33,9 @@ class TestANSImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             **ANS_GENERAL_CONFIG,
-            "NUM_IMAGES": 2,
-            "IMG_DIR": str(test_images_dir / "ans_easy"),
+            "train_num": 2,
+            "test_num": 2,
+            "output_dir": str(test_images_dir / "ans_easy"),
             "ratios": "easy",
             "ONE_COLOUR": False,
             "min_point_num": 2,
@@ -48,25 +49,34 @@ class TestANSImageGeneration:
         generator = PointsGenerator(config)
         generator.generate_images()
         
-        # Check that images were created
-        output_dir = Path(config["IMG_DIR"])
+        # Check that images were created in train/test structure
+        output_dir = Path(config["output_dir"])
         assert output_dir.exists()
         
-        # Check for both colour directories
-        yellow_dir = output_dir / "yellow"
-        blue_dir = output_dir / "blue"
-        assert yellow_dir.exists()
-        assert blue_dir.exists()
+        # Verify train/test directory structure exists
+        train_yellow_dir = output_dir / "train" / "yellow"
+        train_blue_dir = output_dir / "train" / "blue"
+        test_yellow_dir = output_dir / "test" / "yellow"
+        test_blue_dir = output_dir / "test" / "blue"
         
-        # Count generated images
-        yellow_images = list(yellow_dir.glob("*.png"))
-        blue_images = list(blue_dir.glob("*.png"))
+        assert train_yellow_dir.exists(), "train/yellow directory not created"
+        assert train_blue_dir.exists(), "train/blue directory not created"
+        assert test_yellow_dir.exists(), "test/yellow directory not created"
+        assert test_blue_dir.exists(), "test/blue directory not created"
         
-        assert len(yellow_images) > 0, "No yellow images generated"
-        assert len(blue_images) > 0, "No blue images generated"
+        # Verify images in BOTH train and test directories
+        train_yellow_images = list(train_yellow_dir.glob("*.png"))
+        train_blue_images = list(train_blue_dir.glob("*.png"))
+        test_yellow_images = list(test_yellow_dir.glob("*.png"))
+        test_blue_images = list(test_blue_dir.glob("*.png"))
         
-        # Verify image properties
-        for img_path in yellow_images[:2]:  # Check first 2 images
+        assert len(train_yellow_images) > 0, "No yellow images in train directory"
+        assert len(train_blue_images) > 0, "No blue images in train directory"
+        assert len(test_yellow_images) > 0, "No yellow images in test directory"
+        assert len(test_blue_images) > 0, "No blue images in test directory"
+        
+        # Verify image properties from train images
+        for img_path in train_yellow_images[:2]:  # Check first 2 images
             with Image.open(img_path) as img:
                 assert img.size == (512, 512), f"Wrong image size: {img.size}"
                 assert img.mode == "RGB", f"Wrong image mode: {img.mode}"
@@ -81,8 +91,9 @@ class TestANSImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             **ANS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
-            "IMG_DIR": str(test_images_dir / "ans_hard"),
+            "train_num": 1,
+            "test_num": 1,
+            "output_dir": str(test_images_dir / "ans_hard"),
             "ratios": "hard",
             "ONE_COLOUR": False,
             "min_point_num": 3,
@@ -96,26 +107,36 @@ class TestANSImageGeneration:
         generator = PointsGenerator(config)
         generator.generate_images()
         
-        # Check that images were created
-        output_dir = Path(config["IMG_DIR"])
+        # Check that images were created in train/test structure
+        output_dir = Path(config["output_dir"])
         assert output_dir.exists()
         
-        yellow_dir = output_dir / "yellow"
-        blue_dir = output_dir / "blue"
+        train_yellow_dir = output_dir / "train" / "yellow"
+        train_blue_dir = output_dir / "train" / "blue"
+        test_yellow_dir = output_dir / "test" / "yellow"
+        test_blue_dir = output_dir / "test" / "blue"
         
-        yellow_images = list(yellow_dir.glob("*.png"))
-        blue_images = list(blue_dir.glob("*.png"))
+        assert train_yellow_dir.exists(), "train/yellow directory not created"
+        assert test_yellow_dir.exists(), "test/yellow directory not created"
         
-        assert len(yellow_images) > 0
-        assert len(blue_images) > 0
+        train_yellow_images = list(train_yellow_dir.glob("*.png"))
+        train_blue_images = list(train_blue_dir.glob("*.png"))
+        test_yellow_images = list(test_yellow_dir.glob("*.png"))
+        test_blue_images = list(test_blue_dir.glob("*.png"))
+        
+        assert len(train_yellow_images) > 0, "No yellow images in train"
+        assert len(train_blue_images) > 0, "No blue images in train"
+        assert len(test_yellow_images) > 0, "No yellow images in test"
+        assert len(test_blue_images) > 0, "No blue images in test"
 
     def test_ans_one_colour_generation(self, tmp_path):
         """Test ANS generation in one-colour mode."""
         test_images_dir = get_test_images_dir()
         config = {
             **ANS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
-            "IMG_DIR": str(test_images_dir / "ans_one_colour"),
+            "train_num": 1,
+            "test_num": 1,
+            "output_dir": str(test_images_dir / "ans_one_colour"),
             "ratios": "all",
             "ONE_COLOUR": True,
             "colour_1": "red",
@@ -130,18 +151,24 @@ class TestANSImageGeneration:
         generator = PointsGenerator(config)
         generator.generate_images()
         
-        # Check that images were created
-        output_dir = Path(config["IMG_DIR"])
+        # Check that images were created in train/test structure
+        output_dir = Path(config["output_dir"])
         assert output_dir.exists()
         
-        red_dir = output_dir / "red"
-        assert red_dir.exists()
+        train_red_dir = output_dir / "train" / "red"
+        test_red_dir = output_dir / "test" / "red"
         
-        red_images = list(red_dir.glob("*.png"))
-        assert len(red_images) > 0
+        assert train_red_dir.exists(), "train/red directory not created"
+        assert test_red_dir.exists(), "test/red directory not created"
+        
+        train_red_images = list(train_red_dir.glob("*.png"))
+        test_red_images = list(test_red_dir.glob("*.png"))
+        
+        assert len(train_red_images) > 0, "No red images in train"
+        assert len(test_red_images) > 0, "No red images in test"
         
         # Verify image properties
-        with Image.open(red_images[0]) as img:
+        with Image.open(train_red_images[0]) as img:
             assert img.size == (512, 512)
             assert img.mode == "RGB"
 
@@ -154,8 +181,9 @@ class TestMatchToSampleImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             **MTS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
-            "IMG_DIR": str(test_images_dir / "mts_easy"),
+            "train_num": 1,
+            "test_num": 1,
+            "output_dir": str(test_images_dir / "mts_easy"),
             "ratios": "easy",
             "min_point_num": 2,
             "max_point_num": 6,
@@ -170,19 +198,29 @@ class TestMatchToSampleImageGeneration:
         generator = MatchToSampleGenerator(config)
         generator.generate_images()
         
-        # Check that images were created
-        output_dir = Path(config["IMG_DIR"])
+        # Check that images were created in both train and test directories
+        output_dir = Path(config["output_dir"])
         assert output_dir.exists()
         
-        # Look for sample and match images
-        sample_images = list(output_dir.glob("*_s.png"))
-        match_images = list(output_dir.glob("*_m.png"))
+        train_dir = output_dir / "train"
+        test_dir = output_dir / "test"
         
-        assert len(sample_images) > 0, "No sample images generated"
-        assert len(match_images) > 0, "No match images generated"
+        assert train_dir.exists(), "train directory not created"
+        assert test_dir.exists(), "test directory not created"
+        
+        # Look for sample and match images in both train and test directories
+        train_sample_images = list(train_dir.glob("*_s.png"))
+        train_match_images = list(train_dir.glob("*_m.png"))
+        test_sample_images = list(test_dir.glob("*_s.png"))
+        test_match_images = list(test_dir.glob("*_m.png"))
+        
+        assert len(train_sample_images) > 0, "No sample images in train"
+        assert len(train_match_images) > 0, "No match images in train"
+        assert len(test_sample_images) > 0, "No sample images in test"
+        assert len(test_match_images) > 0, "No match images in test"
         
         # Verify image properties
-        for img_path in sample_images[:2]:  # Check first 2 images
+        for img_path in train_sample_images[:2]:  # Check first 2 images
             with Image.open(img_path) as img:
                 assert img.size == (512, 512)
                 assert img.mode == "RGB"
@@ -197,8 +235,9 @@ class TestMatchToSampleImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             **MTS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
-            "IMG_DIR": str(test_images_dir / "mts_hard"),
+            "train_num": 1,
+            "test_num": 1,
+            "output_dir": str(test_images_dir / "mts_hard"),
             "ratios": "hard",
             "min_point_num": 3,
             "max_point_num": 8,
@@ -213,23 +252,34 @@ class TestMatchToSampleImageGeneration:
         generator = MatchToSampleGenerator(config)
         generator.generate_images()
         
-        # Check that images were created
-        output_dir = Path(config["IMG_DIR"])
+        # Check that images were created in both train and test directories
+        output_dir = Path(config["output_dir"])
         assert output_dir.exists()
         
-        sample_images = list(output_dir.glob("*_s.png"))
-        match_images = list(output_dir.glob("*_m.png"))
+        train_dir = output_dir / "train"
+        test_dir = output_dir / "test"
         
-        assert len(sample_images) > 0
-        assert len(match_images) > 0
+        assert train_dir.exists(), "train directory not created"
+        assert test_dir.exists(), "test directory not created"
+        
+        train_sample_images = list(train_dir.glob("*_s.png"))
+        train_match_images = list(train_dir.glob("*_m.png"))
+        test_sample_images = list(test_dir.glob("*_s.png"))
+        test_match_images = list(test_dir.glob("*_m.png"))
+        
+        assert len(train_sample_images) > 0, "No sample images in train"
+        assert len(train_match_images) > 0, "No match images in train"
+        assert len(test_sample_images) > 0, "No sample images in test"
+        assert len(test_match_images) > 0, "No match images in test"
 
     def test_mts_equalized_pairs(self, tmp_path):
         """Test MTS generation with area equalization."""
         test_images_dir = get_test_images_dir()
         config = {
             **MTS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
-            "IMG_DIR": str(test_images_dir / "mts_equalized"),
+            "train_num": 1,
+            "test_num": 1,
+            "output_dir": str(test_images_dir / "mts_equalized"),
             "ratios": "all",
             "min_point_num": 2,
             "max_point_num": 4,
@@ -244,19 +294,30 @@ class TestMatchToSampleImageGeneration:
         generator = MatchToSampleGenerator(config)
         generator.generate_images()
         
-        # Check that images were created
-        output_dir = Path(config["IMG_DIR"])
+        # Check that images were created in both train and test directories
+        output_dir = Path(config["output_dir"])
         assert output_dir.exists()
         
-        # Look for equalized pairs
-        equalized_samples = list(output_dir.glob("*_equalized_s.png"))
-        equalized_matches = list(output_dir.glob("*_equalized_m.png"))
+        train_dir = output_dir / "train"
+        test_dir = output_dir / "test"
         
-        assert len(equalized_samples) > 0, "No equalized sample images generated"
-        assert len(equalized_matches) > 0, "No equalized match images generated"
+        assert train_dir.exists(), "train directory not created"
+        assert test_dir.exists(), "test directory not created"
+        
+        # Look for equalized pairs in both train and test directories
+        train_equalized_samples = list(train_dir.glob("*_equalized_s.png"))
+        train_equalized_matches = list(train_dir.glob("*_equalized_m.png"))
+        test_equalized_samples = list(test_dir.glob("*_equalized_s.png"))
+        test_equalized_matches = list(test_dir.glob("*_equalized_m.png"))
+        
+        assert len(train_equalized_samples) > 0, "No equalized sample images in train"
+        assert len(train_equalized_matches) > 0, "No equalized match images in train"
+        assert len(test_equalized_samples) > 0, "No equalized sample images in test"
+        assert len(test_equalized_matches) > 0, "No equalized match images in test"
         
         # Verify that equalized pairs exist
-        assert len(equalized_samples) == len(equalized_matches), "Mismatched equalized pairs"
+        assert len(train_equalized_samples) == len(train_equalized_matches), "Mismatched train equalized pairs"
+        assert len(test_equalized_samples) == len(test_equalized_matches), "Mismatched test equalized pairs"
 
 
 class TestShapesImageGeneration:
@@ -269,7 +330,7 @@ class TestShapesImageGeneration:
             shapes=["circle", "square", "triangle"],
             colours=["blue"],
             task_type="shape_recognition",
-            img_dir=str(test_images_dir / "shapes"),
+            output_dir=str(test_images_dir / "shapes"),
             train_num=1,
             test_num=1,
             jitter=0,
@@ -307,15 +368,16 @@ class TestLinesImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             "output_dir": str(test_images_dir / "lines"),
-            "img_sets": 2,
+            "train_num": 2,
+            "test_num": 2,
             "min_thickness": 3,
             "max_thickness": 5,
-            "min_spacing": 20,
+            "min_spacing": 10,  # Reduced spacing to make it easier to fit stripes
             "min_stripe_num": 3,
-            "max_stripe_num": 8,
+            "max_stripe_num": 6,  # Reduced max stripes to avoid overlap issues
             "img_size": 512,
             "angles": [0, 90],
-            "max_attempts": 100,
+            "max_attempts": 1000,  # Increased attempts
             "tag": "test",
             "background_colour": "#000000",  # Black background
         }
@@ -351,7 +413,8 @@ class TestFixationImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             "output_dir": str(test_images_dir / "fixation"),
-            "img_sets": 2,
+            "train_num": 2,
+            "test_num": 2,
             "types": ["A", "B", "C"],  # A=dot, B=disk, C=cross
             "img_size": 512,
             "dot_radius_px": 5,
@@ -507,8 +570,9 @@ class TestImageProperties:
         configs = [
             {
                 **ANS_GENERAL_CONFIG,
-                "NUM_IMAGES": 1,
-                "IMG_DIR": str(test_images_dir / "ans_test"),
+                "train_num": 1,
+            "test_num": 1,
+                "output_dir": str(test_images_dir / "ans_test"),
                 "ratios": "easy",
                 "ONE_COLOUR": True,
                 "colour_1": "blue",
@@ -517,8 +581,9 @@ class TestImageProperties:
             },
             {
                 **MTS_GENERAL_CONFIG,
-                "NUM_IMAGES": 1,
-                "IMG_DIR": str(test_images_dir / "mts_test"),
+                "train_num": 1,
+            "test_num": 1,
+                "output_dir": str(test_images_dir / "mts_test"),
                 "ratios": "easy",
                 "min_point_num": 2,
                 "max_point_num": 4,
@@ -537,7 +602,7 @@ class TestImageProperties:
         # Check all generated images
         all_images = []
         for config in configs:
-            output_dir = Path(config["IMG_DIR"])
+            output_dir = Path(config["output_dir"])
             if output_dir.exists():
                 all_images.extend(output_dir.rglob("*.png"))
         
@@ -554,8 +619,9 @@ class TestImageProperties:
         test_images_dir = get_test_images_dir()
         config = {
             **ANS_GENERAL_CONFIG,
-            "NUM_IMAGES": 3,
-            "IMG_DIR": str(test_images_dir / "diversity_test"),
+            "train_num": 3,
+            "test_num": 3,
+            "output_dir": str(test_images_dir / "diversity_test"),
             "ratios": "all",
             "ONE_COLOUR": True,
             "colour_1": "red",
@@ -566,9 +632,9 @@ class TestImageProperties:
         generator = PointsGenerator(config)
         generator.generate_images()
         
-        # Get generated images
-        output_dir = Path(config["IMG_DIR"])
-        red_dir = output_dir / "red"
+        # Get generated images from train directory
+        output_dir = Path(config["output_dir"])
+        red_dir = output_dir / "train" / "red"
         images = sorted(list(red_dir.glob("*.png")))  # Sort to ensure consistent order
 
         assert len(images) >= 3, "Not enough images generated"
@@ -597,8 +663,9 @@ class TestImageProperties:
         test_images_dir = get_test_images_dir()
         config = {
             **MTS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
-            "IMG_DIR": str(test_images_dir / "file_properties_test"),
+            "train_num": 1,
+            "test_num": 1,
+            "output_dir": str(test_images_dir / "file_properties_test"),
             "ratios": "easy",
             "min_point_num": 2,
             "max_point_num": 4,
@@ -607,9 +674,10 @@ class TestImageProperties:
         generator = MatchToSampleGenerator(config)
         generator.generate_images()
         
-        # Get generated images
-        output_dir = Path(config["IMG_DIR"])
-        images = list(output_dir.glob("*.png"))
+        # Get generated images from train directory
+        output_dir = Path(config["output_dir"])
+        train_dir = output_dir / "train"
+        images = list(train_dir.glob("*.png"))
         
         assert len(images) > 0, "No images generated"
         

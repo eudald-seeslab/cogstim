@@ -8,6 +8,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 from cogstim.dots_core import NumberPoints, PointLayoutError
+from cogstim.base_generator import BaseGenerator
 
 # Configure logging
 logging.basicConfig(
@@ -21,19 +22,22 @@ class TerminalPointLayoutError(ValueError):
     pass
 
 
-class OneColourImageGenerator:
+class OneColourImageGenerator(BaseGenerator):
     """Generates images with configurable colored points."""
 
     def __init__(self, config):
-        self.config = config
+        super().__init__(config)
         self.nmin = self.config["min_point_num"]
         self.nmax = self.config["max_point_num"]
         self.total_area = self.config["total_area"]
+        self.train_num = self.config["train_num"]
+        self.test_num = self.config["test_num"]
         self._check_areas_make_sense()
-        self.setup_directories()
 
         if self.nmin == 0:
             raise ValueError("min_point_num must be at least 1")
+        
+        self.setup_directories()
 
     def _check_areas_make_sense(self):
         """Validate that the requested total area is feasible."""
@@ -50,11 +54,12 @@ class OneColourImageGenerator:
                     f"Total_area is very large, please make total area smaller than {max_area_max_num}"
                 )
 
-    def setup_directories(self):
-        """Create necessary directories for saving images."""
-        os.makedirs(self.config["IMG_DIR"], exist_ok=True)
-        for c in range(self.nmin, self.nmax + 1):
-            os.makedirs(os.path.join(self.config["IMG_DIR"], str(c)), exist_ok=True)
+    def get_subdirectories(self):
+        subdirs = []
+        for phase in ["train", "test"]:
+            for c in range(self.nmin, self.nmax + 1):
+                subdirs.append((phase, str(c)))
+        return subdirs
 
     def create_image(self, n):
         """Create a single image with n points."""
@@ -81,7 +86,7 @@ class OneColourImageGenerator:
 
         return number_points.draw_points(point_array)
 
-    def create_and_save(self, n, tag=""):
+    def create_and_save(self, n, phase, tag=""):
         """Create and save an image, with retry logic."""
         v_tag = f"_{self.config['version_tag']}" if self.config["version_tag"] else ""
         ac_tag = "_ac" if self.total_area is not None else ""
@@ -90,7 +95,7 @@ class OneColourImageGenerator:
         attempts = 0
         while attempts < self.config["attempts_limit"]:
             try:
-                self.create_and_save_once(name, n)
+                self.create_and_save_once(name, n, phase)
                 break
             except PointLayoutError as e:
                 logging.debug(f"Failed to create image {name} because '{e}' Retrying.")
@@ -102,19 +107,20 @@ class OneColourImageGenerator:
                         "Your points are probably too big, or there are too many. Stopping."
                     )
 
-    def create_and_save_once(self, name, n):
+    def create_and_save_once(self, name, n, phase):
         """Create and save a single image without retry logic."""
         img = self.create_image(n)
-        img.save(os.path.join(self.config["IMG_DIR"], str(n), name))
+        img.save(os.path.join(self.config["output_dir"], phase, str(n), name))
 
     def generate_images(self):
         """Generate the full set of images based on configuration."""
-        total_images = self.config["IMAGE_SET_NUM"] * (self.nmax - self.nmin + 1)
-        logging.info(f"Generating {total_images} images...")
+        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
+            total_images = num_images * (self.nmax - self.nmin + 1)
+            self.log_generation_info(f"Generating {total_images} images for {phase}...")
 
-        for i in tqdm(range(self.config["IMAGE_SET_NUM"])):
-            for n in range(self.nmin, self.nmax + 1):
-                self.create_and_save(n, tag=i)
+            for i in tqdm(range(num_images), desc=f"{phase}"):
+                for n in range(self.nmin, self.nmax + 1):
+                    self.create_and_save(n, phase=phase, tag=i)
 
 
 def parse_args():
@@ -126,7 +132,7 @@ def parse_args():
         "--img_set_num", type=int, default=100, help="Number of image sets to generate"
     )
     parser.add_argument(
-        "--img_dir",
+        "--output_dir",
         type=str,
         default="images/extremely_easy",
         help="Directory to save images",
@@ -152,6 +158,12 @@ def parse_args():
     parser.add_argument(
         "--max_points", type=int, default=5, help="Maximum number of points per image"
     )
+    parser.add_argument(
+        "--train_num", type=int, default=100, help="Number of training images"
+    )
+    parser.add_argument(
+        "--test_num", type=int, default=20, help="Number of test images"
+    )
 
     return parser.parse_args()
 
@@ -167,6 +179,7 @@ def main():
     config = {
         "version_tag": args.version_tag,
         "colour": "yellow",
+        "colour_1": "yellow",
         "boundary_width": 5,
         "background_colour": "#000000",
         "yellow": "#fffe04",
@@ -177,8 +190,9 @@ def main():
         "min_point_num": args.min_points,
         "max_point_num": args.max_points,
         "attempts_limit": 5000,
-        "IMAGE_SET_NUM": args.img_set_num,
-        "IMG_DIR": args.img_dir,
+        "train_num": args.train_num,
+        "test_num": args.test_num,
+        "output_dir": args.output_dir,
         "total_area": args.total_area,
     }
 

@@ -140,7 +140,7 @@ def build_shapes_generator(args: argparse.Namespace) -> ShapesGenerator:
         shapes=shapes,
         colours=colors,
         task_type=task_type,
-        img_dir=output_dir,
+        output_dir=output_dir,
         train_num=args.train_num,
         test_num=args.test_num,
         min_surface=args.min_surface,
@@ -156,55 +156,55 @@ def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> No
     base_dir_default = "images/one_colour" if one_colour else "images/ans"
     base_dir = args.output_dir or base_dir_default
 
-    for phase, num_sets in (("train", args.train_num), ("test", args.test_num)):
-        cfg = {
-            **ANS_GENERAL_CONFIG,
-            **{
-                "NUM_IMAGES": num_sets,
-                "IMG_DIR": os.path.join(base_dir, phase),
-                "ratios": args.ratios,
-                "ONE_COLOUR": one_colour,
-                "version_tag": args.version_tag,
-                "min_point_num": args.min_point_num,
-                "max_point_num": args.max_point_num,
-                "background_colour": args.background_colour,
-                "min_point_radius": args.min_point_radius,
-                "max_point_radius": args.max_point_radius,
-            },
-        }
+    cfg = {
+        **ANS_GENERAL_CONFIG,
+        **{
+            "train_num": args.train_num,
+            "test_num": args.test_num,
+            "output_dir": base_dir,
+            "ratios": args.ratios,
+            "ONE_COLOUR": one_colour,
+            "version_tag": args.version_tag,
+            "min_point_num": args.min_point_num,
+            "max_point_num": args.max_point_num,
+            "background_colour": args.background_colour,
+            "min_point_radius": args.min_point_radius,
+            "max_point_radius": args.max_point_radius,
+        },
+    }
 
-        # Override colours for one-colour mode to use selected dot colour
-        if one_colour:
-            cfg["colour_1"] = args.dot_colour
-            cfg["colour_2"] = None
+    # Override colours for one-colour mode to use selected dot colour
+    if one_colour:
+        cfg["colour_1"] = args.dot_colour
+        cfg["colour_2"] = None
 
-        generator = PointsGenerator(cfg)
-        generator.generate_images()
+    generator = PointsGenerator(cfg)
+    generator.generate_images()
 
 
 def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
     base_dir_default = "images/match_to_sample"
     base_dir = args.output_dir or base_dir_default
 
-    for phase, num_sets in (("train", args.train_num), ("test", args.test_num)):
-        cfg = {
-            **MTS_GENERAL_CONFIG,
-            **{
-                "NUM_IMAGES": num_sets,
-                "IMG_DIR": os.path.join(base_dir, phase),
-                "ratios": args.ratios,
-                "version_tag": args.version_tag,
-                "min_point_num": args.min_point_num,
-                "max_point_num": args.max_point_num,
-                "background_colour": args.background_colour,
-                "min_point_radius": args.min_point_radius,
-                "max_point_radius": args.max_point_radius,
-                "dot_colour": args.dot_colour,
-            },
-        }
+    cfg = {
+        **MTS_GENERAL_CONFIG,
+        **{
+            "train_num": args.train_num,
+            "test_num": args.test_num,
+            "output_dir": base_dir,
+            "ratios": args.ratios,
+            "version_tag": args.version_tag,
+            "min_point_num": args.min_point_num,
+            "max_point_num": args.max_point_num,
+            "background_colour": args.background_colour,
+            "min_point_radius": args.min_point_radius,
+            "max_point_radius": args.max_point_radius,
+            "dot_colour": args.dot_colour,
+        },
+    }
 
-        generator = MatchToSampleGenerator(cfg)
-        generator.generate_images()
+    generator = MatchToSampleGenerator(cfg)
+    generator.generate_images()
 
 
 def generate_lines_dataset(args: argparse.Namespace) -> None:
@@ -213,23 +213,23 @@ def generate_lines_dataset(args: argparse.Namespace) -> None:
     base_dir_default = "images/lines"
     base_dir = args.output_dir or base_dir_default
 
-    for phase, num_sets in (("train", args.train_num), ("test", args.test_num)):
-        cfg = {
-            "output_dir": os.path.join(base_dir, phase),
-            "img_sets": num_sets,
-            "angles": args.angles,
-            "min_stripe_num": args.min_stripes,
-            "max_stripe_num": args.max_stripes,
-            "img_size": args.img_size,
-            "tag": args.tag,
-            "min_thickness": args.min_thickness,
-            "max_thickness": args.max_thickness,
-            "min_spacing": args.min_spacing,
-            "max_attempts": args.max_attempts,
-            "background_colour": args.background_colour,
-        }
-        generator = StripePatternGenerator(cfg)
-        generator.create_images()
+    cfg = {
+        "output_dir": base_dir,
+        "train_num": args.train_num,
+        "test_num": args.test_num,
+        "angles": args.angles,
+        "min_stripe_num": args.min_stripes,
+        "max_stripe_num": args.max_stripes,
+        "img_size": args.img_size,
+        "tag": args.tag,
+        "min_thickness": args.min_thickness,
+        "max_thickness": args.max_thickness,
+        "min_spacing": args.min_spacing,
+        "max_attempts": args.max_attempts,
+        "background_colour": args.background_colour,
+    }
+    generator = StripePatternGenerator(cfg)
+    generator.create_images()
 
 
 def generate_fixation_dataset(args: argparse.Namespace) -> None:

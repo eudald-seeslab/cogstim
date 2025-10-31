@@ -6,6 +6,7 @@ import logging
 
 from cogstim.helpers import COLOUR_MAP, SIZES
 from cogstim.config import ANS_EASY_RATIOS, ANS_HARD_RATIOS
+from cogstim.base_generator import BaseGenerator
 
 logging.basicConfig(level=logging.INFO)
 
@@ -27,12 +28,11 @@ class TerminalPointLayoutError(ValueError):
     pass
 
 
-class PointsGenerator:
+class PointsGenerator(BaseGenerator):
     def __init__(self, config):
-        self.config = config
-        # Expect NUM_IMAGES key specifying how many tagged repetitions per phase
-        self.num_images = config["NUM_IMAGES"]
-        self.setup_directories()
+        super().__init__(config)
+        self.train_num = config.get("train_num", config.get("NUM_IMAGES", 100))
+        self.test_num = config.get("test_num", config.get("NUM_IMAGES", 100) // 5)
         ratios = self.config["ratios"]
         match ratios:
             case "easy":
@@ -43,16 +43,19 @@ class PointsGenerator:
                 self.ratios = ANS_EASY_RATIOS + ANS_HARD_RATIOS
             case _:
                 raise ValueError(f"Invalid ratio mode: {ratios}")
+        self.setup_directories()
 
-    def setup_directories(self):
-        os.makedirs(self.config["IMG_DIR"], exist_ok=True)
-        os.makedirs(
-            os.path.join(self.config["IMG_DIR"], self.config["colour_1"]), exist_ok=True
-        )
+    def get_subdirectories(self):
+        subdirs = []
+        classes = [self.config["colour_1"]]
         if not self.config["ONE_COLOUR"]:
-            os.makedirs(
-                os.path.join(self.config["IMG_DIR"], self.config["colour_2"]), exist_ok=True
-            )
+            classes.append(self.config["colour_2"])
+        
+        for phase in ["train", "test"]:
+            for cls in classes:
+                subdirs.append((phase, cls))
+        
+        return subdirs
 
     def create_image(self, n1, n2, equalized):
         img = Image.new(
@@ -80,7 +83,7 @@ class PointsGenerator:
             point_array = number_points.equalize_areas(point_array)
         return number_points.draw_points(point_array)
 
-    def create_and_save(self, n1, n2, equalized, tag=""):
+    def create_and_save(self, n1, n2, equalized, phase, tag=""):
         eq = "_equalized" if equalized else ""
         v_tag = f"_{self.config['version_tag']}" if self.config.get("version_tag") else ""
         name = f"img_{n1}_{n2}_{tag}{eq}{v_tag}.png"
@@ -88,7 +91,7 @@ class PointsGenerator:
         attempts = 0
         while attempts < self.config["attempts_limit"]:
             try:
-                self.create_and_save_once(name, n1, n2, equalized)
+                self.create_and_save_once(name, n1, n2, equalized, phase)
                 break
             except PointLayoutError as e:
                 logging.debug(f"Failed to create image {name} because '{e}' Retrying.")
@@ -101,12 +104,14 @@ class PointsGenerator:
                         Stopping."""
                     )
 
-    def create_and_save_once(self, name, n1, n2, equalized):
+    def create_and_save_once(self, name, n1, n2, equalized, phase):
         img = self.create_image(n1, n2, equalized)
+        colour = self.config["colour_1"] if n1 > n2 else self.config["colour_2"]
         img.save(
             os.path.join(
-                self.config["IMG_DIR"],
-                self.config["colour_1"] if n1 > n2 else self.config["colour_2"],
+                self.config["output_dir"],
+                phase,
+                colour,
                 name,
             )
         )
@@ -135,18 +140,18 @@ class PointsGenerator:
     def generate_images(self):
         positions = self.get_positions()
         multiplier = 1 if self.config["ONE_COLOUR"] else 4
-        total_images = self.num_images * len(positions) * multiplier
-        logging.info(
-            f"Generating {total_images} images: {self.num_images} sets x {len(positions)} combinations x {multiplier} variants in '{self.config['IMG_DIR']}'."
-        )
-        for i in tqdm(range(self.num_images)):
-            for pair in positions:
-                if self.config["ONE_COLOUR"]:
-                    # One-colour mode: use first value as the count, ignore second
-                    self.create_and_save(pair[0], 0, equalized=False, tag=i)
-                else:
-                    # Two-colour mode: both orders, equalized and non-equalized
-                    self.create_and_save(pair[0], pair[1], equalized=False, tag=i)
-                    self.create_and_save(pair[1], pair[0], equalized=False, tag=i)
-                    self.create_and_save(pair[0], pair[1], equalized=True, tag=i)
-                    self.create_and_save(pair[1], pair[0], equalized=True, tag=i)
+        
+        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
+            total_images = num_images * len(positions) * multiplier
+            self.log_generation_info(
+                f"Generating {total_images} images for {phase}: {num_images} sets x {len(positions)} combinations x {multiplier} variants in '{self.output_dir}/{phase}'."
+            )
+            for i in tqdm(range(num_images), desc=f"{phase}"):
+                for pair in positions:
+                    if self.config["ONE_COLOUR"]:
+                        self.create_and_save(pair[0], 0, equalized=False, phase=phase, tag=i)
+                    else:
+                        self.create_and_save(pair[0], pair[1], equalized=False, phase=phase, tag=i)
+                        self.create_and_save(pair[1], pair[0], equalized=False, phase=phase, tag=i)
+                        self.create_and_save(pair[0], pair[1], equalized=True, phase=phase, tag=i)
+                        self.create_and_save(pair[1], pair[0], equalized=True, phase=phase, tag=i)

@@ -7,9 +7,10 @@ from typing import List, Tuple
 from PIL import Image, ImageDraw
 
 from cogstim.helpers import COLOUR_MAP
+from cogstim.base_generator import BaseGenerator
 
 
-class FixationGenerator:
+class FixationGenerator(BaseGenerator):
     """Generate fixation target images (A, B, C, AB, AC, BC, ABC).
 
     Shapes (following Thaler et al., 2013 figure conventions):
@@ -27,7 +28,7 @@ class FixationGenerator:
     """
 
     def __init__(self, config: dict):
-        self.output_dir: str = config["output_dir"]
+        super().__init__(config)
         self.img_sets: int = config["img_sets"]
         self.types: List[str] = config["types"]
         self.size: int = config["img_size"]
@@ -45,7 +46,7 @@ class FixationGenerator:
     # ----------------------------- public API ----------------------------- #
 
     def create_images(self) -> None:
-        self._create_directories()
+        self.setup_directories()
         for t in self.types:
             img = self._draw_symbol(t)
             tag_suffix = f"_{self.tag}" if self.tag else ""
@@ -115,8 +116,3 @@ class FixationGenerator:
             raise ValueError(f"Unknown fixation type: {s_type}")
 
         return img
-
-    # ----------------------------- filesystem ---------------------------- #
-
-    def _create_directories(self) -> None:
-        os.makedirs(self.output_dir, exist_ok=True)

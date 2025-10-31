@@ -8,6 +8,7 @@ from cogstim.mts_helpers.factory import create_numberpoints_image as _create_np_
 from cogstim.mts_helpers.geometry import equalize_pair as _equalize_geom
 from cogstim.mts_helpers.io import save_image_pair, save_pair_with_basename, SummaryWriter, build_basename
 from cogstim.mts_helpers.planner import GenerationPlan, resolve_mts_ratios
+from cogstim.base_generator import BaseGenerator
 
 
 # Default general configuration
@@ -132,20 +133,17 @@ def generate_pair(n_first, n_second, args, error_label, equalize=False):
     return (s_np, s_points, m_np, m_points), success
 
 
-class MatchToSampleGenerator:
+class MatchToSampleGenerator(BaseGenerator):
     """Generator for match-to-sample dot array pairs."""
     
     def __init__(self, config):
-        self.config = config
+        super().__init__(config)
         self.num_images = config["NUM_IMAGES"]
-        self.setup_directories()
         
         # Determine ratios to use
         self.ratios = resolve_mts_ratios(self.config["ratios"], MTS_EASY_RATIOS, MTS_HARD_RATIOS)
-    
-    def setup_directories(self):
-        """Create output directories."""
-        os.makedirs(self.config["IMG_DIR"], exist_ok=True)
+        
+        self.setup_directories()
     
     def create_image_pair(self, n1, n2, equalize=False):
         """Create a pair of images (sample and match)."""
@@ -185,7 +183,7 @@ class MatchToSampleGenerator:
     def save_image_pair(self, pair, base_name):
         """Save a pair of images."""
         s_np, s_points, m_np, m_points = pair
-        save_image_pair(s_np, s_points, m_np, m_points, self.config["IMG_DIR"], base_name)
+        save_image_pair(s_np, s_points, m_np, m_points, self.config["output_dir"], base_name)
     
     def create_and_save(self, n1, n2, equalize, tag):
         """Create and save a pair of images."""

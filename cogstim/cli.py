@@ -140,7 +140,7 @@ def build_shapes_generator(args: argparse.Namespace) -> ShapesGenerator:
         shapes=shapes,
         colours=colors,
         task_type=task_type,
-        img_dir=output_dir,
+        output_dir=output_dir,
         train_num=args.train_num,
         test_num=args.test_num,
         min_surface=args.min_surface,
@@ -161,7 +161,7 @@ def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> No
             **ANS_GENERAL_CONFIG,
             **{
                 "NUM_IMAGES": num_sets,
-                "IMG_DIR": os.path.join(base_dir, phase),
+                "output_dir": os.path.join(base_dir, phase),
                 "ratios": args.ratios,
                 "ONE_COLOUR": one_colour,
                 "version_tag": args.version_tag,
@@ -191,7 +191,7 @@ def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
             **MTS_GENERAL_CONFIG,
             **{
                 "NUM_IMAGES": num_sets,
-                "IMG_DIR": os.path.join(base_dir, phase),
+                "output_dir": os.path.join(base_dir, phase),
                 "ratios": args.ratios,
                 "version_tag": args.version_tag,
                 "min_point_num": args.min_point_num,

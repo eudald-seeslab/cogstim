@@ -26,9 +26,13 @@ def test_stripe_pattern_generator_single_set():
         generator = StripePatternGenerator(cfg)
         generator.create_images()
 
-        # Expected file path pattern: output_dir/<angle>/img_<stripes>_<set_idx>.png
-        angle_dir = Path(tmpdir) / "0"
-        images = list(angle_dir.glob("*.png"))
+        # Expected file path pattern: output_dir/<phase>/<angle>/img_<stripes>_<set_idx>.png
+        train_angle_dir = Path(tmpdir) / "train" / "0"
+        test_angle_dir = Path(tmpdir) / "test" / "0"
+        train_images = list(train_angle_dir.glob("*.png"))
+        test_images = list(test_angle_dir.glob("*.png"))
 
-        # total_images = img_sets * len(angles) * (#stripe_counts)
-        assert len(images) == 1, "Exactly one image should be generated for this configuration." 
+        # total_images per phase = img_sets (or train_num/test_num) * len(angles) * (#stripe_counts)
+        # train_num = 1, test_num = 0 (1 // 5), so we should have 1 train image and 0 test images
+        assert len(train_images) == 1, f"Expected 1 train image, got {len(train_images)}"
+        assert len(test_images) == 0, f"Expected 0 test images, got {len(test_images)}" 

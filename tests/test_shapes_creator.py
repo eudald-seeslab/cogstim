@@ -9,7 +9,7 @@ def test_draw_shape_circle():
             shapes=["circle"],
             colours=["yellow"],
             task_type="two_shapes",
-            img_dir=tmpdir,
+            output_dir=tmpdir,
             train_num=1,
             test_num=0,
             jitter=False,

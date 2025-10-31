@@ -25,7 +25,7 @@ class TestMatchToSampleGenerator:
         self.config = {
             **MTS_GENERAL_CONFIG,
             "NUM_IMAGES": 1,
-            "IMG_DIR": "/tmp/test",
+            "output_dir": "/tmp/test",
             "min_point_num": 1,
             "max_point_num": 5,
             "ratios": "easy",
@@ -325,7 +325,7 @@ class TestMatchToSampleIntegration:
             config = {
                 **MTS_GENERAL_CONFIG,
                 "NUM_IMAGES": 1,
-                "IMG_DIR": tmpdir,
+                "output_dir": tmpdir,
                 "min_point_num": 2,
                 "max_point_num": 3,
                 "ratios": "easy",

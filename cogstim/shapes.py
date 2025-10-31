@@ -6,11 +6,12 @@ import numpy as np
 from tqdm import tqdm
 
 from cogstim.helpers import COLOUR_MAP
+from cogstim.base_generator import BaseGenerator
 
 random.seed(1714)
 
 
-class ShapesGenerator:
+class ShapesGenerator(BaseGenerator):
     """
     A class for generating images with geometric shapes for machine learning tasks.
 
@@ -30,7 +31,7 @@ class ShapesGenerator:
         shapes,
         colours,
         task_type,
-        img_dir,
+        output_dir,
         train_num,
         test_num,
         jitter,
@@ -38,21 +39,38 @@ class ShapesGenerator:
         max_surface,
         background_colour,
     ):
+        # Set directory based on task if not provided explicitly
+        if output_dir is not None:
+            pass
+        else:
+            shapes_list = shapes if isinstance(shapes, list) else [shapes]
+            if task_type == "two_shapes":
+                output_dir = "images/two_shapes"
+            elif task_type == "two_colors":
+                output_dir = "images/two_colors"
+            else:
+                output_dir = f"images/{'_'.join(shapes_list)}_{'_'.join(colours)}"
+        
+        # Initialize parent with config
+        config = {
+            'output_dir': output_dir,
+            'shapes': shapes,
+            'colours': colours,
+            'task_type': task_type,
+            'train_num': train_num,
+            'test_num': test_num,
+            'jitter': jitter,
+            'min_surface': min_surface,
+            'max_surface': max_surface,
+            'background_colour': background_colour,
+        }
+        super().__init__(config)
+        
         self.shapes = shapes if isinstance(shapes, list) else [shapes]
         self.colors = {col: COLOUR_MAP[col] for col in colours}
         self.task_type = task_type
         self.background_colour = background_colour
-
-        # Set directory based on task if not provided explicitly
-        if img_dir is not None:
-            self.img_dir = img_dir
-        else:
-            if task_type == "two_shapes":
-                self.img_dir = "images/two_shapes"
-            elif task_type == "two_colors":
-                self.img_dir = "images/two_colors"
-            else:
-                self.img_dir = f"images/{'_'.join(self.shapes)}_{'_'.join(colours)}"
+        self.img_dir = output_dir  # Keep for backward compatibility
 
         # Override default generation params
         self.train_num = train_num
@@ -62,23 +80,42 @@ class ShapesGenerator:
         self.jitter = jitter
         self.img_paths = {}
 
-    def create_dirs(self):
-        """Creates class directories for train and test sets."""
+    def get_subdirectories(self):
+        """Get list of subdirectories for train/test and classes."""
+        subdirs = []
+        
         for t in ["train", "test"]:
             if self.task_type == "two_shapes":
-                classes = self.shapes  # classes are shapes
+                classes = self.shapes
             elif self.task_type == "two_colors":
-                classes = self.colors.keys()  # classes are colors
+                classes = self.colors.keys()
             else:
-                # For custom, each shape-color combination is a class
+                classes = [
+                    f"{shape}_{color}" for shape in self.shapes for color in self.colors
+                ]
+
+            for class_name in classes:
+                subdirs.append((t, class_name))
+                
+        return subdirs
+    
+    def setup_directories(self):
+        """Creates class directories for train and test sets and populate img_paths."""
+        super().setup_directories()
+        
+        for t in ["train", "test"]:
+            if self.task_type == "two_shapes":
+                classes = self.shapes
+            elif self.task_type == "two_colors":
+                classes = self.colors.keys()
+            else:
                 classes = [
                     f"{shape}_{color}" for shape in self.shapes for color in self.colors
                 ]
 
             for class_name in classes:
                 path_key = f"{t}_{class_name}"
-                self.img_paths[path_key] = os.path.join(self.img_dir, t, class_name)
-                os.makedirs(self.img_paths[path_key], exist_ok=True)
+                self.img_paths[path_key] = os.path.join(self.output_dir, t, class_name)
 
     @staticmethod
     def get_radius_from_surface(shape: str, surface: float) -> float:
@@ -212,11 +249,11 @@ class ShapesGenerator:
             else len(self.shapes) * len(self.colors)
         )
 
-        self.create_dirs()
+        self.setup_directories()
 
         for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
             total_phase = num_images * surfaces * combos
-            logging.info(
+            self.log_generation_info(
                 f"Generating {total_phase} images: {num_images} sets x {surfaces} surfaces x {combos} class combos in '{self.img_dir}/{phase}'."
             )
             for i in tqdm(range(num_images)):

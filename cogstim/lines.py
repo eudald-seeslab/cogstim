@@ -6,6 +6,7 @@ import logging
 import numpy as np
 from PIL import Image, ImageDraw
 from tqdm import tqdm
+from cogstim.base_generator import BaseGenerator
 
 # Configure logging
 logging.basicConfig(
@@ -13,11 +14,11 @@ logging.basicConfig(
 )
 
 
-class StripePatternGenerator:
+class StripePatternGenerator(BaseGenerator):
     """Generates images with rotated stripe patterns."""
 
     def __init__(self, config):
-        self.config = config
+        super().__init__(config)
         self.min_thickness = config["min_thickness"]
         self.max_thickness = config["max_thickness"]
         self.min_spacing = config["min_spacing"]
@@ -27,7 +28,8 @@ class StripePatternGenerator:
         self.dir_path = config["output_dir"]
         self.angles = config["angles"]
         self.max_attempts = config["max_attempts"]
-        self.img_sets = config["img_sets"]
+        self.train_num = config.get("train_num", config.get("img_sets", 100))
+        self.test_num = config.get("test_num", config.get("img_sets", 100) // 5)
         self.tag = config["tag"]
         self.background_colour = config["background_colour"]
         # Calculate circumscribed size for rotation
@@ -35,29 +37,30 @@ class StripePatternGenerator:
 
     def create_images(self):
         """Generate the complete set of images with different angles and stripe counts."""
-        self._create_directories()
+        self.setup_directories()
 
-        total_images = (
-            self.img_sets
-            * len(self.angles)
-            * (self.max_stripe_num - self.min_stripe_num + 1)
-        )
-        logging.info(f"Generating {total_images} images...")
+        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
+            total_images = (
+                num_images
+                * len(self.angles)
+                * (self.max_stripe_num - self.min_stripe_num + 1)
+            )
+            self.log_generation_info(f"Generating {total_images} images for {phase}...")
 
-        for i in tqdm(range(self.img_sets)):
-            for angle in self.angles:
-                for num_stripes in range(self.min_stripe_num, self.max_stripe_num + 1):
-                    try:
-                        img = self.create_rotated_stripes(num_stripes, angle)
-                        tag_suffix = f"_{self.tag}" if self.tag else ""
-                        filename = f"img_{num_stripes}_{i}{tag_suffix}.png"
-                        img.save(os.path.join(self.dir_path, str(angle), filename))
-                    except Exception as e:
-                        logging.error(
-                            f"Failed to generate image: angle={angle}, stripes={num_stripes}, set={i}"
-                        )
-                        logging.error(str(e))
-                        raise
+            for i in tqdm(range(num_images), desc=f"{phase}"):
+                for angle in self.angles:
+                    for num_stripes in range(self.min_stripe_num, self.max_stripe_num + 1):
+                        try:
+                            img = self.create_rotated_stripes(num_stripes, angle)
+                            tag_suffix = f"_{self.tag}" if self.tag else ""
+                            filename = f"img_{num_stripes}_{i}{tag_suffix}.png"
+                            img.save(os.path.join(self.dir_path, phase, str(angle), filename))
+                        except Exception as e:
+                            logging.error(
+                                f"Failed to generate image: angle={angle}, stripes={num_stripes}, set={i}"
+                            )
+                            logging.error(str(e))
+                            raise
 
     def create_rotated_stripes(self, num_stripes, angle):
         """Create an image with the specified number of stripes at the given angle."""
@@ -125,11 +128,12 @@ class StripePatternGenerator:
                     return True
         return False
 
-    def _create_directories(self):
-        """Create output directories for each angle."""
-        os.makedirs(self.dir_path, exist_ok=True)
-        for angle in self.angles:
-            os.makedirs(os.path.join(self.dir_path, str(angle)), exist_ok=True)
+    def get_subdirectories(self):
+        subdirs = []
+        for phase in ["train", "test"]:
+            for angle in self.angles:
+                subdirs.append((phase, str(angle)))
+        return subdirs
 
 
 def parse_args():

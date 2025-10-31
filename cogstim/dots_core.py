@@ -3,8 +3,6 @@ from random import randint
 from PIL import ImageDraw
 import numpy as np
 
-np.random.seed(1234)
-
 
 class PointLayoutError(ValueError):
     pass

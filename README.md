@@ -1,5 +1,10 @@
 # CogStim – Visual Cognitive-Stimulus Generator
 
+[![PyPI version](https://img.shields.io/pypi/v/cogstim.svg)](https://pypi.org/project/cogstim/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/eudald-seeslab/cogstim/workflows/CI/badge.svg)](https://github.com/eudald-seeslab/cogstim/actions)
+[![Coverage Status](https://coveralls.io/repos/github/eudald-seeslab/cogstim/badge.svg?branch=main)](https://coveralls.io/github/eudald-seeslab/cogstim?branch=main)
+
 CogStim is a small Python toolkit that produces **synthetic image datasets** commonly used in cognitive–neuroscience and psychophysics experiments, such as:
 
 * Two–shape discrimination (e.g. *circle vs star*).

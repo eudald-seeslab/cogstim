@@ -38,6 +38,7 @@ cogstim-cli = "cogstim.cli:main"
 addopts = "--cov=cogstim --cov-report=term-missing --cov-report=xml --cov-report=html"
 testpaths = ["tests"]
 
+
 [tool.setuptools]
 # Restrict automatic discovery to the actual Python package only
 packages = ["cogstim"]

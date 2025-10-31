@@ -10,7 +10,7 @@ python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
 python -m cogstim.cli --colour_recognition --no-jitter
 
 # ANS (dot arrays)
-python -m cogstim.cli --ans --train_num 100 --test_num 40 --easy
+python -m cogstim.cli --ans --train_num 100 --test_num 40
 
 # One-colour dot arrays
 python -m cogstim.cli --one_colour --train_num 80 --test_num 20

@@ -157,12 +157,93 @@ def test_cli_match_to_sample_with_equalization(tmp_path):
         "--ratios", "all",
         "--output_dir", str(tmp_path),
     ]
-    
+
     _run_cli_with_args(cli_args)
-    
+
     images = list(Path(tmp_path).rglob("*.png"))
     assert len(images) >= 2, "Should generate images"
-    
+
     # Check for equalized files
     equalized_files = [img for img in images if "equalized" in img.name]
     assert len(equalized_files) > 0, "Should have equalized files"
+
+
+def test_cli_fixation_dataset(tmp_path):
+    """Test fixation dataset generation via CLI."""
+    cli_args = [
+        "--fixation",
+        "--all_types",
+        "--output_dir", str(tmp_path),
+        "--img_size", 256,
+        "--background_colour", "black",
+        "--symbol_colour", "white",
+    ]
+
+    _run_cli_with_args(cli_args)
+
+    images = list(Path(tmp_path).rglob("*.png"))
+    # Should generate 7 types (A, B, C, AB, AC, BC, ABC) = 7 images
+    assert len(images) == 7, f"Expected 7 fixation images, got {len(images)}"
+
+    # Check that all expected types are present
+    image_names = [img.name for img in images]
+    expected_types = ["A", "B", "C", "AB", "AC", "BC", "ABC"]
+    for expected_type in expected_types:
+        assert any(expected_type in name for name in image_names), f"Missing fixation type {expected_type}"
+
+
+def test_cli_fixation_dataset_specific_types(tmp_path):
+    """Test fixation dataset with specific types selected."""
+    cli_args = [
+        "--fixation",
+        "--types", "A", "C", "ABC",
+        "--output_dir", str(tmp_path),
+    ]
+
+    _run_cli_with_args(cli_args)
+
+    images = list(Path(tmp_path).rglob("*.png"))
+    # Should generate only 3 types
+    assert len(images) == 3, f"Expected 3 fixation images, got {len(images)}"
+
+    # Check that only specified types are present
+    image_names = [img.name for img in images]
+    assert any("A" in name for name in image_names), "Should have type A"
+    assert any("C" in name for name in image_names), "Should have type C"
+    assert any("ABC" in name for name in image_names), "Should have type ABC"
+    # Should not have B, AB, AC, BC
+    assert not any("B" in name and "AB" not in name and "BC" not in name for name in image_names), "Should not have type B"
+
+
+def test_cli_custom_shapes(tmp_path):
+    """Test custom shape generation with specific shapes and colors."""
+    cli_args = [
+        "--custom",
+        "--shapes", "circle", "triangle",
+        "--colours", "red", "blue",
+        "--train_num", 1,
+        "--test_num", 1,
+        "--output_dir", str(tmp_path),
+        "--min_surface", 1000,
+        "--max_surface", 2000,
+    ]
+
+    _run_cli_with_args(cli_args)
+
+    images = list(Path(tmp_path).rglob("*.png"))
+    # Should generate 2 shapes × 2 colors × 2 phases (train/test) = 8 images
+    assert len(images) >= 4, f"Expected at least 4 images, got {len(images)}"
+
+
+def test_cli_custom_shapes_missing_args(tmp_path):
+    """Test custom shapes CLI with missing required arguments."""
+    # Missing --colours
+    cli_args = [
+        "--custom",
+        "--shapes", "circle",
+        "--train_num", 1,
+        "--output_dir", str(tmp_path),
+    ]
+
+    with pytest.raises(ValueError, match="--shapes and --colours must be provided with --custom"):
+        _run_cli_with_args(cli_args)

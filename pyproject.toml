@@ -27,12 +27,16 @@ Homepage   = "https://github.com/eudald-seeslab/cogstim"
 BugTracker = "https://github.com/eudald-seeslab/cogstim/issues"
 
 [project.optional-dependencies]
-dev   = ["pytest", "black", "ruff"]
+dev   = ["pytest", "pytest-cov", "coverage", "coveralls", "black", "ruff"]
 docs  = ["mkdocs-material"]
 
 [project.scripts]
 # consolidated entry point
 cogstim-cli = "cogstim.cli:main"
+
+[tool.pytest.ini_options]
+addopts = "--cov=cogstim --cov-report=term-missing --cov-report=xml --cov-report=html"
+testpaths = ["tests"]
 
 [tool.setuptools]
 # Restrict automatic discovery to the actual Python package only

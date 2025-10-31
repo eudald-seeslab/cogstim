@@ -1,0 +1,30 @@
+# This is a coverage.py configuration file in INI format
+# It should not be parsed as Python code
+[run]
+source = cogstim
+omit =
+    */tests/*
+    */test_*
+    setup.py
+    */venv/*
+    */__pycache__/*
+    */.tox/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml

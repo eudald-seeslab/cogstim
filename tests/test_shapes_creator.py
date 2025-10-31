@@ -34,7 +34,7 @@ def test_shapes_generator_directory_two_shapes():
         shapes=["circle", "star"],
         colours=["yellow"],
         task_type="two_shapes",
-        img_dir=None,  # Should use default
+        output_dir=None,  # Should use default
         train_num=1,
         test_num=1,
         jitter=False,
@@ -43,7 +43,7 @@ def test_shapes_generator_directory_two_shapes():
         background_colour="black",
     )
 
-    assert sg.img_dir == "images/two_shapes"
+    assert sg.output_dir == "images/two_shapes"
 
 
 def test_shapes_generator_directory_two_colors():
@@ -52,7 +52,7 @@ def test_shapes_generator_directory_two_colors():
         shapes=["circle"],
         colours=["yellow", "blue"],
         task_type="two_colors",
-        img_dir=None,  # Should use default
+        output_dir=None,  # Should use default
         train_num=1,
         test_num=1,
         jitter=False,
@@ -61,7 +61,7 @@ def test_shapes_generator_directory_two_colors():
         background_colour="black",
     )
 
-    assert sg.img_dir == "images/two_colors"
+    assert sg.output_dir == "images/two_colors"
 
 
 def test_shapes_generator_directory_custom():
@@ -70,7 +70,7 @@ def test_shapes_generator_directory_custom():
         shapes=["circle", "triangle"],
         colours=["red", "blue"],
         task_type="custom",
-        img_dir=None,  # Should use default
+        output_dir=None,  # Should use default
         train_num=1,
         test_num=1,
         jitter=False,
@@ -79,7 +79,7 @@ def test_shapes_generator_directory_custom():
         background_colour="black",
     )
 
-    assert sg.img_dir == "images/circle_triangle_red_blue"
+    assert sg.output_dir == "images/circle_triangle_red_blue"
 
 
 def test_shapes_generator_directory_explicit():
@@ -88,7 +88,7 @@ def test_shapes_generator_directory_explicit():
         shapes=["circle"],
         colours=["yellow"],
         task_type="two_shapes",
-        img_dir="/custom/path",
+        output_dir="/custom/path",
         train_num=1,
         test_num=1,
         jitter=False,
@@ -97,7 +97,7 @@ def test_shapes_generator_directory_explicit():
         background_colour="black",
     )
 
-    assert sg.img_dir == "/custom/path"
+    assert sg.output_dir == "/custom/path"
 
 
 def test_create_dirs_two_shapes():
@@ -107,7 +107,7 @@ def test_create_dirs_two_shapes():
             shapes=["circle", "star"],
             colours=["yellow"],
             task_type="two_shapes",
-            img_dir="/tmp/test",
+            output_dir="/tmp/test",
             train_num=1,
             test_num=1,
             jitter=False,
@@ -116,13 +116,15 @@ def test_create_dirs_two_shapes():
             background_colour="black",
         )
 
-        sg.create_dirs()
+        sg.setup_directories()
 
-        # Should create directories for train/test and each shape
-        assert mock_makedirs.call_count == 4
+        # Should create base dir + train/test subdirs for each shape
+        # 1 base + 2 shapes × 2 phases = 5 dirs
+        assert mock_makedirs.call_count == 5
         # Check that the right directories were created
         call_args = [call[0][0] for call in mock_makedirs.call_args_list]
         expected_dirs = [
+            "/tmp/test",  # base directory
             os.path.join("/tmp/test", "train", "circle"),
             os.path.join("/tmp/test", "train", "star"),
             os.path.join("/tmp/test", "test", "circle"),
@@ -139,7 +141,7 @@ def test_create_dirs_two_colors():
             shapes=["circle"],
             colours=["yellow", "blue"],
             task_type="two_colors",
-            img_dir="/tmp/test",
+            output_dir="/tmp/test",
             train_num=1,
             test_num=1,
             jitter=False,
@@ -148,13 +150,15 @@ def test_create_dirs_two_colors():
             background_colour="black",
         )
 
-        sg.create_dirs()
+        sg.setup_directories()
 
-        # Should create directories for train/test and each color
-        assert mock_makedirs.call_count == 4
+        # Should create base dir + train/test subdirs for each color
+        # 1 base + 2 colors × 2 phases = 5 dirs
+        assert mock_makedirs.call_count == 5
         # Check that the right directories were created
         call_args = [call[0][0] for call in mock_makedirs.call_args_list]
         expected_dirs = [
+            "/tmp/test",  # base directory
             os.path.join("/tmp/test", "train", "yellow"),
             os.path.join("/tmp/test", "train", "blue"),
             os.path.join("/tmp/test", "test", "yellow"),
@@ -176,7 +180,7 @@ def test_get_vertices_invalid_shape():
         shapes=["circle"],
         colours=["yellow"],
         task_type="two_shapes",
-        img_dir="/tmp/test",
+        output_dir="/tmp/test",
         train_num=1,
         test_num=1,
         jitter=False,
@@ -196,7 +200,7 @@ def test_generate_images_two_colors():
             shapes=["circle"],  # Not used in two_colors mode
             colours=["yellow", "red"],
             task_type="two_colors",
-            img_dir=tmpdir,
+            output_dir=tmpdir,
             train_num=1,
             test_num=1,
             jitter=False,

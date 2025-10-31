@@ -45,7 +45,8 @@ def test_stripe_pattern_generator_max_attempts_exceeded():
     """Test that ValueError is raised when max attempts are exceeded."""
     cfg = {
         "output_dir": "/tmp/test",
-        "img_sets": 1,
+        "train_num": 1,
+        "test_num": 0,
         "angles": [0],
         "min_stripe_num": 10,  # Many stripes
         "max_stripe_num": 10,
@@ -69,7 +70,8 @@ def test_stripe_pattern_generator_exception_handling():
     with tempfile.TemporaryDirectory() as tmpdir:
         cfg = {
             "output_dir": tmpdir,
-            "img_sets": 1,
+            "train_num": 1,
+            "test_num": 0,
             "angles": [0],
             "min_stripe_num": 10,  # Many stripes that will cause overlap issues
             "max_stripe_num": 10,

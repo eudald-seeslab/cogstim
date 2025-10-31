@@ -137,7 +137,7 @@ class TestFixationGenerator:
 
     @patch('cogstim.fixation.os.makedirs')
     def test_create_directories(self, mock_makedirs):
-        """Test _create_directories creates output directory."""
+        """Test setup_directories creates output directory."""
         config = {
             "output_dir": "/tmp/test/fixation",
             "img_sets": 1,
@@ -154,7 +154,7 @@ class TestFixationGenerator:
         }
 
         generator = FixationGenerator(config)
-        generator._create_directories()
+        generator.setup_directories()
 
         mock_makedirs.assert_called_once_with("/tmp/test/fixation", exist_ok=True)
 

@@ -4,7 +4,8 @@ from pathlib import Path
 
 def test_points_generator_creates_images(tmp_path):
     cfg = GENERAL_CONFIG | {
-        "NUM_IMAGES": 1,
+        "train_num": 1,
+        "test_num": 1,
         "output_dir": str(tmp_path),
         "ratios": "easy",
         "EASY": True,

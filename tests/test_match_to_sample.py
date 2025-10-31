@@ -24,7 +24,8 @@ class TestMatchToSampleGenerator:
         """Set up test fixtures."""
         self.config = {
             **MTS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
+            "train_num": 1,
+            "test_num": 1,
             "output_dir": "/tmp/test",
             "min_point_num": 1,
             "max_point_num": 5,
@@ -54,7 +55,7 @@ class TestMatchToSampleGenerator:
 
     def test_get_positions(self):
         """Test compute_positions via GenerationPlan."""
-        plan = GenerationPlan(self.config["ratios"], self.config["min_point_num"], self.config["max_point_num"], self.config["NUM_IMAGES"]).build()
+        plan = GenerationPlan(self.config["ratios"], self.config["min_point_num"], self.config["max_point_num"], self.config["train_num"]).build()
         positions = plan.compute_positions()
         assert isinstance(positions, list)
         for n, m in positions:
@@ -324,7 +325,8 @@ class TestMatchToSampleIntegration:
         with tempfile.TemporaryDirectory() as tmpdir:
             config = {
                 **MTS_GENERAL_CONFIG,
-                "NUM_IMAGES": 1,
+                "train_num": 1,
+            "test_num": 1,
                 "output_dir": tmpdir,
                 "min_point_num": 2,
                 "max_point_num": 3,

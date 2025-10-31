@@ -138,7 +138,8 @@ class MatchToSampleGenerator(BaseGenerator):
     
     def __init__(self, config):
         super().__init__(config)
-        self.num_images = config["NUM_IMAGES"]
+        self.train_num = config["train_num"]
+        self.test_num = config["test_num"]
         
         # Determine ratios to use
         self.ratios = resolve_mts_ratios(self.config["ratios"], MTS_EASY_RATIOS, MTS_HARD_RATIOS)
@@ -180,28 +181,34 @@ class MatchToSampleGenerator(BaseGenerator):
         
         return (s_np, s_points, m_np, m_points)
     
-    def save_image_pair(self, pair, base_name):
+    def save_image_pair(self, pair, base_name, phase="train"):
         """Save a pair of images."""
         s_np, s_points, m_np, m_points = pair
-        save_image_pair(s_np, s_points, m_np, m_points, self.config["output_dir"], base_name)
+        output_dir = os.path.join(self.config["output_dir"], phase)
+        save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name)
     
-    def create_and_save(self, n1, n2, equalize, tag):
+    def create_and_save(self, n1, n2, equalize, tag, phase="train"):
         """Create and save a pair of images."""
         base_name = build_basename(n1, n2, tag, equalize, self.config.get("version_tag"))
         
         pair = self.create_image_pair(n1, n2, equalize)
         if pair is not None:
-            self.save_image_pair(pair, base_name)
+            self.save_image_pair(pair, base_name, phase)
+    
+    def get_subdirectories(self):
+        return [("train",), ("test",)]
     
     def generate_images(self):
-        """Generate all image pairs."""
-
-        plan = GenerationPlan(self.ratios, self.config["min_point_num"], self.config["max_point_num"], self.num_images).build()
-        for task in tqdm(plan.tasks):
-            n = task["n1"]
-            m = task["n2"]
-            rep = task["rep"]
-            self.create_and_save(n, m, task["equalize"], rep)
+        """Generate all image pairs for train and test."""
+        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
+            plan = GenerationPlan(self.ratios, self.config["min_point_num"], self.config["max_point_num"], num_images).build()
+            self.log_generation_info(f"Generating {len(plan.tasks)} image pairs for {phase}...")
+            
+            for task in tqdm(plan.tasks, desc=f"{phase}"):
+                n = task["n1"]
+                m = task["n2"]
+                rep = task["rep"]
+                self.create_and_save(n, m, task["equalize"], rep, phase)
 
 
 def main():

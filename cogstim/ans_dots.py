@@ -31,8 +31,8 @@ class TerminalPointLayoutError(ValueError):
 class PointsGenerator(BaseGenerator):
     def __init__(self, config):
         super().__init__(config)
-        self.train_num = config.get("train_num", config.get("NUM_IMAGES", 100))
-        self.test_num = config.get("test_num", config.get("NUM_IMAGES", 100) // 5)
+        self.train_num = config["train_num"]
+        self.test_num = config["test_num"]
         ratios = self.config["ratios"]
         match ratios:
             case "easy":
@@ -52,8 +52,8 @@ class PointsGenerator(BaseGenerator):
             classes.append(self.config["colour_2"])
         
         for phase in ["train", "test"]:
-            for cls in classes:
-                subdirs.append((phase, cls))
+            for class_name in classes:
+                subdirs.append((phase, class_name))
         
         return subdirs
 

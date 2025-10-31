@@ -30,8 +30,8 @@ class OneColourImageGenerator(BaseGenerator):
         self.nmin = self.config["min_point_num"]
         self.nmax = self.config["max_point_num"]
         self.total_area = self.config["total_area"]
-        self.train_num = self.config.get("train_num", self.config.get("IMAGE_SET_NUM", 100))
-        self.test_num = self.config.get("test_num", self.config.get("IMAGE_SET_NUM", 100) // 5)
+        self.train_num = self.config["train_num"]
+        self.test_num = self.config["test_num"]
         self._check_areas_make_sense()
 
         if self.nmin == 0:
@@ -158,6 +158,12 @@ def parse_args():
     parser.add_argument(
         "--max_points", type=int, default=5, help="Maximum number of points per image"
     )
+    parser.add_argument(
+        "--train_num", type=int, default=100, help="Number of training images"
+    )
+    parser.add_argument(
+        "--test_num", type=int, default=20, help="Number of test images"
+    )
 
     return parser.parse_args()
 
@@ -173,6 +179,7 @@ def main():
     config = {
         "version_tag": args.version_tag,
         "colour": "yellow",
+        "colour_1": "yellow",
         "boundary_width": 5,
         "background_colour": "#000000",
         "yellow": "#fffe04",
@@ -183,7 +190,8 @@ def main():
         "min_point_num": args.min_points,
         "max_point_num": args.max_points,
         "attempts_limit": 5000,
-        "IMAGE_SET_NUM": args.img_set_num,
+        "train_num": args.train_num,
+        "test_num": args.test_num,
         "output_dir": args.output_dir,
         "total_area": args.total_area,
     }

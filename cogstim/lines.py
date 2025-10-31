@@ -28,8 +28,8 @@ class StripePatternGenerator(BaseGenerator):
         self.dir_path = config["output_dir"]
         self.angles = config["angles"]
         self.max_attempts = config["max_attempts"]
-        self.train_num = config.get("train_num", config.get("img_sets", 100))
-        self.test_num = config.get("test_num", config.get("img_sets", 100) // 5)
+        self.train_num = config["train_num"]
+        self.test_num = config["test_num"]
         self.tag = config["tag"]
         self.background_colour = config["background_colour"]
         # Calculate circumscribed size for rotation

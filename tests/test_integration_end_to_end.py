@@ -33,7 +33,8 @@ class TestANSImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             **ANS_GENERAL_CONFIG,
-            "NUM_IMAGES": 2,
+            "train_num": 2,
+            "test_num": 2,
             "output_dir": str(test_images_dir / "ans_easy"),
             "ratios": "easy",
             "ONE_COLOUR": False,
@@ -81,7 +82,8 @@ class TestANSImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             **ANS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
+            "train_num": 1,
+            "test_num": 1,
             "output_dir": str(test_images_dir / "ans_hard"),
             "ratios": "hard",
             "ONE_COLOUR": False,
@@ -114,7 +116,8 @@ class TestANSImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             **ANS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
+            "train_num": 1,
+            "test_num": 1,
             "output_dir": str(test_images_dir / "ans_one_colour"),
             "ratios": "all",
             "ONE_COLOUR": True,
@@ -154,7 +157,8 @@ class TestMatchToSampleImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             **MTS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
+            "train_num": 1,
+            "test_num": 1,
             "output_dir": str(test_images_dir / "mts_easy"),
             "ratios": "easy",
             "min_point_num": 2,
@@ -197,7 +201,8 @@ class TestMatchToSampleImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             **MTS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
+            "train_num": 1,
+            "test_num": 1,
             "output_dir": str(test_images_dir / "mts_hard"),
             "ratios": "hard",
             "min_point_num": 3,
@@ -228,7 +233,8 @@ class TestMatchToSampleImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             **MTS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
+            "train_num": 1,
+            "test_num": 1,
             "output_dir": str(test_images_dir / "mts_equalized"),
             "ratios": "all",
             "min_point_num": 2,
@@ -307,7 +313,8 @@ class TestLinesImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             "output_dir": str(test_images_dir / "lines"),
-            "img_sets": 2,
+            "train_num": 2,
+            "test_num": 2,
             "min_thickness": 3,
             "max_thickness": 5,
             "min_spacing": 20,
@@ -351,7 +358,8 @@ class TestFixationImageGeneration:
         test_images_dir = get_test_images_dir()
         config = {
             "output_dir": str(test_images_dir / "fixation"),
-            "img_sets": 2,
+            "train_num": 2,
+            "test_num": 2,
             "types": ["A", "B", "C"],  # A=dot, B=disk, C=cross
             "img_size": 512,
             "dot_radius_px": 5,
@@ -507,7 +515,8 @@ class TestImageProperties:
         configs = [
             {
                 **ANS_GENERAL_CONFIG,
-                "NUM_IMAGES": 1,
+                "train_num": 1,
+            "test_num": 1,
                 "output_dir": str(test_images_dir / "ans_test"),
                 "ratios": "easy",
                 "ONE_COLOUR": True,
@@ -517,7 +526,8 @@ class TestImageProperties:
             },
             {
                 **MTS_GENERAL_CONFIG,
-                "NUM_IMAGES": 1,
+                "train_num": 1,
+            "test_num": 1,
                 "output_dir": str(test_images_dir / "mts_test"),
                 "ratios": "easy",
                 "min_point_num": 2,
@@ -554,7 +564,8 @@ class TestImageProperties:
         test_images_dir = get_test_images_dir()
         config = {
             **ANS_GENERAL_CONFIG,
-            "NUM_IMAGES": 3,
+            "train_num": 3,
+            "test_num": 3,
             "output_dir": str(test_images_dir / "diversity_test"),
             "ratios": "all",
             "ONE_COLOUR": True,
@@ -592,7 +603,8 @@ class TestImageProperties:
         test_images_dir = get_test_images_dir()
         config = {
             **MTS_GENERAL_CONFIG,
-            "NUM_IMAGES": 1,
+            "train_num": 1,
+            "test_num": 1,
             "output_dir": str(test_images_dir / "file_properties_test"),
             "ratios": "easy",
             "min_point_num": 2,

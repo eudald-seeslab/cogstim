@@ -10,7 +10,8 @@ def test_stripe_pattern_generator_single_set():
     with tempfile.TemporaryDirectory() as tmpdir:
         cfg = {
             "output_dir": tmpdir,
-            "img_sets": 1,  # one repetition
+            "train_num": 1,
+            "test_num": 0,  # one train repetition, no test
             "angles": [0],  # single angle
             "min_stripe_num": 2,
             "max_stripe_num": 2,  # fixed stripe count

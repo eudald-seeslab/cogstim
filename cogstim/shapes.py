@@ -70,7 +70,6 @@ class ShapesGenerator(BaseGenerator):
         self.colors = {col: COLOUR_MAP[col] for col in colours}
         self.task_type = task_type
         self.background_colour = background_colour
-        self.img_dir = output_dir  # Keep for backward compatibility
 
         # Override default generation params
         self.train_num = train_num
@@ -254,7 +253,7 @@ class ShapesGenerator(BaseGenerator):
         for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
             total_phase = num_images * surfaces * combos
             self.log_generation_info(
-                f"Generating {total_phase} images: {num_images} sets x {surfaces} surfaces x {combos} class combos in '{self.img_dir}/{phase}'."
+                f"Generating {total_phase} images: {num_images} sets x {surfaces} surfaces x {combos} class combos in '{self.output_dir}/{phase}'."
             )
             for i in tqdm(range(num_images)):
                 # FIXME: we should specify how many we want and compute the step from this

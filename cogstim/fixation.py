@@ -29,7 +29,8 @@ class FixationGenerator(BaseGenerator):
 
     def __init__(self, config: dict):
         super().__init__(config)
-        self.img_sets: int = config["img_sets"]
+        # Fixation doesn't use train/test splits, but may receive these keys from CLI
+        self.img_sets: int = config.get("img_sets", 1)
         self.types: List[str] = config["types"]
         self.size: int = config["img_size"]
         self.dot_radius: int = config["dot_radius_px"]

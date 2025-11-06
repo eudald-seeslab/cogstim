@@ -1,6 +1,6 @@
-"""Tests for cogstim.constants module."""
+"""Tests for cogstim.helpers.constants module."""
 
-from cogstim.constants import (
+from cogstim.helpers.constants import (
     ANS_EASY_RATIOS,
     ANS_HARD_RATIOS,
     MTS_EASY_RATIOS,

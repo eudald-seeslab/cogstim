@@ -1,4 +1,4 @@
-from cogstim.ans_dots import PointsGenerator, GENERAL_CONFIG
+from cogstim.generators.dots_ans import DotsANSGenerator, GENERAL_CONFIG
 from pathlib import Path
 
 
@@ -15,7 +15,7 @@ def test_points_generator_creates_images(tmp_path):
         "max_point_num": 2,
     }
 
-    gen = PointsGenerator(cfg)
+    gen = DotsANSGenerator(cfg)
     gen.generate_images()
 
     images = list(Path(cfg["output_dir"]).rglob("*.png"))

@@ -7,7 +7,7 @@ class PointLayoutError(ValueError):
     pass
 
 
-class NumberPoints:
+class DotsCore:
 
     boundary_width = 5
     point_sep = 10
@@ -16,7 +16,7 @@ class NumberPoints:
 
     def __init__(self, init_size, colour_1, colour_2=None, bg_colour=None, mode=None,
                  min_point_radius=None, max_point_radius=None, attempts_limit=None):
-        """Initialize NumberPoints for dot placement on an image.
+        """Initialize DotsCore for dot placement on an image.
         
         Args:
             init_size: Image size in pixels (square)
@@ -28,8 +28,8 @@ class NumberPoints:
             max_point_radius: Maximum dot radius (uses defaults.DOT_DEFAULTS if None)
             attempts_limit: Maximum attempts to place dots without overlap (uses defaults.DOT_DEFAULTS if None)
         """
-        from cogstim.image_utils import ImageCanvas
-        from cogstim.constants import IMAGE_DEFAULTS, DOT_DEFAULTS
+        from cogstim.helpers.image_utils import ImageCanvas
+        from cogstim.helpers.constants import IMAGE_DEFAULTS, DOT_DEFAULTS
         
         # Apply defaults if not provided
         bg_colour = bg_colour if bg_colour is not None else IMAGE_DEFAULTS["background_colour"]

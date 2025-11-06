@@ -2,10 +2,10 @@ import os
 from tqdm import tqdm
 import logging
 
-from cogstim.dots_core import NumberPoints, PointLayoutError
-from cogstim.constants import COLOUR_MAP, ANS_EASY_RATIOS, ANS_HARD_RATIOS, DOT_DEFAULTS, IMAGE_DEFAULTS
-from cogstim.base_generator import BaseGenerator
-from cogstim.planner import GenerationPlan, resolve_ratios
+from cogstim.helpers.dots_core import DotsCore, PointLayoutError
+from cogstim.helpers.constants import COLOUR_MAP, ANS_EASY_RATIOS, ANS_HARD_RATIOS, DOT_DEFAULTS, IMAGE_DEFAULTS
+from cogstim.helpers.base_generator import BaseGenerator
+from cogstim.helpers.planner import GenerationPlan, resolve_ratios
 
 logging.basicConfig(level=logging.INFO)
 
@@ -24,7 +24,7 @@ class TerminalPointLayoutError(ValueError):
     pass
 
 
-class PointsGenerator(BaseGenerator):
+class DotsANSGenerator(BaseGenerator):
     def __init__(self, config):
         super().__init__(config)
         self.train_num = config["train_num"]
@@ -56,7 +56,7 @@ class PointsGenerator(BaseGenerator):
         # Map configured colours to drawer colours. In one-colour mode, only pass colour_1.
         colour_2 = None if self.config["ONE_COLOUR"] else COLOUR_MAP[self.config["colour_2"]]
 
-        number_points = NumberPoints(
+        number_points = DotsCore(
             init_size=IMAGE_DEFAULTS["init_size"],
             colour_1=COLOUR_MAP[self.config["colour_1"]],
             colour_2=colour_2,

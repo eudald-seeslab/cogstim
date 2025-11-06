@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from unittest.mock import patch, MagicMock
 
-from cogstim.lines import StripePatternGenerator, parse_args, main
+from cogstim.generators.lines import LinesGenerator, parse_args, main
 
 
 def test_stripe_pattern_generator_single_set():
@@ -26,7 +26,7 @@ def test_stripe_pattern_generator_single_set():
             "background_colour": "#000000",
         }
 
-        generator = StripePatternGenerator(cfg)
+        generator = LinesGenerator(cfg)
         generator.generate_images()
 
         # Expected file path pattern: output_dir/<phase>/<angle>/img_<stripes>_<set_idx>.png
@@ -59,7 +59,7 @@ def test_stripe_pattern_generator_max_attempts_exceeded():
         "background_colour": "#000000",
     }
 
-    generator = StripePatternGenerator(cfg)
+    generator = LinesGenerator(cfg)
 
     with pytest.raises(ValueError, match="Failed to generate non-overlapping positions"):
         generator._generate_valid_positions(10, 0, 64, [20] * 10)
@@ -84,7 +84,7 @@ def test_stripe_pattern_generator_exception_handling():
             "background_colour": "#000000",
         }
 
-        generator = StripePatternGenerator(cfg)
+        generator = LinesGenerator(cfg)
 
         # This should raise an exception due to overlap issues
         with pytest.raises(ValueError):
@@ -123,12 +123,12 @@ def test_parse_args_defaults():
         assert args.max_attempts == 10000
 
 
-@patch('cogstim.lines.StripePatternGenerator')
+@patch('cogstim.generators.lines.LinesGenerator')
 def test_main_success(mock_generator_class):
     """Test main function success path."""
     mock_generator_instance = type('MockGen', (), {'generate_images': lambda: None})()
 
-    with patch('cogstim.lines.parse_args') as mock_parse:
+    with patch('cogstim.generators.lines.parse_args') as mock_parse:
         mock_args = type('Args', (), {
             'output_dir': '/tmp/test',
             'img_sets': 10,
@@ -160,14 +160,14 @@ def test_main_success(mock_generator_class):
         assert config["tag"] == "test"
 
 
-@patch('cogstim.lines.StripePatternGenerator')
+@patch('cogstim.generators.lines.LinesGenerator')
 def test_main_with_exception(mock_generator_class):
     """Test main function with exception handling."""
     mock_generator_instance = MagicMock()
     mock_generator_instance.generate_images.side_effect = ValueError("Test error")
     mock_generator_class.return_value = mock_generator_instance
 
-    with patch('cogstim.lines.parse_args'), \
+    with patch('cogstim.generators.lines.parse_args'), \
          patch('logging.error') as mock_error:
 
         with pytest.raises(ValueError):

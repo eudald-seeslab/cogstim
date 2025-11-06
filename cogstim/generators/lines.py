@@ -5,10 +5,10 @@ import argparse
 import logging
 import numpy as np
 from tqdm import tqdm
-from cogstim.base_generator import BaseGenerator
-from cogstim.image_utils import ImageCanvas
-from cogstim.planner import GenerationPlan
-from cogstim.constants import IMAGE_DEFAULTS, LINE_DEFAULTS
+from cogstim.helpers.base_generator import BaseGenerator
+from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.planner import GenerationPlan
+from cogstim.helpers.constants import IMAGE_DEFAULTS, LINE_DEFAULTS
 
 # Configure logging
 logging.basicConfig(
@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 
 
-class StripePatternGenerator(BaseGenerator):
+class LinesGenerator(BaseGenerator):
     """Generates images with rotated stripe patterns."""
 
     def __init__(self, config):
@@ -226,7 +226,7 @@ def main():
     }
 
     try:
-        generator = StripePatternGenerator(config)
+        generator = LinesGenerator(config)
         generator.generate_images()
         logging.info("Image generation completed successfully!")
     except Exception as e:

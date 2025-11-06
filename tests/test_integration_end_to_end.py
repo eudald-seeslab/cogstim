@@ -9,11 +9,11 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 
-from cogstim.ans_dots import PointsGenerator, GENERAL_CONFIG as ANS_GENERAL_CONFIG
-from cogstim.match_to_sample import MatchToSampleGenerator, GENERAL_CONFIG as MTS_GENERAL_CONFIG
-from cogstim.shapes import ShapesGenerator
-from cogstim.lines import StripePatternGenerator
-from cogstim.fixation import FixationGenerator
+from cogstim.generators.dots_ans import DotsANSGenerator, GENERAL_CONFIG as ANS_GENERAL_CONFIG
+from cogstim.generators.match_to_sample import MatchToSampleGenerator, GENERAL_CONFIG as MTS_GENERAL_CONFIG
+from cogstim.generators.shapes import ShapesGenerator
+from cogstim.generators.lines import LinesGenerator
+from cogstim.generators.fixation import FixationGenerator
 
 
 def get_test_images_dir():
@@ -44,7 +44,7 @@ class TestANSImageGeneration:
             "max_point_radius": 12,
         }
         
-        generator = PointsGenerator(config)
+        generator = DotsANSGenerator(config)
         generator.generate_images()
         
         # Check that images were created in train/test structure
@@ -102,7 +102,7 @@ class TestANSImageGeneration:
             "max_point_radius": 10,
         }
         
-        generator = PointsGenerator(config)
+        generator = DotsANSGenerator(config)
         generator.generate_images()
         
         # Check that images were created in train/test structure
@@ -146,7 +146,7 @@ class TestANSImageGeneration:
             "max_point_radius": 15,
         }
         
-        generator = PointsGenerator(config)
+        generator = DotsANSGenerator(config)
         generator.generate_images()
         
         # Check that images were created in train/test structure
@@ -380,7 +380,7 @@ class TestLinesImageGeneration:
             "background_colour": "#000000",  # Black background
         }
         
-        generator = StripePatternGenerator(config)
+        generator = LinesGenerator(config)
         generator.generate_images()
         
         # Check that images were created
@@ -589,7 +589,7 @@ class TestImageProperties:
         ]
         
         generators = [
-            PointsGenerator(configs[0]),
+            DotsANSGenerator(configs[0]),
             MatchToSampleGenerator(configs[1]),
         ]
         
@@ -627,7 +627,7 @@ class TestImageProperties:
             "max_point_num": 8,
         }
 
-        generator = PointsGenerator(config)
+        generator = DotsANSGenerator(config)
         generator.generate_images()
         
         # Get generated images from train directory
@@ -714,7 +714,7 @@ class TestSeedDeterminism:
             "seed": 42,
         }
         
-        generator1 = PointsGenerator(config1)
+        generator1 = DotsANSGenerator(config1)
         generator1.generate_images()
         
         # Generate images with seed=42 (second run)
@@ -732,7 +732,7 @@ class TestSeedDeterminism:
             "seed": 42,
         }
         
-        generator2 = PointsGenerator(config2)
+        generator2 = DotsANSGenerator(config2)
         generator2.generate_images()
         
         # Get list of images from both runs
@@ -834,7 +834,7 @@ class TestSeedDeterminism:
             "seed": 1,
         }
         
-        generator1 = PointsGenerator(config1)
+        generator1 = DotsANSGenerator(config1)
         generator1.generate_images()
         
         # Generate images with seed=2
@@ -852,7 +852,7 @@ class TestSeedDeterminism:
             "seed": 2,
         }
         
-        generator2 = PointsGenerator(config2)
+        generator2 = DotsANSGenerator(config2)
         generator2.generate_images()
         
         # Get list of images from both runs
@@ -899,7 +899,7 @@ class TestSeedDeterminism:
         }
         # Note: no "seed" key in config
         
-        generator = PointsGenerator(config)
+        generator = DotsANSGenerator(config)
         generator.generate_images()
         
         # Check that images were created

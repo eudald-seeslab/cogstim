@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from unittest.mock import patch
 
-from cogstim.dots_core import NumberPoints, PointLayoutError
+from cogstim.helpers.dots_core import DotsCore, PointLayoutError
 
 
 class TestNumberPointsNewMethods:
@@ -12,7 +12,7 @@ class TestNumberPointsNewMethods:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.np = NumberPoints(
+        self.np = DotsCore(
             init_size=512,
             colour_1=(255, 255, 0),  # yellow
             colour_2=(0, 0, 255),    # blue
@@ -240,7 +240,7 @@ class TestNumberPointsBoundaryCheck:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.np = NumberPoints(
+        self.np = DotsCore(
             init_size=512,
             colour_1=(255, 255, 0),
             colour_2=(0, 0, 255),

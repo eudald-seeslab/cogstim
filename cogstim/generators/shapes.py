@@ -4,10 +4,10 @@ import random
 import numpy as np
 from tqdm import tqdm
 
-from cogstim.constants import COLOUR_MAP, IMAGE_DEFAULTS
-from cogstim.base_generator import BaseGenerator
-from cogstim.image_utils import ImageCanvas
-from cogstim.planner import GenerationPlan
+from cogstim.helpers.constants import COLOUR_MAP, IMAGE_DEFAULTS
+from cogstim.helpers.base_generator import BaseGenerator
+from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.planner import GenerationPlan
 
 
 class ShapesGenerator(BaseGenerator):

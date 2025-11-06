@@ -22,15 +22,15 @@ python -m cogstim.cli --custom --shapes triangle square --colours red green
 import argparse
 
 # Generators
-from cogstim.shapes import ShapesGenerator
-from cogstim.ans_dots import (
-    PointsGenerator,
+from cogstim.generators.shapes import ShapesGenerator
+from cogstim.generators.dots_ans import (
+    DotsANSGenerator,
     GENERAL_CONFIG as ANS_GENERAL_CONFIG,
 )
-from cogstim.lines import StripePatternGenerator
-from cogstim.fixation import FixationGenerator
-from cogstim.match_to_sample import MatchToSampleGenerator, GENERAL_CONFIG as MTS_GENERAL_CONFIG
-from cogstim.constants import (
+from cogstim.generators.lines import LinesGenerator
+from cogstim.generators.fixation import FixationGenerator
+from cogstim.generators.match_to_sample import MatchToSampleGenerator, GENERAL_CONFIG as MTS_GENERAL_CONFIG
+from cogstim.helpers.constants import (
     IMAGE_DEFAULTS,
     DOT_DEFAULTS,
     SHAPE_DEFAULTS,
@@ -196,7 +196,7 @@ def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> No
     if one_colour:
         cfg["colour_1"] = args.dot_colour
         cfg["colour_2"] = None
-    generator = PointsGenerator(cfg)
+    generator = DotsANSGenerator(cfg)
     generator.generate_images()
 
 
@@ -234,7 +234,7 @@ def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
 
 
 def generate_lines_dataset(args: argparse.Namespace) -> None:
-    """Generate train/test stripe-pattern line datasets using StripePatternGenerator."""
+    """Generate train/test stripe-pattern line datasets using LinesGenerator."""
 
     base_dir_default = "images/lines"
     base_dir = args.output_dir or base_dir_default
@@ -255,7 +255,7 @@ def generate_lines_dataset(args: argparse.Namespace) -> None:
         "background_colour": args.background_colour,
         "seed": args.seed,
     }
-    generator = StripePatternGenerator(cfg)
+    generator = LinesGenerator(cfg)
     generator.generate_images()
 
 

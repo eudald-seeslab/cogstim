@@ -1,11 +1,11 @@
 
-from cogstim.dots_core import NumberPoints, PointLayoutError
+from cogstim.helpers.dots_core import DotsCore, PointLayoutError
 
 
 def equalize_pair(
-    s_np: NumberPoints,
+    s_np: DotsCore,
     s_points,
-    m_np: NumberPoints,
+    m_np: DotsCore,
     m_points,
     rel_tolerance: float,
     abs_tolerance: float,

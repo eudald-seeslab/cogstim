@@ -1,14 +1,14 @@
-"""Tests for updated cogstim.ans_dots module."""
+"""Tests for updated cogstim.generators.dots_ans module."""
 
 import pytest
 from unittest.mock import patch, MagicMock, call
 
-from cogstim.ans_dots import PointsGenerator, GENERAL_CONFIG, TerminalPointLayoutError
-from cogstim.constants import ANS_EASY_RATIOS, ANS_HARD_RATIOS
+from cogstim.generators.dots_ans import DotsANSGenerator, GENERAL_CONFIG, TerminalPointLayoutError
+from cogstim.helpers.constants import ANS_EASY_RATIOS, ANS_HARD_RATIOS
 
 
 class TestPointsGeneratorRatiosMode:
-    """Test the new ratios functionality in PointsGenerator."""
+    """Test the new ratios functionality in DotsANSGenerator."""
 
     def test_ratios_easy(self):
         """Test that ratios='easy' uses ANS_EASY_RATIOS."""
@@ -23,8 +23,8 @@ class TestPointsGeneratorRatiosMode:
             "max_point_num": 10,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             assert generator.ratios == ANS_EASY_RATIOS
 
     def test_ratios_hard(self):
@@ -40,8 +40,8 @@ class TestPointsGeneratorRatiosMode:
             "max_point_num": 10,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             assert generator.ratios == ANS_HARD_RATIOS
 
     def test_ratios_all(self):
@@ -57,8 +57,8 @@ class TestPointsGeneratorRatiosMode:
             "max_point_num": 10,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             expected_ratios = ANS_EASY_RATIOS + ANS_HARD_RATIOS
             assert generator.ratios == expected_ratios
 
@@ -75,8 +75,8 @@ class TestPointsGeneratorRatiosMode:
             "max_point_num": 10,
         }
 
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             expected_ratios = ANS_EASY_RATIOS + ANS_HARD_RATIOS
             assert generator.ratios == expected_ratios
 
@@ -93,9 +93,9 @@ class TestPointsGeneratorRatiosMode:
             "max_point_num": 10,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
             with pytest.raises(ValueError, match="Invalid ratio mode: invalid"):
-                PointsGenerator(config)
+                DotsANSGenerator(config)
 
     def test_legacy_easy_flag_precedence(self):
         """Test that explicit ratios takes precedence over legacy EASY flag."""
@@ -111,8 +111,8 @@ class TestPointsGeneratorRatiosMode:
             "max_point_num": 10,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             # Should use hard ratios despite EASY=True
             assert generator.ratios == ANS_HARD_RATIOS
 
@@ -133,8 +133,8 @@ class TestPointsGeneratorOneColourMode:
             "max_point_num": 5,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             positions = generator.get_positions()
             
             # Should generate single counts, ignoring second value
@@ -154,8 +154,8 @@ class TestPointsGeneratorOneColourMode:
             "max_point_num": 3,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             positions = generator.get_positions()
             
             # One-colour mode: multiplier = 1, positions = 3
@@ -177,8 +177,8 @@ class TestPointsGeneratorOneColourMode:
             "max_point_num": 3,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             positions = generator.get_positions()
             
             # Two-colour mode: multiplier = 4 (both orders + equalized/non-equalized)
@@ -204,11 +204,11 @@ class TestPointsGeneratorErrorHandling:
             "max_point_num": 1,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             
             # Mock create_and_save_once to always raise PointLayoutError
-            from cogstim.dots_core import PointLayoutError
+            from cogstim.helpers.dots_core import PointLayoutError
             with patch.object(generator, 'create_and_save_once', side_effect=PointLayoutError("Too many attempts")):
                 with pytest.raises(TerminalPointLayoutError):
                     generator.create_and_save(1, 0, False, "test")
@@ -227,11 +227,11 @@ class TestPointsGeneratorErrorHandling:
             "max_point_num": 1,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             
-            # Mock NumberPoints
-            with patch('cogstim.ans_dots.NumberPoints') as mock_create:
+            # Mock DotsCore
+            with patch('cogstim.generators.dots_ans.DotsCore') as mock_create:
                 mock_np = MagicMock()
                 mock_create.return_value = mock_np
                 mock_np.design_n_points.return_value = []
@@ -259,11 +259,11 @@ class TestPointsGeneratorErrorHandling:
             "max_point_num": 1,
         }
         
-        with patch('cogstim.ans_dots.os.makedirs'):
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs'):
+            generator = DotsANSGenerator(config)
             
-            # Mock NumberPoints
-            with patch('cogstim.ans_dots.NumberPoints') as mock_create:
+            # Mock DotsCore
+            with patch('cogstim.generators.dots_ans.DotsCore') as mock_create:
                 mock_np = MagicMock()
                 mock_create.return_value = mock_np
                 mock_np.design_n_points.return_value = []
@@ -293,8 +293,8 @@ class TestPointsGeneratorDirectorySetup:
             "colour_1": "yellow",
         }
         
-        with patch('cogstim.ans_dots.os.makedirs') as mock_makedirs:
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs') as mock_makedirs:
+            generator = DotsANSGenerator(config)
             
             # Should create main directory, train/yellow, and test/yellow
             import os
@@ -318,8 +318,8 @@ class TestPointsGeneratorDirectorySetup:
             "colour_2": "blue",
         }
         
-        with patch('cogstim.ans_dots.os.makedirs') as mock_makedirs:
-            generator = PointsGenerator(config)
+        with patch('cogstim.generators.dots_ans.os.makedirs') as mock_makedirs:
+            generator = DotsANSGenerator(config)
             
             # Should create main directory, train/test for both colours
             import os

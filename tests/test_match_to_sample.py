@@ -1,17 +1,17 @@
-"""Tests for cogstim.match_to_sample module."""
+"""Tests for cogstim.generators.match_to_sample module."""
 
 import tempfile
 from unittest.mock import MagicMock, patch
 
-from cogstim.match_to_sample import (
+from cogstim.generators.match_to_sample import (
     MatchToSampleGenerator,
     GENERAL_CONFIG as MTS_GENERAL_CONFIG,
 )
-from cogstim.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS
-from cogstim.planner import GenerationPlan
-from cogstim.dots_core import NumberPoints
-from cogstim.mts_helpers.geometry import equalize_pair as geometry_equalize_pair
-from cogstim.mts_helpers.io import save_image_pair, save_pair_with_basename
+from cogstim.helpers.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS
+from cogstim.helpers.planner import GenerationPlan
+from cogstim.helpers.dots_core import DotsCore
+from cogstim.helpers.mts_geometry import equalize_pair as geometry_equalize_pair
+from cogstim.helpers.mts_io import save_image_pair, save_pair_with_basename
 
 
 class TestMatchToSampleGenerator:
@@ -31,21 +31,21 @@ class TestMatchToSampleGenerator:
 
     def test_init_with_easy_ratios(self):
         """Test generator initialization with easy ratios."""
-        with patch('cogstim.match_to_sample.os.makedirs'):
+        with patch('cogstim.generators.match_to_sample.os.makedirs'):
             generator = MatchToSampleGenerator(self.config)
             assert generator.ratios == MTS_EASY_RATIOS
 
     def test_init_with_hard_ratios(self):
         """Test generator initialization with hard ratios."""
         config = {**self.config, "ratios": "hard"}
-        with patch('cogstim.match_to_sample.os.makedirs'):
+        with patch('cogstim.generators.match_to_sample.os.makedirs'):
             generator = MatchToSampleGenerator(config)
             assert generator.ratios == MTS_HARD_RATIOS
 
     def test_init_with_all_ratios(self):
         """Test generator initialization with all ratios."""
         config = {**self.config, "ratios": "all"}
-        with patch('cogstim.match_to_sample.os.makedirs'):
+        with patch('cogstim.generators.match_to_sample.os.makedirs'):
             generator = MatchToSampleGenerator(config)
             expected_ratios = MTS_EASY_RATIOS + MTS_HARD_RATIOS
             assert generator.ratios == expected_ratios
@@ -68,7 +68,7 @@ class TestMatchToSampleGenerator:
 
     def test_generate_images(self):
         """Test generate_images method."""
-        with patch('cogstim.match_to_sample.os.makedirs'), \
+        with patch('cogstim.generators.match_to_sample.os.makedirs'), \
              patch.object(MatchToSampleGenerator, 'create_and_save') as mock_create:
             generator = MatchToSampleGenerator(self.config)
             generator.generate_images()
@@ -76,7 +76,7 @@ class TestMatchToSampleGenerator:
 
     def test_create_and_save_equalized_pair(self):
         """Test create_and_save method for equalized pairs."""
-        with patch('cogstim.match_to_sample.os.makedirs'), \
+        with patch('cogstim.generators.match_to_sample.os.makedirs'), \
              patch.object(MatchToSampleGenerator, 'create_image_pair') as mock_create, \
              patch.object(MatchToSampleGenerator, 'save_image_pair') as mock_save:
             generator = MatchToSampleGenerator(self.config)
@@ -86,7 +86,7 @@ class TestMatchToSampleGenerator:
 
     def test_create_and_save_random_pair(self):
         """Test create_and_save method for random pairs."""
-        with patch('cogstim.match_to_sample.os.makedirs'), \
+        with patch('cogstim.generators.match_to_sample.os.makedirs'), \
              patch.object(MatchToSampleGenerator, 'create_image_pair') as mock_create, \
              patch.object(MatchToSampleGenerator, 'save_image_pair') as mock_save:
             generator = MatchToSampleGenerator(self.config)
@@ -99,8 +99,8 @@ class TestHelperFunctions:
     """Test helper functions in match_to_sample module."""
 
     def test_numberpoints_creation(self):
-        """Test NumberPoints object creation."""
-        np_obj = NumberPoints(
+        """Test DotsCore object creation."""
+        np_obj = DotsCore(
             init_size=512,
             colour_1="black",
             bg_colour="white",
@@ -116,7 +116,7 @@ class TestHelperFunctions:
 
     def test_design_n_points(self):
         """Test design_n_points method."""
-        np_obj = NumberPoints(
+        np_obj = DotsCore(
             init_size=512,
             colour_1="black",
             bg_colour="white",
@@ -208,8 +208,8 @@ class TestHelperFunctions:
         m_np = MagicMock()
         s_points = [((100, 100, 10), "colour_1")]
         m_points = [((200, 200, 15), "colour_1")]
-        with patch('cogstim.match_to_sample.os.path.join') as mock_join, \
-             patch('builtins.open', MagicMock()):
+        with patch('os.path.join') as mock_join, \
+              patch('builtins.open', MagicMock()):
             mock_join.side_effect = ["/tmp/test_s.png", "/tmp/test_m.png"]
             save_image_pair(s_np, s_points, m_np, m_points, "/tmp", "test")
             s_np.draw_points.assert_called_once_with(s_points)
@@ -224,7 +224,7 @@ class TestHelperFunctions:
         m_np = MagicMock()
         m_points = [((200, 200, 15), "colour_1")]
         pair = (s_np, s_points, m_np, m_points)
-        with patch('cogstim.mts_helpers.io.save_image_pair') as mock_save:
+        with patch('cogstim.helpers.mts_io.save_image_pair') as mock_save:
             save_pair_with_basename(pair, "/tmp", "test")
             mock_save.assert_called_once_with(s_np, s_points, m_np, m_points, "/tmp", "test")
 
@@ -245,7 +245,7 @@ class TestMatchToSampleIntegration:
                 "ratios": "easy",
             }
             
-            with patch('cogstim.match_to_sample.os.makedirs'):
+            with patch('cogstim.generators.match_to_sample.os.makedirs'):
                 generator = MatchToSampleGenerator(config)
                 
                 # Mock the actual image creation to avoid file I/O

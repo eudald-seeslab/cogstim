@@ -7,9 +7,9 @@ import logging
 import numpy as np
 from tqdm import tqdm
 
-from cogstim.dots_core import NumberPoints, PointLayoutError
-from cogstim.base_generator import BaseGenerator
-from cogstim.constants import IMAGE_DEFAULTS, DOT_DEFAULTS
+from cogstim.helpers.dots_core import DotsCore, PointLayoutError
+from cogstim.helpers.base_generator import BaseGenerator
+from cogstim.helpers.constants import IMAGE_DEFAULTS, DOT_DEFAULTS
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -20,7 +20,7 @@ class TerminalPointLayoutError(ValueError):
     """Raised when point layout attempts are exhausted."""
 
 
-class OneColourImageGenerator(BaseGenerator):
+class DotsOneColourGenerator(BaseGenerator):
     """Generates images with configurable colored points."""
 
     def __init__(self, config):
@@ -62,7 +62,7 @@ class OneColourImageGenerator(BaseGenerator):
 
     def create_image(self, n):
         """Create a single image with n points."""
-        number_points = NumberPoints(
+        number_points = DotsCore(
             init_size=self.config["init_size"],
             colour_1=self.config["colour_1"],
             bg_colour=self.config["background_colour"],
@@ -190,7 +190,7 @@ def main():
     }
 
     try:
-        image_generator = OneColourImageGenerator(config)
+        image_generator = DotsOneColourGenerator(config)
         image_generator.generate_images()
         logging.info("Image generation completed successfully!")
     except Exception as e:

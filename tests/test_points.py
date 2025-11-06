@@ -1,9 +1,9 @@
-from cogstim.dots_core import NumberPoints
-from cogstim.constants import COLOUR_MAP
+from cogstim.helpers.dots_core import DotsCore
+from cogstim.helpers.constants import COLOUR_MAP
 
 
 def _make_number_points(init_size: int = 512):
-    return NumberPoints(
+    return DotsCore(
         init_size=init_size,
         colour_1=COLOUR_MAP["yellow"],
         colour_2=COLOUR_MAP["blue"],

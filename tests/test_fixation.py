@@ -7,7 +7,7 @@ from unittest.mock import patch
 from PIL import Image
 import numpy as np
 
-from cogstim.fixation import FixationGenerator
+from cogstim.generators.fixation import FixationGenerator
 
 
 class TestFixationGenerator:
@@ -106,7 +106,7 @@ class TestFixationGenerator:
         generator = FixationGenerator(config)
         canvas = generator._blank_canvas()
         
-        from cogstim.image_utils import ImageCanvas
+        from cogstim.helpers.image_utils import ImageCanvas
         assert isinstance(canvas, ImageCanvas)
         
         img = canvas.img
@@ -139,7 +139,7 @@ class TestFixationGenerator:
         with pytest.raises(ValueError, match="Unknown fixation type: INVALID"):
             generator._draw_symbol("invalid")
 
-    @patch('cogstim.fixation.os.makedirs')
+    @patch('cogstim.generators.fixation.os.makedirs')
     def test_create_directories(self, mock_makedirs):
         """Test setup_directories creates output directory."""
         config = {

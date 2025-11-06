@@ -11,7 +11,7 @@ import os
 import logging
 from abc import ABC
 from typing import Dict, Any
-from cogstim.random_seed import set_seed
+from cogstim.helpers.random_seed import set_seed
 
 
 class BaseGenerator(ABC):

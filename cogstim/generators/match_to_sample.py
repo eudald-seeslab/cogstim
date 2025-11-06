@@ -1,12 +1,12 @@
 import os
 from tqdm import tqdm
 
-from cogstim.dots_core import NumberPoints
-from cogstim.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS, MTS_DEFAULTS, IMAGE_DEFAULTS
-from cogstim.mts_helpers.geometry import equalize_pair as _equalize_geom
-from cogstim.mts_helpers.io import save_image_pair, build_basename
-from cogstim.planner import GenerationPlan, resolve_ratios
-from cogstim.base_generator import BaseGenerator
+from cogstim.helpers.dots_core import DotsCore
+from cogstim.helpers.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS, MTS_DEFAULTS, IMAGE_DEFAULTS
+from cogstim.helpers.mts_geometry import equalize_pair as _equalize_geom
+from cogstim.helpers.mts_io import save_image_pair, build_basename
+from cogstim.helpers.planner import GenerationPlan, resolve_ratios
+from cogstim.helpers.base_generator import BaseGenerator
 
 
 # Default general configuration
@@ -39,7 +39,7 @@ class MatchToSampleGenerator(BaseGenerator):
         init_size = self.config["init_size"]
         
         # Create sample image
-        s_np = NumberPoints(
+        s_np = DotsCore(
             init_size=init_size,
             colour_1=self.config["dot_colour"],
             bg_colour=self.config["background_colour"],
@@ -50,7 +50,7 @@ class MatchToSampleGenerator(BaseGenerator):
         s_points = s_np.design_n_points(n1, "colour_1")
         
         # Create match image
-        m_np = NumberPoints(
+        m_np = DotsCore(
             init_size=init_size,
             colour_1=self.config["dot_colour"],
             bg_colour=self.config["background_colour"],

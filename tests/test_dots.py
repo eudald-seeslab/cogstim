@@ -5,7 +5,8 @@ import os
 from unittest.mock import patch, MagicMock
 from PIL import Image
 
-from cogstim.dots import OneColourImageGenerator, parse_args, main
+from cogstim.generators.dots_one_colour import DotsOneColourGenerator, parse_args, main
+from cogstim.helpers.constants import IMAGE_DEFAULTS
 
 
 class TestOneColourImageGenerator:
@@ -30,8 +31,8 @@ class TestOneColourImageGenerator:
             "version_tag": "",
         }
 
-        with patch('os.makedirs'):
-            generator = OneColourImageGenerator(config)
+        with patch('cogstim.generators.dots_one_colour.os.makedirs'):
+            generator = DotsOneColourGenerator(config)
 
             assert generator.nmin == 1
             assert generator.nmax == 5
@@ -50,7 +51,7 @@ class TestOneColourImageGenerator:
             "train_num": 1,
             "test_num": 1,
             "init_size": 512,
-            "mode": "RGB",
+            "mode": IMAGE_DEFAULTS["mode"],
             "background_colour": "black",
             "colour_1": (255, 255, 0),
             "attempts_limit": 100,
@@ -58,7 +59,7 @@ class TestOneColourImageGenerator:
         }
 
         with pytest.raises(ValueError, match="min_point_num must be at least 1"):
-            OneColourImageGenerator(config)
+            DotsOneColourGenerator(config)
 
     def test_check_areas_make_sense_too_small_area(self):
         """Test that too small total_area raises ValueError."""
@@ -80,7 +81,7 @@ class TestOneColourImageGenerator:
         }
 
         with pytest.raises(ValueError, match="total_area is too small"):
-            OneColourImageGenerator(config)
+            DotsOneColourGenerator(config)
 
     def test_check_areas_make_sense_too_large_area(self):
         """Test that too large total_area raises ValueError."""
@@ -102,7 +103,7 @@ class TestOneColourImageGenerator:
         }
 
         with pytest.raises(ValueError, match="Total_area is very large"):
-            OneColourImageGenerator(config)
+            DotsOneColourGenerator(config)
 
     def test_setup_directories(self):
         """Test directory creation."""
@@ -124,13 +125,13 @@ class TestOneColourImageGenerator:
         }
 
         with patch('os.makedirs') as mock_makedirs:
-            generator = OneColourImageGenerator(config)
+            generator = DotsOneColourGenerator(config)
 
             # Should create train and test subdirs for 1, 2, 3
             # With train/test structure: output_dir, train/1, train/2, train/3, test/1, test/2, test/3
             assert mock_makedirs.call_count == 7  # base + 3 train + 3 test
 
-    @patch('cogstim.dots.NumberPoints')
+    @patch('cogstim.generators.dots_one_colour.DotsCore')
     def test_create_image_without_total_area(self, mock_create):
         """Test image creation without total area constraint."""
         config = {
@@ -156,10 +157,10 @@ class TestOneColourImageGenerator:
         mock_np_instance.draw_points.return_value = MagicMock(spec=Image.Image)
 
         with patch('os.makedirs'):
-            generator = OneColourImageGenerator(config)
+            generator = DotsOneColourGenerator(config)
             result = generator.create_image(3)
 
-            # Should call NumberPoints
+            # Should call DotsCore
             mock_create.assert_called_once()
             
             # Should call design_n_points and draw_points
@@ -168,7 +169,7 @@ class TestOneColourImageGenerator:
             # Should NOT call fix_total_area
             mock_np_instance.fix_total_area.assert_not_called()
 
-    @patch('cogstim.dots.NumberPoints')
+    @patch('cogstim.generators.dots_one_colour.DotsCore')
     def test_create_image_with_total_area(self, mock_create):
         """Test image creation with total area constraint."""
         # Calculate a valid total_area: π * (max_radius)² * max_points
@@ -199,13 +200,13 @@ class TestOneColourImageGenerator:
         mock_np_instance.draw_points.return_value = MagicMock(spec=Image.Image)
 
         with patch('os.makedirs'):
-            generator = OneColourImageGenerator(config)
+            generator = DotsOneColourGenerator(config)
             result = generator.create_image(3)
 
             # Should call fix_total_area when total_area is set
             mock_np_instance.fix_total_area.assert_called_once_with([], valid_total_area)
 
-    @patch('cogstim.dots.OneColourImageGenerator.create_image')
+    @patch('cogstim.generators.dots_one_colour.DotsOneColourGenerator.create_image')
     def test_create_and_save_once(self, mock_create_image):
         """Test create_and_save_once method."""
         config = {
@@ -229,7 +230,7 @@ class TestOneColourImageGenerator:
         mock_create_image.return_value = mock_image
 
         with patch('os.makedirs'):
-            generator = OneColourImageGenerator(config)
+            generator = DotsOneColourGenerator(config)
             generator.create_and_save_once("test.png", 3, "train")
 
             # Should call create_image
@@ -261,9 +262,9 @@ class TestOneColourImageGenerator:
         }
 
         with patch('os.makedirs'), \
-             patch('cogstim.dots.OneColourImageGenerator.create_and_save') as mock_save:
+             patch('cogstim.generators.dots_one_colour.DotsOneColourGenerator.create_and_save') as mock_save:
 
-            generator = OneColourImageGenerator(config)
+            generator = DotsOneColourGenerator(config)
             generator.generate_images()
 
             # Should call create_and_save for each combination:
@@ -308,7 +309,7 @@ class TestDotsCLI:
             assert args.min_points == 1
             assert args.max_points == 5
 
-    @patch('cogstim.dots.OneColourImageGenerator')
+    @patch('cogstim.generators.dots_one_colour.DotsOneColourGenerator')
     @patch('random.seed')
     def test_main_success(self, mock_random_seed, mock_generator_class):
         """Test main function success path."""
@@ -349,7 +350,7 @@ class TestDotsCLI:
             # Should call generate_images
             mock_generator_instance.generate_images.assert_called_once()
 
-    @patch('cogstim.dots.OneColourImageGenerator')
+    @patch('cogstim.generators.dots_one_colour.DotsOneColourGenerator')
     def test_main_with_exception(self, mock_generator_class):
         """Test main function with exception handling."""
         mock_generator_instance = MagicMock()

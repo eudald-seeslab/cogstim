@@ -233,7 +233,7 @@ class TestHelperFunctions:
                 n_first=2, n_second=3,
                 bg_colour="white", dot_colour="black",
                 init_size=512,
-                min_radius=5, max_radius=15,
+                min_point_radius=5, max_point_radius=15,
                 attempts_limit=100,
                 error_label="test"
             )
@@ -252,7 +252,7 @@ class TestHelperFunctions:
                 n_first=2, n_second=3,
                 bg_colour="white", dot_colour="black",
                 init_size=512,
-                min_radius=5, max_radius=15,
+                min_point_radius=5, max_point_radius=15,
                 attempts_limit=100,
                 error_label="test"
             )
@@ -265,8 +265,8 @@ class TestHelperFunctions:
             args = MagicMock()
             args.background_colour = "white"
             args.dot_colour = "black"
-            args.min_radius = 5
-            args.max_radius = 15
+            args.min_point_radius = 5
+            args.max_point_radius = 15
             args.attempts_limit = 100
             pair, success = generate_pair(2, 3, args, "test", equalize=False)
             assert pair is not None
@@ -282,10 +282,11 @@ class TestHelperFunctions:
             args = MagicMock()
             args.background_colour = "white"
             args.dot_colour = "black"
-            args.min_radius = 5
-            args.max_radius = 15
+            args.min_point_radius = 5
+            args.max_point_radius = 15
             args.attempts_limit = 100
             args.tolerance = 0.01
+            args.abs_tolerance = 2
             pair, success = generate_pair(2, 3, args, "test", equalize=True)
             assert pair is not None
             assert success is True
@@ -300,10 +301,11 @@ class TestHelperFunctions:
             args = MagicMock()
             args.background_colour = "white"
             args.dot_colour = "black"
-            args.min_radius = 5
-            args.max_radius = 15
+            args.min_point_radius = 5
+            args.max_point_radius = 15
             args.attempts_limit = 100
             args.tolerance = 0.01
+            args.abs_tolerance = 2
             pair, success = generate_pair(2, 3, args, "test", equalize=True)
             assert pair is not None
             assert success is False

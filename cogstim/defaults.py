@@ -47,8 +47,11 @@ FIXATION_DEFAULTS = {
 
 # Match-to-sample defaults
 MTS_DEFAULTS = {
-    "min_radius": 5,
-    "max_radius": 15,
-    "tolerance": 0.05,
+    "min_point_radius": 5,
+    "max_point_radius": 15,
+    "attempts_limit": 5000,
+    "tolerance": 0.01,  # 1% relative difference for area equalization
+    "abs_tolerance": 2,  # absolute area tolerance in pixels
+    "dot_colour": "black",
+    "background_colour": "white",
 }
-

@@ -84,6 +84,11 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--min_point_radius", type=int, default=DOT_DEFAULTS["min_point_radius"], help=f"Minimum dot radius in pixels (dot-array datasets, default: {DOT_DEFAULTS['min_point_radius']})")
     parser.add_argument("--max_point_radius", type=int, default=DOT_DEFAULTS["max_point_radius"], help=f"Maximum dot radius in pixels (dot-array datasets, default: {DOT_DEFAULTS['max_point_radius']})")
     parser.add_argument("--dot_colour", type=str, choices=["yellow", "blue", "red", "green", "black", "white", "gray"], default=DOT_DEFAULTS["dot_colour"], help=f"Dot colour for one-colour dot-array images (default: {DOT_DEFAULTS['dot_colour']})")
+    parser.add_argument("--attempts_limit", type=int, default=DOT_DEFAULTS["attempts_limit"], help=f"Maximum attempts for dot placement (dot-array datasets, default: {DOT_DEFAULTS['attempts_limit']})")
+    
+    # Match-to-sample specific parameters
+    parser.add_argument("--tolerance", type=float, help=f"Relative tolerance for area equalization in MTS (e.g., 0.01 for 1%%, default varies by task)")
+    parser.add_argument("--abs_tolerance", type=int, help=f"Absolute area tolerance in pixels for MTS equalization (default varies by task)")
 
     # Line-pattern-specific parameters  # NEW ARGUMENT GROUP
     parser.add_argument("--angles", type=int, nargs="+", default=[0, 45, 90, 135], help="Rotation angles for stripe patterns (lines dataset)")
@@ -206,8 +211,15 @@ def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
             "min_point_radius": args.min_point_radius,
             "max_point_radius": args.max_point_radius,
             "dot_colour": args.dot_colour,
+            "attempts_limit": args.attempts_limit,
         },
     }
+    
+    # Add tolerance parameters if provided (otherwise use defaults from MTS_GENERAL_CONFIG)
+    if args.tolerance is not None:
+        cfg["tolerance"] = args.tolerance
+    if args.abs_tolerance is not None:
+        cfg["abs_tolerance"] = args.abs_tolerance
 
     generator = MatchToSampleGenerator(cfg)
     generator.generate_images()

@@ -8,23 +8,14 @@ from cogstim.mts_helpers.geometry import equalize_pair as _equalize_geom
 from cogstim.mts_helpers.io import save_image_pair, save_pair_with_basename, SummaryWriter, build_basename
 from cogstim.planner import GenerationPlan, resolve_ratios
 from cogstim.base_generator import BaseGenerator
+from cogstim.defaults import MTS_DEFAULTS
 
 
 # Default general configuration
 GENERAL_CONFIG = {
-    "dot_colour": "black",
-    "background_colour": "white",
-    "min_radius": 5,
-    "max_radius": 15,
-    "attempts_limit": 1000,
-    "tolerance": 0.01,
+    **MTS_DEFAULTS,
     "ratios": "all",
 }
-DEFAULT_ATTEMPTS_LIMIT = 5000
-DEFAULT_BG_COLOUR = "white"
-DEFAULT_DOT_COLOUR = "black"
-DEFAULT_TOLERANCE = 0.01        # 1% relative difference by default
-DEFAULT_ABS_TOL = 2            # absolute area tolerance in pixels
 
 
 class ImagePrinter:
@@ -73,8 +64,8 @@ class ImagePrinter:
 
 def try_build_random_pair(n_first, n_second,
                           bg_colour, dot_colour,
-                          init_size, min_radius, 
-                          max_radius, attempts_limit,
+                          init_size, min_point_radius, 
+                          max_point_radius, attempts_limit,
                           error_label):
     """Try to create a pair (n_first, n_second). Return tuple or None and print contextualized error.
 
@@ -84,14 +75,14 @@ def try_build_random_pair(n_first, n_second,
         s_np = NumberPoints(init_size=init_size,
                            colour_1=dot_colour,
                            bg_colour=bg_colour,
-                           min_point_radius=min_radius,
-                           max_point_radius=max_radius,
+                           min_point_radius=min_point_radius,
+                           max_point_radius=max_point_radius,
                            attempts_limit=attempts_limit)
         m_np = NumberPoints(init_size=init_size,
                            colour_1=dot_colour,
                            bg_colour=bg_colour,
-                           min_point_radius=min_radius,
-                           max_point_radius=max_radius,
+                           min_point_radius=min_point_radius,
+                           max_point_radius=max_point_radius,
                            attempts_limit=attempts_limit)
         s_points = s_np.design_n_points(n_first, "colour_1")
         m_points = m_np.design_n_points(n_second, "colour_1")
@@ -113,8 +104,8 @@ def generate_pair(n_first, n_second, args, error_label, equalize=False):
         bg_colour=args.background_colour,
         dot_colour=args.dot_colour,
         init_size=args.init_size,
-        min_radius=args.min_radius,
-        max_radius=args.max_radius,
+        min_point_radius=args.min_point_radius,
+        max_point_radius=args.max_point_radius,
         attempts_limit=args.attempts_limit,
         error_label=error_label,
     )
@@ -129,7 +120,7 @@ def generate_pair(n_first, n_second, args, error_label, equalize=False):
         m_np,
         m_points,
         rel_tolerance=args.tolerance,
-        abs_tolerance=DEFAULT_ABS_TOL,
+        abs_tolerance=args.abs_tolerance,
         attempts_limit=args.attempts_limit,
     )
     return (s_np, s_points, m_np, m_points), success
@@ -162,8 +153,8 @@ class MatchToSampleGenerator(BaseGenerator):
             init_size=init_size,
             colour_1=self.config["dot_colour"],
             bg_colour=self.config["background_colour"],
-            min_point_radius=self.config["min_radius"],
-            max_point_radius=self.config["max_radius"],
+            min_point_radius=self.config["min_point_radius"],
+            max_point_radius=self.config["max_point_radius"],
             attempts_limit=self.config["attempts_limit"]
         )
         s_points = s_np.design_n_points(n1, "colour_1")
@@ -173,8 +164,8 @@ class MatchToSampleGenerator(BaseGenerator):
             init_size=init_size,
             colour_1=self.config["dot_colour"],
             bg_colour=self.config["background_colour"],
-            min_point_radius=self.config["min_radius"],
-            max_point_radius=self.config["max_radius"],
+            min_point_radius=self.config["min_point_radius"],
+            max_point_radius=self.config["max_point_radius"],
             attempts_limit=self.config["attempts_limit"]
         )
         m_points = m_np.design_n_points(n2, "colour_1")
@@ -184,7 +175,7 @@ class MatchToSampleGenerator(BaseGenerator):
             success, s_points, m_points = _equalize_geom(
                 s_np, s_points, m_np, m_points,
                 rel_tolerance=self.config["tolerance"],
-                abs_tolerance=DEFAULT_ABS_TOL,
+                abs_tolerance=self.config["abs_tolerance"],
                 attempts_limit=self.config["attempts_limit"]
             )
             if not success:
@@ -240,14 +231,16 @@ def main():
     parser.add_argument("--max_point_num", type=int, default=9, help="Maximum number of points per image")
     parser.add_argument("--ratios", type=str, choices=["easy", "hard", "all"], default="all", help="Ratio set to use: easy|hard|all")
     parser.add_argument("--num_repeats", type=int, default=1, help="How many times to repeat generation per combination (to diversify images)")
-    parser.add_argument("--tolerance", type=float, default=DEFAULT_TOLERANCE, help="Relative tolerance for area equalization (e.g., 0.01 for 1%%)")
+    parser.add_argument("--tolerance", type=float, default=MTS_DEFAULTS["tolerance"], help="Relative tolerance for area equalization (e.g., 0.01 for 1%%)")
+    parser.add_argument("--abs_tolerance", type=int, default=MTS_DEFAULTS["abs_tolerance"], help="Absolute area tolerance in pixels")
     parser.add_argument("--output_dir", type=str, default="mts_output", help="Output directory to save generated images")
-    parser.add_argument("--min_radius", type=int, default=20, help="Minimum dot radius")
-    parser.add_argument("--max_radius", type=int, default=30, help="Maximum dot radius")
-    parser.add_argument("--background_colour", type=str, default=DEFAULT_BG_COLOUR, help="Background color (name or hex)")
-    parser.add_argument("--dot_colour", type=str, default=DEFAULT_DOT_COLOUR, help="Dot color (name or hex)")
-    parser.add_argument("--attempts_limit", type=int, default=DEFAULT_ATTEMPTS_LIMIT, help="Maximum attempts to equalize or generate a non-overlapping layout")
+    parser.add_argument("--min_point_radius", type=int, default=20, help="Minimum dot radius")
+    parser.add_argument("--max_point_radius", type=int, default=30, help="Maximum dot radius")
+    parser.add_argument("--background_colour", type=str, default=MTS_DEFAULTS["background_colour"], help="Background color (name or hex)")
+    parser.add_argument("--dot_colour", type=str, default=MTS_DEFAULTS["dot_colour"], help="Dot color (name or hex)")
+    parser.add_argument("--attempts_limit", type=int, default=MTS_DEFAULTS["attempts_limit"], help="Maximum attempts to equalize or generate a non-overlapping layout")
     parser.add_argument("--summary", action="store_true", help="Write a CSV summary with per-pair metrics in the output directory")
+    parser.add_argument("--init_size", type=int, default=512, help="Image size in pixels")
     args = parser.parse_args()
 
 

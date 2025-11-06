@@ -25,7 +25,7 @@ class BaseGenerator(ABC):
     
     Subclasses must implement:
     - setup_directories(): Create necessary output directories
-    - generate_images() or create_images(): Generate the actual images
+    - generate_images(): Generate the actual images
     
     Attributes:
         config (dict): Configuration dictionary for the generator

@@ -45,7 +45,7 @@ class FixationGenerator(BaseGenerator):
 
     # ----------------------------- public API ----------------------------- #
 
-    def create_images(self) -> None:
+    def generate_images(self) -> None:
         self.setup_directories()
         for t in self.types:
             img = self._draw_symbol(t)

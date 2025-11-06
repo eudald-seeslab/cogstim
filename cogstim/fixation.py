@@ -23,8 +23,8 @@ class FixationGenerator(BaseGenerator):
       - ABC: disk with cross-shaped cut-out and a central cut-out dot
 
     All stimuli are rendered on a solid background. The symbol itself uses
-    a single colour (as requested), while BC/ABC achieve contrast by
-    overdrawing the background colour for the cut-outs.
+    a single colour, while BC/ABC achieve contrast by overdrawing the background 
+    colour for the cut-outs.
     """
 
     def __init__(self, config: dict):

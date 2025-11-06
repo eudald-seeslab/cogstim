@@ -93,9 +93,9 @@ def parse_arguments() -> argparse.Namespace:
     # Fixation-specific parameters
     parser.add_argument("--types", nargs="+", default=["A", "B", "C", "AB", "AC", "BC", "ABC"], choices=["A", "B", "C", "AB", "AC", "BC", "ABC"], help="Fixation target types to generate")
     parser.add_argument("--all_types", action="store_true", help="Generate all fixation types (A, B, C, AB, AC, BC, ABC)")
-    parser.add_argument("--dot_radius_px", type=int, default=12, help="Radius of the central dot in pixels (A/ABC)")
-    parser.add_argument("--disk_radius_px", type=int, default=32, help="Radius of the filled disk in pixels (B/AB/BC/ABC)")
-    parser.add_argument("--cross_thickness_px", type=int, default=16, help="Bar thickness for the cross in pixels (C/AC/BC/ABC)")
+    parser.add_argument("--dot_radius_px", type=int, default=6, help="Radius of the central dot in pixels (A/ABC)")
+    parser.add_argument("--disk_radius_px", type=int, default=48, help="Radius of the filled disk in pixels (B/AB/BC/ABC)")
+    parser.add_argument("--cross_thickness_px", type=int, default=12, help="Bar thickness for the cross in pixels (C/AC/BC/ABC)")
     parser.add_argument("--cross_arm_px", type=int, default=128, help="Half-length of each cross arm from the center in pixels")
     parser.add_argument("--jitter_px", type=int, default=0, help="Max positional jitter of the fixation center in pixels")
 

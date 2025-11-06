@@ -24,7 +24,7 @@ pip install cogstim
 ```
 ## Command-line interface
 
-After installation the `cli` module is available as the *single entry-point* to create datasets. Run it either via `python -m cogstim.cli …` or directly if the `cogstim` package is on your `$PYTHONPATH`.
+You can access the `cli` module via `python -m cogstim.cli …` or directly if the `cogstim` package is on your `$PYTHONPATH`. The arguments are (see below for examples):
 
 ```text
 usage: cli.py [-h] (--shape_recognition | --colour_recognition | --ans | --one_colour | --lines | --fixation | --match_to_sample | --custom)
@@ -34,20 +34,24 @@ usage: cli.py [-h] (--shape_recognition | --colour_recognition | --ans | --one_c
               [--background_colour BACKGROUND_COLOUR]
               [--symbol_colour {yellow,blue,red,green,black,white,gray}]
               [--min_surface MIN_SURFACE] [--max_surface MAX_SURFACE] [--no-jitter]
-              [--ratios {easy,hard,all}] [--version_tag VERSION_TAG] [--min_point_num MIN_POINT_NUM] [--max_point_num MAX_POINT_NUM]
+              [--ratios {easy,hard,all}] [--version_tag VERSION_TAG] 
+              [--min_point_num MIN_POINT_NUM] [--max_point_num MAX_POINT_NUM]
               [--min_point_radius MIN_POINT_RADIUS] [--max_point_radius MAX_POINT_RADIUS]
               [--dot_colour {yellow,blue,red,green,black,white,gray}]
-              [--angles ANGLES [ANGLES ...]] [--min_stripes MIN_STRIPES] [--max_stripes MAX_STRIPES]
-              [--img_size IMG_SIZE] [--tag TAG] [--min_thickness MIN_THICKNESS] [--max_thickness MAX_THICKNESS]
+              [--angles ANGLES [ANGLES ...]] [--min_stripes MIN_STRIPES] 
+              [--max_stripes MAX_STRIPES] [--img_size IMG_SIZE] [--tag TAG] 
+              [--min_thickness MIN_THICKNESS] [--max_thickness MAX_THICKNESS]
               [--min_spacing MIN_SPACING] [--max_attempts MAX_ATTEMPTS]
               [--types {A,B,C,AB,AC,BC,ABC} ...] [--all_types]
               [--dot_radius_px DOT_RADIUS_PX] [--disk_radius_px DISK_RADIUS_PX]
-              [--cross_thickness_px CROSS_THICKNESS_PX] [--cross_arm_px CROSS_ARM_PX] [--jitter_px JITTER_PX]
-              [--seed SEED]
+              [--cross_thickness_px CROSS_THICKNESS_PX] [--cross_arm_px CROSS_ARM_PX] 
+              [--jitter_px JITTER_PX] [--seed SEED]
 ```
 
 > **Note**: train_num and test_num refer to the number of image _sets_ created. An image set is a group of images that comb all the possible parameter combinations. So, for shapes and colors, an image set is of about 200 images, whereas for ANS is of around 75 images, of course always depending on the other parameters.
+
 > **Note**: All cli arguments use British spelling.
+
 > **Note**: Use `--seed SEED` (where SEED is an integer) to make generation deterministic and reproducible. Without a seed, each run will produce different random variations.
 
 ## Examples
@@ -59,7 +63,7 @@ python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
 
 For reproducible results, add the `--seed` option:
 ```bash
-python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20 --seed 42
+python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20 --seed 1234
 ```
 
 <table><tr>

@@ -1,6 +1,6 @@
-"""Tests for cogstim.config module."""
+"""Tests for cogstim.constants module."""
 
-from cogstim.config import (
+from cogstim.constants import (
     ANS_EASY_RATIOS,
     ANS_HARD_RATIOS,
     MTS_EASY_RATIOS,

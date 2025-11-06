@@ -29,7 +29,7 @@ class NumberPoints:
             attempts_limit: Maximum attempts to place dots without overlap (uses defaults.DOT_DEFAULTS if None)
         """
         from cogstim.image_utils import ImageCanvas
-        from cogstim.defaults import IMAGE_DEFAULTS, DOT_DEFAULTS
+        from cogstim.constants import IMAGE_DEFAULTS, DOT_DEFAULTS
         
         # Apply defaults if not provided
         bg_colour = bg_colour if bg_colour is not None else IMAGE_DEFAULTS["background_colour"]

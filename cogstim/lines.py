@@ -8,6 +8,7 @@ from tqdm import tqdm
 from cogstim.base_generator import BaseGenerator
 from cogstim.image_utils import ImageCanvas
 from cogstim.planner import GenerationPlan
+from cogstim.constants import IMAGE_DEFAULTS, LINE_DEFAULTS
 
 # Configure logging
 logging.basicConfig(
@@ -181,24 +182,24 @@ def parse_args():
         help="Maximum number of stripes per image",
     )
     parser.add_argument(
-        "--img-size", type=int, default=512, help="Size of the output images"
+        "--img-size", type=int, default=IMAGE_DEFAULTS["init_size"], help="Size of the output images"
     )
     parser.add_argument(
         "--tag", type=str, default="", help="Optional tag to add to image filenames"
     )
     parser.add_argument(
-        "--min-thickness", type=int, default=10, help="Minimum stripe thickness"
+        "--min-thickness", type=int, default=LINE_DEFAULTS["min_thickness"], help="Minimum stripe thickness"
     )
     parser.add_argument(
-        "--max-thickness", type=int, default=30, help="Maximum stripe thickness"
+        "--max-thickness", type=int, default=LINE_DEFAULTS["max_thickness"], help="Maximum stripe thickness"
     )
     parser.add_argument(
-        "--min-spacing", type=int, default=5, help="Minimum spacing between stripes"
+        "--min-spacing", type=int, default=LINE_DEFAULTS["min_spacing"], help="Minimum spacing between stripes"
     )
     parser.add_argument(
         "--max-attempts",
         type=int,
-        default=10000,
+        default=10000,  # This is specific to lines, not a general default
         help="Maximum attempts to generate non-overlapping stripes",
     )
 

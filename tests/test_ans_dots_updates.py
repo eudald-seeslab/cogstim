@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock, call
 
 from cogstim.ans_dots import PointsGenerator, GENERAL_CONFIG, TerminalPointLayoutError
-from cogstim.config import ANS_EASY_RATIOS, ANS_HARD_RATIOS
+from cogstim.constants import ANS_EASY_RATIOS, ANS_HARD_RATIOS
 
 
 class TestPointsGeneratorRatiosMode:

@@ -7,7 +7,7 @@ from cogstim.match_to_sample import (
     MatchToSampleGenerator,
     GENERAL_CONFIG as MTS_GENERAL_CONFIG,
 )
-from cogstim.config import MTS_EASY_RATIOS, MTS_HARD_RATIOS
+from cogstim.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS
 from cogstim.planner import GenerationPlan
 from cogstim.dots_core import NumberPoints
 from cogstim.mts_helpers.geometry import equalize_pair as geometry_equalize_pair

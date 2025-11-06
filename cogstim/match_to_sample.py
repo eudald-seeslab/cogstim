@@ -2,18 +2,18 @@ import os
 from tqdm import tqdm
 
 from cogstim.dots_core import NumberPoints
-from cogstim.config import MTS_EASY_RATIOS, MTS_HARD_RATIOS
+from cogstim.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS, MTS_DEFAULTS, IMAGE_DEFAULTS
 from cogstim.mts_helpers.geometry import equalize_pair as _equalize_geom
 from cogstim.mts_helpers.io import save_image_pair, build_basename
 from cogstim.planner import GenerationPlan, resolve_ratios
 from cogstim.base_generator import BaseGenerator
-from cogstim.defaults import MTS_DEFAULTS
 
 
 # Default general configuration
 GENERAL_CONFIG = {
     **MTS_DEFAULTS,
     "ratios": "all",
+    "init_size": IMAGE_DEFAULTS["init_size"],
 }
 
 
@@ -36,8 +36,7 @@ class MatchToSampleGenerator(BaseGenerator):
     
     def create_image_pair(self, n1, n2, equalize=False):
         """Create a pair of images (sample and match)."""
-        # TODO: remove this once we have a default init_size
-        init_size = self.config.get("init_size", 512)  # Default to 512 if not specified
+        init_size = self.config["init_size"]
         
         # Create sample image
         s_np = NumberPoints(

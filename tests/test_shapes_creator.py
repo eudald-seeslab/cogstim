@@ -1,5 +1,5 @@
 from cogstim.shapes import ShapesGenerator
-from cogstim.helpers import COLOUR_MAP
+from cogstim.constants import COLOUR_MAP
 import tempfile
 import pytest
 from unittest.mock import patch

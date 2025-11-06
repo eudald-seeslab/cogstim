@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from cogstim.dots_core import NumberPoints, PointLayoutError
 from cogstim.base_generator import BaseGenerator
+from cogstim.constants import IMAGE_DEFAULTS, DOT_DEFAULTS
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -175,13 +176,13 @@ def main():
         "boundary_width": 5,
         "background_colour": "#000000",
         "yellow": "#fffe04",
-        "min_point_radius": 20,
-        "max_point_radius": 30,
-        "init_size": 512,
-        "mode": "RGB",
+        "min_point_radius": DOT_DEFAULTS["min_point_radius"],
+        "max_point_radius": DOT_DEFAULTS["max_point_radius"],
+        "init_size": IMAGE_DEFAULTS["init_size"],
+        "mode": IMAGE_DEFAULTS["mode"],
         "min_point_num": args.min_points,
         "max_point_num": args.max_points,
-        "attempts_limit": 5000,
+        "attempts_limit": DOT_DEFAULTS["attempts_limit"],
         "train_num": args.train_num,
         "test_num": args.test_num,
         "output_dir": args.output_dir,

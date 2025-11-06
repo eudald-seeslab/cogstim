@@ -4,7 +4,7 @@ import os
 import random
 from typing import List, Tuple
 
-from cogstim.helpers import COLOUR_MAP
+from cogstim.constants import COLOUR_MAP
 from cogstim.base_generator import BaseGenerator
 from cogstim.image_utils import ImageCanvas
 

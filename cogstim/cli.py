@@ -30,7 +30,7 @@ from cogstim.ans_dots import (
 from cogstim.lines import StripePatternGenerator
 from cogstim.fixation import FixationGenerator
 from cogstim.match_to_sample import MatchToSampleGenerator, GENERAL_CONFIG as MTS_GENERAL_CONFIG
-from cogstim.defaults import (
+from cogstim.constants import (
     IMAGE_DEFAULTS,
     DOT_DEFAULTS,
     SHAPE_DEFAULTS,
@@ -187,6 +187,7 @@ def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> No
             "background_colour": args.background_colour,
             "min_point_radius": args.min_point_radius,
             "max_point_radius": args.max_point_radius,
+            "attempts_limit": args.attempts_limit,
             "seed": args.seed,
         },
     }
@@ -218,6 +219,7 @@ def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
             "max_point_radius": args.max_point_radius,
             "dot_colour": args.dot_colour,
             "attempts_limit": args.attempts_limit,
+            "init_size": args.img_size,
             "seed": args.seed,
         },
     }

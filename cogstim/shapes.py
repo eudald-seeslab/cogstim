@@ -4,7 +4,7 @@ import random
 import numpy as np
 from tqdm import tqdm
 
-from cogstim.helpers import COLOUR_MAP
+from cogstim.constants import COLOUR_MAP, IMAGE_DEFAULTS
 from cogstim.base_generator import BaseGenerator
 from cogstim.image_utils import ImageCanvas
 from cogstim.planner import GenerationPlan
@@ -203,8 +203,8 @@ class ShapesGenerator(BaseGenerator):
 
     def draw_shape(self, shape: str, surface: int, colour: str, jitter: bool = False):
         """Draws a single shape on an image and saves it to the appropriate directory."""
-        pixels_x, pixels_y = 512, 512
-        canvas = ImageCanvas(pixels_x, self.background_colour, mode="RGB")
+        pixels_x = pixels_y = IMAGE_DEFAULTS["init_size"]
+        canvas = ImageCanvas(pixels_x, self.background_colour, mode=IMAGE_DEFAULTS["mode"])
 
         radius = int(self.get_radius_from_surface(shape, surface))
 

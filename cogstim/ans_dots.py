@@ -3,8 +3,7 @@ from tqdm import tqdm
 import logging
 
 from cogstim.dots_core import NumberPoints, PointLayoutError
-from cogstim.helpers import COLOUR_MAP, SIZES
-from cogstim.config import ANS_EASY_RATIOS, ANS_HARD_RATIOS
+from cogstim.constants import COLOUR_MAP, ANS_EASY_RATIOS, ANS_HARD_RATIOS, DOT_DEFAULTS, IMAGE_DEFAULTS
 from cogstim.base_generator import BaseGenerator
 from cogstim.planner import GenerationPlan, resolve_ratios
 
@@ -14,10 +13,10 @@ logging.basicConfig(level=logging.INFO)
 GENERAL_CONFIG = {
     "colour_1": "yellow",
     "colour_2": "blue",
-    "attempts_limit": 2000,
+    "attempts_limit": DOT_DEFAULTS["attempts_limit"],
     "background_colour": "black",
-    "min_point_radius": SIZES["min_point_radius"],
-    "max_point_radius": SIZES["max_point_radius"],
+    "min_point_radius": DOT_DEFAULTS["min_point_radius"],
+    "max_point_radius": DOT_DEFAULTS["max_point_radius"],
 }
 
 
@@ -58,11 +57,11 @@ class PointsGenerator(BaseGenerator):
         colour_2 = None if self.config["ONE_COLOUR"] else COLOUR_MAP[self.config["colour_2"]]
 
         number_points = NumberPoints(
-            init_size=SIZES["init_size"],
+            init_size=IMAGE_DEFAULTS["init_size"],
             colour_1=COLOUR_MAP[self.config["colour_1"]],
             colour_2=colour_2,
             bg_colour=self.config["background_colour"],
-            mode="RGB",
+            mode=IMAGE_DEFAULTS["mode"],
             min_point_radius=self.config["min_point_radius"],
             max_point_radius=self.config["max_point_radius"],
             attempts_limit=self.config["attempts_limit"]

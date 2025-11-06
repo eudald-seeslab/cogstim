@@ -1,5 +1,5 @@
 from cogstim.dots_core import NumberPoints
-from cogstim.helpers import COLOUR_MAP
+from cogstim.constants import COLOUR_MAP
 
 
 def _make_number_points(init_size: int = 512):

@@ -6,6 +6,7 @@ from cogstim.dots_core import NumberPoints, PointLayoutError
 from cogstim.helpers import COLOUR_MAP, SIZES
 from cogstim.config import ANS_EASY_RATIOS, ANS_HARD_RATIOS
 from cogstim.base_generator import BaseGenerator
+from cogstim.planner import GenerationPlan, resolve_ratios
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,16 +31,14 @@ class PointsGenerator(BaseGenerator):
         self.train_num = config["train_num"]
         self.test_num = config["test_num"]
         
-        ratios = self.config["ratios"]
-        match ratios:
-            case "easy":
-                self.ratios = ANS_EASY_RATIOS
-            case "hard":
-                self.ratios = ANS_HARD_RATIOS
-            case "all":
-                self.ratios = ANS_EASY_RATIOS + ANS_HARD_RATIOS
-            case _:
-                raise ValueError(f"Invalid ratio mode: {ratios}")
+        # Resolve ratios using unified planner
+        ratios_mode = self.config["ratios"]
+        if isinstance(ratios_mode, str):
+            self.ratios = resolve_ratios(ratios_mode, ANS_EASY_RATIOS, ANS_HARD_RATIOS)
+        else:
+            # Support direct ratio lists
+            self.ratios = ratios_mode
+        
         self.setup_directories()
 
     def get_subdirectories(self):
@@ -110,41 +109,53 @@ class PointsGenerator(BaseGenerator):
         )
 
     def get_positions(self):
-        min_p = self.config["min_point_num"]
-        max_p = self.config["max_point_num"]
-
-        if self.config["ONE_COLOUR"]:
-            # For one-colour mode, we only need a single count per image
-            return [(a, 0) for a in range(min_p, max_p + 1)]
-
-        positions = []
-        # Note that we don't need the last value of 'a', since 'b' will always be greater.
-        for a in range(min_p, max_p):
-            # Given 'a', we need to find 'b' in the tuple (a, b) such that b/a is in the ratios list.
-            for ratio in self.ratios:
-                b = a / ratio
-
-                # We keep this tuple if b is an integer and within the allowed range.
-                if b == round(b) and b <= max_p:
-                    positions.append((a, int(b)))
-
-        return positions
+        """Get positions using unified planner (kept for backward compatibility)."""
+        task_type = "one_colour" if self.config["ONE_COLOUR"] else "ans"
+        plan = GenerationPlan(
+            task_type=task_type,
+            min_point_num=self.config["min_point_num"],
+            max_point_num=self.config["max_point_num"],
+            num_repeats=1,  # Just for computing positions
+            ratios=self.ratios
+        )
+        return plan.compute_positions()
 
     def generate_images(self):
-        positions = self.get_positions()
-        multiplier = 1 if self.config["ONE_COLOUR"] else 4
+        """Generate images using unified planning mechanism."""
+        task_type = "one_colour" if self.config["ONE_COLOUR"] else "ans"
         
         for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
-            total_images = num_images * len(positions) * multiplier
+            # Build generation plan
+            plan = GenerationPlan(
+                task_type=task_type,
+                min_point_num=self.config["min_point_num"],
+                max_point_num=self.config["max_point_num"],
+                num_repeats=num_images,
+                ratios=self.ratios
+            ).build()
+            
             self.log_generation_info(
-                f"Generating {total_images} images for {phase}: {num_images} sets x {len(positions)} combinations x {multiplier} variants in '{self.output_dir}/{phase}'."
+                f"Generating {len(plan)} images for {phase} in '{self.output_dir}/{phase}'."
             )
-            for i in tqdm(range(num_images), desc=f"{phase}"):
-                for pair in positions:
-                    if self.config["ONE_COLOUR"]:
-                        self.create_and_save(pair[0], 0, equalized=False, phase=phase, tag=i)
-                    else:
-                        self.create_and_save(pair[0], pair[1], equalized=False, phase=phase, tag=i)
-                        self.create_and_save(pair[1], pair[0], equalized=False, phase=phase, tag=i)
-                        self.create_and_save(pair[0], pair[1], equalized=True, phase=phase, tag=i)
-                        self.create_and_save(pair[1], pair[0], equalized=True, phase=phase, tag=i)
+            
+            # Execute plan
+            for task in tqdm(plan.tasks, desc=f"{phase}"):
+                # Handle different task types
+                if task.task_type == "one_colour":
+                    n1 = task.params.get('n')
+                    n2 = 0
+                    equalized = False
+                else:  # ans (two-colour)
+                    n1 = task.n1
+                    n2 = task.n2 if task.n2 is not None else 0
+                    equalized = task.equalize
+                
+                rep = task.rep
+                
+                # Create and save image
+                self.create_and_save(n1, n2, equalized=equalized, phase=phase, tag=rep)
+            
+            # Write summary CSV if enabled
+            if self.config.get("summary", False):
+                phase_output_dir = os.path.join(self.output_dir, phase)
+                plan.write_summary_csv(phase_output_dir)

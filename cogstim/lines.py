@@ -7,6 +7,7 @@ import numpy as np
 from tqdm import tqdm
 from cogstim.base_generator import BaseGenerator
 from cogstim.image_utils import ImageCanvas
+from cogstim.planner import GenerationPlan
 
 # Configure logging
 logging.basicConfig(
@@ -32,36 +33,49 @@ class StripePatternGenerator(BaseGenerator):
         self.test_num = config["test_num"]
         self.tag = config["tag"]
         self.background_colour = config["background_colour"]
+        self.config = config  # Store for summary check
         
         # Calculate circumscribed size for rotation
         self.c_size = int(self.size / 2 * np.sqrt(2)) * 2
 
     def create_images(self):
-        """Generate the complete set of images with different angles and stripe counts."""
+        """Generate the complete set of images with different angles and stripe counts using unified planner."""
         self.setup_directories()
 
         for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
-            total_images = (
-                num_images
-                * len(self.angles)
-                * (self.max_stripe_num - self.min_stripe_num + 1)
-            )
-            self.log_generation_info(f"Generating {total_images} images for {phase}...")
+            # Build generation plan
+            plan = GenerationPlan(
+                task_type="lines",
+                num_repeats=num_images,
+                angles=self.angles,
+                min_stripes=self.min_stripe_num,
+                max_stripes=self.max_stripe_num
+            ).build()
+            
+            self.log_generation_info(f"Generating {len(plan)} images for {phase}...")
 
-            for i in tqdm(range(num_images), desc=f"{phase}"):
-                for angle in self.angles:
-                    for num_stripes in range(self.min_stripe_num, self.max_stripe_num + 1):
-                        try:
-                            img = self.create_rotated_stripes(num_stripes, angle)
-                            tag_suffix = f"_{self.tag}" if self.tag else ""
-                            filename = f"img_{num_stripes}_{i}{tag_suffix}.png"
-                            img.save(os.path.join(self.dir_path, phase, str(angle), filename))
-                        except Exception as e:
-                            logging.error(
-                                f"Failed to generate image: angle={angle}, stripes={num_stripes}, set={i}"
-                            )
-                            logging.error(str(e))
-                            raise
+            # Execute plan
+            for task in tqdm(plan.tasks, desc=f"{phase}"):
+                angle = task.params['angle']
+                num_stripes = task.params['num_stripes']
+                rep = task.rep
+                
+                try:
+                    img = self.create_rotated_stripes(num_stripes, angle)
+                    tag_suffix = f"_{self.tag}" if self.tag else ""
+                    filename = f"img_{num_stripes}_{rep}{tag_suffix}.png"
+                    img.save(os.path.join(self.dir_path, phase, str(angle), filename))
+                except Exception as e:
+                    logging.error(
+                        f"Failed to generate image: angle={angle}, stripes={num_stripes}, set={rep}"
+                    )
+                    logging.error(str(e))
+                    raise
+            
+            # Write summary CSV if enabled
+            if self.config.get("summary", False):
+                phase_output_dir = os.path.join(self.dir_path, phase)
+                plan.write_summary_csv(phase_output_dir)
 
     def create_rotated_stripes(self, num_stripes, angle):
         """Create an image with the specified number of stripes at the given angle."""

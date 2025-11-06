@@ -11,7 +11,7 @@ from cogstim.match_to_sample import (
     save_pair_with_basename,
 )
 from cogstim.config import MTS_EASY_RATIOS, MTS_HARD_RATIOS
-from cogstim.mts_helpers.planner import GenerationPlan
+from cogstim.planner import GenerationPlan
 from cogstim.dots_core import NumberPoints
 from cogstim.mts_helpers.geometry import equalize_pair as geometry_equalize_pair
 from cogstim.mts_helpers.io import save_image_pair
@@ -55,7 +55,7 @@ class TestMatchToSampleGenerator:
 
     def test_get_positions(self):
         """Test compute_positions via GenerationPlan."""
-        plan = GenerationPlan(self.config["ratios"], self.config["min_point_num"], self.config["max_point_num"], self.config["train_num"]).build()
+        plan = GenerationPlan("mts", self.config["min_point_num"], self.config["max_point_num"], self.config["train_num"], ratios=MTS_EASY_RATIOS).build()
         positions = plan.compute_positions()
         assert isinstance(positions, list)
         for n, m in positions:

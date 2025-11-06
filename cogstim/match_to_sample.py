@@ -6,7 +6,7 @@ from cogstim.dots_core import NumberPoints, PointLayoutError
 from cogstim.config import MTS_EASY_RATIOS, MTS_HARD_RATIOS
 from cogstim.mts_helpers.geometry import equalize_pair as _equalize_geom
 from cogstim.mts_helpers.io import save_image_pair, save_pair_with_basename, SummaryWriter, build_basename
-from cogstim.mts_helpers.planner import GenerationPlan, resolve_mts_ratios
+from cogstim.planner import GenerationPlan, resolve_ratios
 from cogstim.base_generator import BaseGenerator
 
 
@@ -143,8 +143,12 @@ class MatchToSampleGenerator(BaseGenerator):
         self.train_num = config["train_num"]
         self.test_num = config["test_num"]
         
-        # Determine ratios to use
-        self.ratios = resolve_mts_ratios(self.config["ratios"], MTS_EASY_RATIOS, MTS_HARD_RATIOS)
+        # Determine ratios to use - support both string and list
+        ratios_config = self.config["ratios"]
+        if isinstance(ratios_config, str):
+            self.ratios = resolve_ratios(ratios_config, MTS_EASY_RATIOS, MTS_HARD_RATIOS)
+        else:
+            self.ratios = ratios_config
         
         self.setup_directories()
     
@@ -206,16 +210,28 @@ class MatchToSampleGenerator(BaseGenerator):
         return [("train",), ("test",)]
     
     def generate_images(self):
-        """Generate all image pairs for train and test."""
+        """Generate all image pairs for train and test using unified planner."""
         for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
-            plan = GenerationPlan(self.ratios, self.config["min_point_num"], self.config["max_point_num"], num_images).build()
-            self.log_generation_info(f"Generating {len(plan.tasks)} image pairs for {phase}...")
+            plan = GenerationPlan(
+                task_type="mts",
+                min_point_num=self.config["min_point_num"],
+                max_point_num=self.config["max_point_num"],
+                num_repeats=num_images,
+                ratios=self.ratios
+            ).build()
+            
+            self.log_generation_info(f"Generating {len(plan)} image pairs for {phase}...")
             
             for task in tqdm(plan.tasks, desc=f"{phase}"):
-                n = task["n1"]
-                m = task["n2"]
-                rep = task["rep"]
-                self.create_and_save(n, m, task["equalize"], rep, phase)
+                n = task.n1
+                m = task.n2
+                rep = task.rep
+                self.create_and_save(n, m, task.equalize, rep, phase)
+            
+            # Write summary CSV if enabled
+            if self.config.get("summary", False):
+                phase_output_dir = os.path.join(self.config["output_dir"], phase)
+                plan.write_summary_csv(phase_output_dir)
 
 
 def main():

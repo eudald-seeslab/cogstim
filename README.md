@@ -154,7 +154,7 @@ images/fixation/
 
 These shapes are based on Thaler et al. (2013). They recommend using ABC.
 
-<img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/fix_C.png" alt="Fixation point example" width="220"/>
+<img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/fix_ABC.png" alt="Fixation point example" width="220"/>
 
 ## Output
 The generated folder structure is organised by *phase / class*, e.g.

@@ -381,7 +381,7 @@ class TestLinesImageGeneration:
         }
         
         generator = StripePatternGenerator(config)
-        generator.create_images()
+        generator.generate_images()
         
         # Check that images were created
         output_dir = Path(test_images_dir / "lines")
@@ -426,7 +426,7 @@ class TestFixationImageGeneration:
         }
         
         generator = FixationGenerator(config)
-        generator.create_images()
+        generator.generate_images()
         
         # Check that images were created
         output_dir = Path(test_images_dir / "fixation")

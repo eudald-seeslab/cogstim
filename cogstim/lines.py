@@ -38,7 +38,7 @@ class StripePatternGenerator(BaseGenerator):
         # Calculate circumscribed size for rotation
         self.c_size = int(self.size / 2 * np.sqrt(2)) * 2
 
-    def create_images(self):
+    def generate_images(self):
         """Generate the complete set of images with different angles and stripe counts using unified planner."""
         self.setup_directories()
 
@@ -226,7 +226,7 @@ def main():
 
     try:
         generator = StripePatternGenerator(config)
-        generator.create_images()
+        generator.generate_images()
         logging.info("Image generation completed successfully!")
     except Exception as e:
         logging.error(f"Error during image generation: {str(e)}")

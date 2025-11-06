@@ -247,7 +247,7 @@ def generate_lines_dataset(args: argparse.Namespace) -> None:
         "background_colour": args.background_colour,
     }
     generator = StripePatternGenerator(cfg)
-    generator.create_images()
+    generator.generate_images()
 
 
 def generate_fixation_dataset(args: argparse.Namespace) -> None:
@@ -270,7 +270,7 @@ def generate_fixation_dataset(args: argparse.Namespace) -> None:
         "tag": args.tag,
     }
     generator = FixationGenerator(cfg)
-    generator.create_images()
+    generator.generate_images()
 
 
 # ---------------------------------------------------------------------------

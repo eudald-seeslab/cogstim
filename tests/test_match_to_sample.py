@@ -6,15 +6,12 @@ from unittest.mock import MagicMock, patch
 from cogstim.match_to_sample import (
     MatchToSampleGenerator,
     GENERAL_CONFIG as MTS_GENERAL_CONFIG,
-    try_build_random_pair,
-    generate_pair,
-    save_pair_with_basename,
 )
 from cogstim.config import MTS_EASY_RATIOS, MTS_HARD_RATIOS
 from cogstim.planner import GenerationPlan
 from cogstim.dots_core import NumberPoints
 from cogstim.mts_helpers.geometry import equalize_pair as geometry_equalize_pair
-from cogstim.mts_helpers.io import save_image_pair
+from cogstim.mts_helpers.io import save_image_pair, save_pair_with_basename
 
 
 class TestMatchToSampleGenerator:
@@ -219,96 +216,6 @@ class TestHelperFunctions:
             m_np.draw_points.assert_called_once_with(m_points)
             s_np.save.assert_called_once_with("/tmp/test_s.png")
             m_np.save.assert_called_once_with("/tmp/test_m.png")
-
-    def test_try_build_random_pair_success(self):
-        """Test try_build_random_pair function with successful pair creation."""
-        with patch('cogstim.match_to_sample.NumberPoints') as mock_create:
-            mock_s_np = MagicMock()
-            mock_m_np = MagicMock()
-            mock_create.side_effect = [mock_s_np, mock_m_np]
-            mock_s_np.design_n_points.return_value = [((100, 100, 10), "colour_1")]
-            mock_m_np.design_n_points.return_value = [((200, 200, 15), "colour_1")]
-            
-            result = try_build_random_pair(
-                n_first=2, n_second=3,
-                bg_colour="white", dot_colour="black",
-                init_size=512,
-                min_point_radius=5, max_point_radius=15,
-                attempts_limit=100,
-                error_label="test"
-            )
-            assert result is not None
-            assert len(result) == 4
-            assert mock_create.call_count == 2
-            mock_s_np.design_n_points.assert_called_once_with(2, "colour_1")
-            mock_m_np.design_n_points.assert_called_once_with(3, "colour_1")
-
-    def test_try_build_random_pair_failure(self):
-        """Test try_build_random_pair function with failure."""
-        from cogstim.dots_core import PointLayoutError
-        with patch('cogstim.match_to_sample.NumberPoints',
-                   side_effect=PointLayoutError("Too many attempts")):
-            result = try_build_random_pair(
-                n_first=2, n_second=3,
-                bg_colour="white", dot_colour="black",
-                init_size=512,
-                min_point_radius=5, max_point_radius=15,
-                attempts_limit=100,
-                error_label="test"
-            )
-            assert result is None
-
-    def test_generate_pair_without_equalization(self):
-        """Test generate_pair function without equalization."""
-        with patch('cogstim.match_to_sample.try_build_random_pair') as mock_try:
-            mock_try.return_value = (MagicMock(), [], MagicMock(), [])
-            args = MagicMock()
-            args.background_colour = "white"
-            args.dot_colour = "black"
-            args.min_point_radius = 5
-            args.max_point_radius = 15
-            args.attempts_limit = 100
-            pair, success = generate_pair(2, 3, args, "test", equalize=False)
-            assert pair is not None
-            assert success is None
-            mock_try.assert_called_once()
-
-    def test_generate_pair_with_equalization_success(self):
-        """Test generate_pair function with successful equalization."""
-        with patch('cogstim.match_to_sample.try_build_random_pair') as mock_try, \
-             patch('cogstim.match_to_sample._equalize_geom') as mock_equalize:
-            mock_try.return_value = (MagicMock(), [], MagicMock(), [])
-            mock_equalize.return_value = True
-            args = MagicMock()
-            args.background_colour = "white"
-            args.dot_colour = "black"
-            args.min_point_radius = 5
-            args.max_point_radius = 15
-            args.attempts_limit = 100
-            args.tolerance = 0.01
-            args.abs_tolerance = 2
-            pair, success = generate_pair(2, 3, args, "test", equalize=True)
-            assert pair is not None
-            assert success is True
-            mock_equalize.assert_called_once()
-
-    def test_generate_pair_with_equalization_failure(self):
-        """Test generate_pair function with failed equalization."""
-        with patch('cogstim.match_to_sample.try_build_random_pair') as mock_try, \
-             patch('cogstim.match_to_sample._equalize_geom') as mock_equalize:
-            mock_try.return_value = (MagicMock(), [], MagicMock(), [])
-            mock_equalize.return_value = False
-            args = MagicMock()
-            args.background_colour = "white"
-            args.dot_colour = "black"
-            args.min_point_radius = 5
-            args.max_point_radius = 15
-            args.attempts_limit = 100
-            args.tolerance = 0.01
-            args.abs_tolerance = 2
-            pair, success = generate_pair(2, 3, args, "test", equalize=True)
-            assert pair is not None
-            assert success is False
 
     def test_save_pair_with_basename(self):
         """Test save_pair_with_basename function."""

@@ -27,7 +27,7 @@ def test_stripe_pattern_generator_single_set():
         }
 
         generator = StripePatternGenerator(cfg)
-        generator.create_images()
+        generator.generate_images()
 
         # Expected file path pattern: output_dir/<phase>/<angle>/img_<stripes>_<set_idx>.png
         train_angle_dir = Path(tmpdir) / "train" / "0"
@@ -66,7 +66,7 @@ def test_stripe_pattern_generator_max_attempts_exceeded():
 
 
 def test_stripe_pattern_generator_exception_handling():
-    """Test exception handling in create_images method."""
+    """Test exception handling in generate_images method."""
     with tempfile.TemporaryDirectory() as tmpdir:
         cfg = {
             "output_dir": tmpdir,
@@ -88,7 +88,7 @@ def test_stripe_pattern_generator_exception_handling():
 
         # This should raise an exception due to overlap issues
         with pytest.raises(ValueError):
-            generator.create_images()
+            generator.generate_images()
 
 
 def test_parse_args_defaults():
@@ -126,7 +126,7 @@ def test_parse_args_defaults():
 @patch('cogstim.lines.StripePatternGenerator')
 def test_main_success(mock_generator_class):
     """Test main function success path."""
-    mock_generator_instance = type('MockGen', (), {'create_images': lambda: None})()
+    mock_generator_instance = type('MockGen', (), {'generate_images': lambda: None})()
 
     with patch('cogstim.lines.parse_args') as mock_parse:
         mock_args = type('Args', (), {
@@ -164,7 +164,7 @@ def test_main_success(mock_generator_class):
 def test_main_with_exception(mock_generator_class):
     """Test main function with exception handling."""
     mock_generator_instance = MagicMock()
-    mock_generator_instance.create_images.side_effect = ValueError("Test error")
+    mock_generator_instance.generate_images.side_effect = ValueError("Test error")
     mock_generator_class.return_value = mock_generator_instance
 
     with patch('cogstim.lines.parse_args'), \

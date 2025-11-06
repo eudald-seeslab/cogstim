@@ -162,8 +162,8 @@ class TestFixationGenerator:
 
         mock_makedirs.assert_called_once_with("/tmp/test/fixation", exist_ok=True)
 
-    def test_create_images(self):
-        """Test create_images generates the expected files."""
+    def test_generate_images(self):
+        """Test generate_images generates the expected files."""
         with tempfile.TemporaryDirectory() as tmp_dir:
             config = {
                 "output_dir": tmp_dir,
@@ -181,7 +181,7 @@ class TestFixationGenerator:
             }
 
             generator = FixationGenerator(config)
-            generator.create_images()
+            generator.generate_images()
 
             # Should create 2 images (1 set × 2 types)
             images = list(Path(tmp_dir).glob("*.png"))

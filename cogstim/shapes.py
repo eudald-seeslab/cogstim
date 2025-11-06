@@ -1,14 +1,12 @@
 import os
 import math
 import random
-from PIL import Image, ImageDraw
 import numpy as np
 from tqdm import tqdm
 
 from cogstim.helpers import COLOUR_MAP
 from cogstim.base_generator import BaseGenerator
-
-random.seed(1714)
+from cogstim.image_utils import ImageCanvas
 
 
 class ShapesGenerator(BaseGenerator):
@@ -38,6 +36,7 @@ class ShapesGenerator(BaseGenerator):
         min_surface,
         max_surface,
         background_colour,
+        seed=None,
     ):
         # Set directory based on task if not provided explicitly
         if output_dir is not None:
@@ -63,6 +62,7 @@ class ShapesGenerator(BaseGenerator):
             'min_surface': min_surface,
             'max_surface': max_surface,
             'background_colour': background_colour,
+            'seed': seed,
         }
         super().__init__(config)
         
@@ -203,8 +203,7 @@ class ShapesGenerator(BaseGenerator):
     def draw_shape(self, shape: str, surface: int, colour: str, jitter: bool = False):
         """Draws a single shape on an image and saves it to the appropriate directory."""
         pixels_x, pixels_y = 512, 512
-        image = Image.new("RGB", (pixels_x, pixels_y), color=self.background_colour)
-        draw = ImageDraw.Draw(image)
+        canvas = ImageCanvas(pixels_x, self.background_colour, mode="RGB")
 
         radius = int(self.get_radius_from_surface(shape, surface))
 
@@ -221,11 +220,11 @@ class ShapesGenerator(BaseGenerator):
 
         vertices = self.get_vertices(shape, center, radius)
         if shape == "circle":
-            draw.ellipse(vertices, fill=colour)
+            canvas.draw_ellipse(vertices, fill=colour)
         else:
-            draw.polygon(vertices, fill=colour)
+            canvas.draw_polygon(vertices, fill=colour)
 
-        return image, distance, angle
+        return canvas.img, distance, angle  
 
     def save_image(self, image, shape, surface, dist_from_center, angle, it, path):
         file_path = os.path.join(
@@ -236,7 +235,6 @@ class ShapesGenerator(BaseGenerator):
 
     def generate_images(self):
         """Generate all images for training and testing."""
-        import logging
 
         # Common factors
         surfaces = len(range(self.min_surface, self.max_surface, 100))

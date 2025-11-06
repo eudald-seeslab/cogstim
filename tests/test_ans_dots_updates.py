@@ -1,7 +1,6 @@
 """Tests for updated cogstim.ans_dots module."""
 
 import pytest
-from pathlib import Path
 from unittest.mock import patch, MagicMock, call
 
 from cogstim.ans_dots import PointsGenerator, GENERAL_CONFIG, TerminalPointLayoutError
@@ -231,19 +230,19 @@ class TestPointsGeneratorErrorHandling:
         with patch('cogstim.ans_dots.os.makedirs'):
             generator = PointsGenerator(config)
             
-            # Mock NumberPoints to avoid actual image creation
-            with patch('cogstim.ans_dots.NumberPoints') as mock_np:
-                mock_instance = MagicMock()
-                mock_np.return_value = mock_instance
-                mock_instance.design_n_points.return_value = []
-                mock_instance.draw_points.return_value = MagicMock()
+            # Mock NumberPoints
+            with patch('cogstim.ans_dots.NumberPoints') as mock_create:
+                mock_np = MagicMock()
+                mock_create.return_value = mock_np
+                mock_np.design_n_points.return_value = []
+                mock_np.draw_points.return_value = MagicMock()
                 
                 result = generator.create_image(2, 0, False)
                 
                 # Should call design_n_points twice (once for each colour, even in one-colour mode)
-                assert mock_instance.design_n_points.call_count == 2
+                assert mock_np.design_n_points.call_count == 2
                 # Should not call equalize_areas in one-colour mode
-                mock_instance.equalize_areas.assert_not_called()
+                mock_np.equalize_areas.assert_not_called()
 
     def test_create_image_two_colour_mode_equalized(self):
         """Test create_image method in two-colour mode with equalization."""
@@ -263,19 +262,20 @@ class TestPointsGeneratorErrorHandling:
         with patch('cogstim.ans_dots.os.makedirs'):
             generator = PointsGenerator(config)
             
-            # Mock NumberPoints to avoid actual image creation
-            with patch('cogstim.ans_dots.NumberPoints') as mock_np:
-                mock_instance = MagicMock()
-                mock_np.return_value = mock_instance
-                mock_instance.design_n_points.return_value = []
-                mock_instance.draw_points.return_value = MagicMock()
+            # Mock NumberPoints
+            with patch('cogstim.ans_dots.NumberPoints') as mock_create:
+                mock_np = MagicMock()
+                mock_create.return_value = mock_np
+                mock_np.design_n_points.return_value = []
+                mock_np.equalize_areas.return_value = []
+                mock_np.draw_points.return_value = MagicMock()
                 
                 result = generator.create_image(2, 3, True)
                 
                 # Should call design_n_points twice for both colours
-                assert mock_instance.design_n_points.call_count == 2
+                assert mock_np.design_n_points.call_count == 2
                 # Should call equalize_areas when equalized=True
-                mock_instance.equalize_areas.assert_called_once()
+                mock_np.equalize_areas.assert_called_once()
 
 
 class TestPointsGeneratorDirectorySetup:

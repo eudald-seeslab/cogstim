@@ -1,4 +1,3 @@
-from typing import List, Tuple
 
 from cogstim.dots_core import NumberPoints, PointLayoutError
 

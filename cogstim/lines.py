@@ -4,9 +4,9 @@ import os
 import argparse
 import logging
 import numpy as np
-from PIL import Image, ImageDraw
 from tqdm import tqdm
 from cogstim.base_generator import BaseGenerator
+from cogstim.image_utils import ImageCanvas
 
 # Configure logging
 logging.basicConfig(
@@ -32,6 +32,7 @@ class StripePatternGenerator(BaseGenerator):
         self.test_num = config["test_num"]
         self.tag = config["tag"]
         self.background_colour = config["background_colour"]
+        
         # Calculate circumscribed size for rotation
         self.c_size = int(self.size / 2 * np.sqrt(2)) * 2
 
@@ -64,8 +65,7 @@ class StripePatternGenerator(BaseGenerator):
 
     def create_rotated_stripes(self, num_stripes, angle):
         """Create an image with the specified number of stripes at the given angle."""
-        img = Image.new("RGB", (self.c_size, self.c_size), color=self.background_colour)
-        draw = ImageDraw.Draw(img)
+        canvas = ImageCanvas(self.c_size, self.background_colour, mode="RGB")
 
         # Generate random stripe thicknesses
         stripe_thickness = np.random.randint(
@@ -90,10 +90,10 @@ class StripePatternGenerator(BaseGenerator):
                 starting_positions[i] + stripe_thickness[i],
                 self.c_size,
             )
-            draw.rectangle([upper_left, lower_right], fill="white")
+            canvas.draw_rectangle([upper_left, lower_right], fill="white")
 
         # Rotate and crop
-        rotated_img = img.rotate(angle)
+        rotated_img = canvas.img.rotate(angle)
         crop_box = (
             (self.c_size - self.size) // 2,
             (self.c_size - self.size) // 2,

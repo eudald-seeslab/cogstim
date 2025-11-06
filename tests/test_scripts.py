@@ -5,7 +5,7 @@ import tempfile
 import csv
 import os
 from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import patch
 import numpy as np
 from PIL import Image
 

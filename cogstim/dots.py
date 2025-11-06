@@ -5,12 +5,11 @@ import argparse
 import random
 import logging
 import numpy as np
-from PIL import Image
 from tqdm import tqdm
+
 from cogstim.dots_core import NumberPoints, PointLayoutError
 from cogstim.base_generator import BaseGenerator
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
@@ -18,8 +17,6 @@ logging.basicConfig(
 
 class TerminalPointLayoutError(ValueError):
     """Raised when point layout attempts are exhausted."""
-
-    pass
 
 
 class OneColourImageGenerator(BaseGenerator):
@@ -32,6 +29,7 @@ class OneColourImageGenerator(BaseGenerator):
         self.total_area = self.config["total_area"]
         self.train_num = self.config["train_num"]
         self.test_num = self.config["test_num"]
+        
         self._check_areas_make_sense()
 
         if self.nmin == 0:
@@ -63,24 +61,18 @@ class OneColourImageGenerator(BaseGenerator):
 
     def create_image(self, n):
         """Create a single image with n points."""
-        img = Image.new(
-            self.config["mode"],
-            (self.config["init_size"], self.config["init_size"]),
-            color=self.config["background_colour"],
-        )
-
         number_points = NumberPoints(
-            img,
-            self.config["init_size"],
+            init_size=self.config["init_size"],
             colour_1=self.config["colour_1"],
-            colour_2=None,
+            bg_colour=self.config["background_colour"],
+            mode=self.config["mode"],
             min_point_radius=self.config["min_point_radius"],
             max_point_radius=self.config["max_point_radius"],
-            attempts_limit=self.config["attempts_limit"],
+            attempts_limit=self.config["attempts_limit"]
         )
-
+        
         point_array = number_points.design_n_points(n, "colour_1")
-
+        
         if self.total_area is not None:
             point_array = number_points.fix_total_area(point_array, self.total_area)
 

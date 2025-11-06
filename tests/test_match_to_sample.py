@@ -12,7 +12,7 @@ from cogstim.match_to_sample import (
 )
 from cogstim.config import MTS_EASY_RATIOS, MTS_HARD_RATIOS
 from cogstim.mts_helpers.planner import GenerationPlan
-from cogstim.mts_helpers.factory import create_numberpoints_image, generate_random_points
+from cogstim.dots_core import NumberPoints
 from cogstim.mts_helpers.geometry import equalize_pair as geometry_equalize_pair
 from cogstim.mts_helpers.io import save_image_pair
 
@@ -101,33 +101,35 @@ class TestMatchToSampleGenerator:
 class TestHelperFunctions:
     """Test helper functions in match_to_sample module."""
 
-    def test_create_numberpoints_image(self):
-        """Test create_numberpoints_image function."""
-        img, np_obj = create_numberpoints_image(
+    def test_numberpoints_creation(self):
+        """Test NumberPoints object creation."""
+        np_obj = NumberPoints(
+            init_size=512,
+            colour_1="black",
             bg_colour="white",
-            dot_colour="black",
-            min_radius=5,
-            max_radius=15,
+            min_point_radius=5,
+            max_point_radius=15,
             attempts_limit=100
         )
-        assert img is not None
         assert np_obj is not None
+        assert np_obj.canvas.img is not None
         assert np_obj.min_point_radius == 5
         assert np_obj.max_point_radius == 15
         assert np_obj.attempts_limit == 100
 
-    def test_generate_random_points(self):
-        """Test generate_random_points function."""
-        img, np_obj = create_numberpoints_image(
+    def test_design_n_points(self):
+        """Test design_n_points method."""
+        np_obj = NumberPoints(
+            init_size=512,
+            colour_1="black",
             bg_colour="white",
-            dot_colour="black",
-            min_radius=5,
-            max_radius=15,
+            min_point_radius=5,
+            max_point_radius=15,
             attempts_limit=100
         )
         with patch.object(np_obj, 'design_n_points') as mock_design:
             mock_design.return_value = [((100, 100, 10), "colour_1")]
-            points = generate_random_points(np_obj, 3)
+            points = np_obj.design_n_points(3, "colour_1")
             mock_design.assert_called_once_with(3, "colour_1")
             assert points == [((100, 100, 10), "colour_1")]
 
@@ -215,23 +217,22 @@ class TestHelperFunctions:
             save_image_pair(s_np, s_points, m_np, m_points, "/tmp", "test")
             s_np.draw_points.assert_called_once_with(s_points)
             m_np.draw_points.assert_called_once_with(m_points)
-            s_np.img.save.assert_called_once_with("/tmp/test_s.png")
-            m_np.img.save.assert_called_once_with("/tmp/test_m.png")
+            s_np.save.assert_called_once_with("/tmp/test_s.png")
+            m_np.save.assert_called_once_with("/tmp/test_m.png")
 
     def test_try_build_random_pair_success(self):
         """Test try_build_random_pair function with successful pair creation."""
-        with patch('cogstim.match_to_sample._create_np_image') as mock_create, \
-             patch('cogstim.match_to_sample.generate_random_points') as mock_generate:
-            mock_img = MagicMock()
-            mock_np = MagicMock()
-            mock_create.return_value = (mock_img, mock_np)
-            mock_generate.side_effect = [
-                [((100, 100, 10), "colour_1")],
-                [((200, 200, 15), "colour_1")],
-            ]
+        with patch('cogstim.match_to_sample.NumberPoints') as mock_create:
+            mock_s_np = MagicMock()
+            mock_m_np = MagicMock()
+            mock_create.side_effect = [mock_s_np, mock_m_np]
+            mock_s_np.design_n_points.return_value = [((100, 100, 10), "colour_1")]
+            mock_m_np.design_n_points.return_value = [((200, 200, 15), "colour_1")]
+            
             result = try_build_random_pair(
                 n_first=2, n_second=3,
                 bg_colour="white", dot_colour="black",
+                init_size=512,
                 min_radius=5, max_radius=15,
                 attempts_limit=100,
                 error_label="test"
@@ -239,16 +240,18 @@ class TestHelperFunctions:
             assert result is not None
             assert len(result) == 4
             assert mock_create.call_count == 2
-            assert mock_generate.call_count == 2
+            mock_s_np.design_n_points.assert_called_once_with(2, "colour_1")
+            mock_m_np.design_n_points.assert_called_once_with(3, "colour_1")
 
     def test_try_build_random_pair_failure(self):
         """Test try_build_random_pair function with failure."""
         from cogstim.dots_core import PointLayoutError
-        with patch('cogstim.match_to_sample._create_np_image',
+        with patch('cogstim.match_to_sample.NumberPoints',
                    side_effect=PointLayoutError("Too many attempts")):
             result = try_build_random_pair(
                 n_first=2, n_second=3,
                 bg_colour="white", dot_colour="black",
+                init_size=512,
                 min_radius=5, max_radius=15,
                 attempts_limit=100,
                 error_label="test"

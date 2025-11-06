@@ -3,7 +3,7 @@
 import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from PIL import Image
 import numpy as np
 
@@ -104,8 +104,12 @@ class TestFixationGenerator:
         }
 
         generator = FixationGenerator(config)
-        img = generator._blank_image()
-
+        canvas = generator._blank_canvas()
+        
+        from cogstim.image_utils import ImageCanvas
+        assert isinstance(canvas, ImageCanvas)
+        
+        img = canvas.img
         assert img.size == (128, 128)
         assert img.mode == "RGB"
 

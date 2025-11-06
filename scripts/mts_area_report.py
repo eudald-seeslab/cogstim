@@ -31,7 +31,7 @@ def main() -> None:
         raise FileNotFoundError(f"Directory not found: {base_dir}")
 
     rows = []
-    for s_path in base_dir.glob("*_s.png"):
+    for s_path in sorted(base_dir.glob("*_s.png")):
         match = FILENAME_RE.match(s_path.name)
         if not match:
             # Skip files not following naming convention

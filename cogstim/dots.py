@@ -17,7 +17,6 @@ logging.basicConfig(
 
 class TerminalPointLayoutError(ValueError):
     """Raised when point layout attempts are exhausted."""
-    pass
 
 
 class OneColourImageGenerator(BaseGenerator):

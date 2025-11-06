@@ -1,6 +1,5 @@
 """Tests for cogstim.config module."""
 
-import pytest
 from cogstim.config import (
     ANS_EASY_RATIOS,
     ANS_HARD_RATIOS,

@@ -5,8 +5,6 @@ real images and checking their properties. Images are saved to test_images/
 directory for manual inspection.
 """
 
-import pytest
-import os
 from pathlib import Path
 from PIL import Image
 import numpy as np

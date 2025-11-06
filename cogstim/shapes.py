@@ -235,7 +235,6 @@ class ShapesGenerator(BaseGenerator):
 
     def generate_images(self):
         """Generate all images for training and testing."""
-        import logging
 
         # Common factors
         surfaces = len(range(self.min_surface, self.max_surface, 100))

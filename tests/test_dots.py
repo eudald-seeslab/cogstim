@@ -1,12 +1,9 @@
 """Tests for cogstim.dots module."""
 
 import pytest
-import tempfile
 import os
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 from PIL import Image
-import numpy as np
 
 from cogstim.dots import OneColourImageGenerator, parse_args, main
 

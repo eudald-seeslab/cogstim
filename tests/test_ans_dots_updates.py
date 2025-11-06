@@ -1,7 +1,6 @@
 """Tests for updated cogstim.ans_dots module."""
 
 import pytest
-from pathlib import Path
 from unittest.mock import patch, MagicMock, call
 
 from cogstim.ans_dots import PointsGenerator, GENERAL_CONFIG, TerminalPointLayoutError

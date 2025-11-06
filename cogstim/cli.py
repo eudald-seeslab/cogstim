@@ -20,7 +20,6 @@ python -m cogstim.cli --custom --shapes triangle square --colours red green
 """
 
 import argparse
-import os
 
 # Generators
 from cogstim.shapes import ShapesGenerator
@@ -31,6 +30,13 @@ from cogstim.ans_dots import (
 from cogstim.lines import StripePatternGenerator
 from cogstim.fixation import FixationGenerator
 from cogstim.match_to_sample import MatchToSampleGenerator, GENERAL_CONFIG as MTS_GENERAL_CONFIG
+from cogstim.defaults import (
+    IMAGE_DEFAULTS,
+    DOT_DEFAULTS,
+    SHAPE_DEFAULTS,
+    LINE_DEFAULTS,
+    FIXATION_DEFAULTS,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -62,12 +68,12 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--train_num", type=int, default=50, help="Number of image sets for training")
     parser.add_argument("--test_num", type=int, default=50, help="Number of image sets for testing")
     parser.add_argument("--output_dir", type=str, default=None, help="Root output directory (default depends on dataset type)")
-    parser.add_argument("--background_colour", type=str, default="black", help="Background colour for generated images (default: black)")
-    parser.add_argument("--symbol_colour", type=str, default="white", choices=["yellow", "blue", "red", "green", "black", "white", "gray"], help="Fixation symbol colour (single colour)")
+    parser.add_argument("--background_colour", type=str, default=IMAGE_DEFAULTS["background_colour"], help=f"Background colour for generated images (default: {IMAGE_DEFAULTS['background_colour']})")
+    parser.add_argument("--symbol_colour", type=str, default=FIXATION_DEFAULTS["symbol_colour"], choices=["yellow", "blue", "red", "green", "black", "white", "gray"], help=f"Fixation symbol colour (default: {FIXATION_DEFAULTS['symbol_colour']})")
 
     # Shape-specific parameters
-    parser.add_argument("--min_surface", type=int, default=10000, help="Minimum shape surface area (shapes datasets)")
-    parser.add_argument("--max_surface", type=int, default=20000, help="Maximum shape surface area (shapes datasets)")
+    parser.add_argument("--min_surface", type=int, default=SHAPE_DEFAULTS["min_surface"], help=f"Minimum shape surface area (shapes datasets, default: {SHAPE_DEFAULTS['min_surface']})")
+    parser.add_argument("--max_surface", type=int, default=SHAPE_DEFAULTS["max_surface"], help=f"Maximum shape surface area (shapes datasets, default: {SHAPE_DEFAULTS['max_surface']})")
     parser.add_argument("--no-jitter", dest="no_jitter", action="store_true", help="Disable positional jitter for shapes datasets")
 
     # Dot-array-specific parameters
@@ -75,29 +81,29 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--version_tag", type=str, default="", help="Optional version tag appended to filenames (dot-array datasets)")
     parser.add_argument("--min_point_num", type=int, default=1, help="Minimum number of points per colour (dot-array datasets)")
     parser.add_argument("--max_point_num", type=int, default=10, help="Maximum number of points per colour (dot-array datasets)")
-    parser.add_argument("--min_point_radius", type=int, default=20, help="Minimum dot radius in pixels (dot-array datasets)")
-    parser.add_argument("--max_point_radius", type=int, default=30, help="Maximum dot radius in pixels (dot-array datasets)")
-    parser.add_argument("--dot_colour", type=str, choices=["yellow", "blue", "red", "green", "black", "white", "gray"], default="yellow", help="Dot colour for one-colour dot-array images")
+    parser.add_argument("--min_point_radius", type=int, default=DOT_DEFAULTS["min_point_radius"], help=f"Minimum dot radius in pixels (dot-array datasets, default: {DOT_DEFAULTS['min_point_radius']})")
+    parser.add_argument("--max_point_radius", type=int, default=DOT_DEFAULTS["max_point_radius"], help=f"Maximum dot radius in pixels (dot-array datasets, default: {DOT_DEFAULTS['max_point_radius']})")
+    parser.add_argument("--dot_colour", type=str, choices=["yellow", "blue", "red", "green", "black", "white", "gray"], default=DOT_DEFAULTS["dot_colour"], help=f"Dot colour for one-colour dot-array images (default: {DOT_DEFAULTS['dot_colour']})")
 
     # Line-pattern-specific parameters  # NEW ARGUMENT GROUP
     parser.add_argument("--angles", type=int, nargs="+", default=[0, 45, 90, 135], help="Rotation angles for stripe patterns (lines dataset)")
     parser.add_argument("--min_stripes", type=int, default=2, help="Minimum number of stripes per image (lines dataset)")
     parser.add_argument("--max_stripes", type=int, default=10, help="Maximum number of stripes per image (lines dataset)")
-    parser.add_argument("--img_size", type=int, default=512, help="Image size in pixels (lines dataset)")
+    parser.add_argument("--img_size", type=int, default=IMAGE_DEFAULTS["init_size"], help=f"Image size in pixels (lines dataset, default: {IMAGE_DEFAULTS['init_size']})")
     parser.add_argument("--tag", type=str, default="", help="Optional tag appended to filenames (lines dataset)")
-    parser.add_argument("--min_thickness", type=int, default=10, help="Minimum stripe thickness (lines dataset)")
-    parser.add_argument("--max_thickness", type=int, default=30, help="Maximum stripe thickness (lines dataset)")
-    parser.add_argument("--min_spacing", type=int, default=5, help="Minimum spacing between stripes (lines dataset)")
+    parser.add_argument("--min_thickness", type=int, default=LINE_DEFAULTS["min_thickness"], help=f"Minimum stripe thickness (lines dataset, default: {LINE_DEFAULTS['min_thickness']})")
+    parser.add_argument("--max_thickness", type=int, default=LINE_DEFAULTS["max_thickness"], help=f"Maximum stripe thickness (lines dataset, default: {LINE_DEFAULTS['max_thickness']})")
+    parser.add_argument("--min_spacing", type=int, default=LINE_DEFAULTS["min_spacing"], help=f"Minimum spacing between stripes (lines dataset, default: {LINE_DEFAULTS['min_spacing']})")
     parser.add_argument("--max_attempts", type=int, default=10000, help="Maximum attempts to place non-overlapping stripes (lines dataset)")
 
     # Fixation-specific parameters
     parser.add_argument("--types", nargs="+", default=["A", "B", "C", "AB", "AC", "BC", "ABC"], choices=["A", "B", "C", "AB", "AC", "BC", "ABC"], help="Fixation target types to generate")
     parser.add_argument("--all_types", action="store_true", help="Generate all fixation types (A, B, C, AB, AC, BC, ABC)")
-    parser.add_argument("--dot_radius_px", type=int, default=6, help="Radius of the central dot in pixels (A/ABC)")
-    parser.add_argument("--disk_radius_px", type=int, default=48, help="Radius of the filled disk in pixels (B/AB/BC/ABC)")
-    parser.add_argument("--cross_thickness_px", type=int, default=12, help="Bar thickness for the cross in pixels (C/AC/BC/ABC)")
-    parser.add_argument("--cross_arm_px", type=int, default=128, help="Half-length of each cross arm from the center in pixels")
-    parser.add_argument("--jitter_px", type=int, default=0, help="Max positional jitter of the fixation center in pixels")
+    parser.add_argument("--dot_radius_px", type=int, default=FIXATION_DEFAULTS["dot_radius_px"], help=f"Radius of the central dot in pixels (A/ABC, default: {FIXATION_DEFAULTS['dot_radius_px']})")
+    parser.add_argument("--disk_radius_px", type=int, default=FIXATION_DEFAULTS["disk_radius_px"], help=f"Radius of the filled disk in pixels (B/AB/BC/ABC, default: {FIXATION_DEFAULTS['disk_radius_px']})")
+    parser.add_argument("--cross_thickness_px", type=int, default=FIXATION_DEFAULTS["cross_thickness_px"], help=f"Bar thickness for the cross in pixels (C/AC/BC/ABC, default: {FIXATION_DEFAULTS['cross_thickness_px']})")
+    parser.add_argument("--cross_arm_px", type=int, default=FIXATION_DEFAULTS["cross_arm_px"], help=f"Half-length of each cross arm from the center in pixels (default: {FIXATION_DEFAULTS['cross_arm_px']})")
+    parser.add_argument("--jitter_px", type=int, default=FIXATION_DEFAULTS["jitter_px"], help=f"Max positional jitter of the fixation center in pixels (default: {FIXATION_DEFAULTS['jitter_px']})")
 
     return parser.parse_args()
 

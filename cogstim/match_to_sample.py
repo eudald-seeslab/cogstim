@@ -2,9 +2,8 @@ import os
 import argparse
 from tqdm import tqdm
 
-from cogstim.dots_core import PointLayoutError
+from cogstim.dots_core import NumberPoints, PointLayoutError
 from cogstim.config import MTS_EASY_RATIOS, MTS_HARD_RATIOS
-from cogstim.mts_helpers.factory import create_numberpoints_image as _create_np_image, generate_random_points
 from cogstim.mts_helpers.geometry import equalize_pair as _equalize_geom
 from cogstim.mts_helpers.io import save_image_pair, save_pair_with_basename, SummaryWriter, build_basename
 from cogstim.mts_helpers.planner import GenerationPlan, resolve_mts_ratios
@@ -74,26 +73,28 @@ class ImagePrinter:
 
 def try_build_random_pair(n_first, n_second,
                           bg_colour, dot_colour,
-                          min_radius, max_radius,
-                          attempts_limit,
+                          init_size, min_radius, 
+                          max_radius, attempts_limit,
                           error_label):
     """Try to create a pair (n_first, n_second). Return tuple or None and print contextualized error.
 
     error_label examples: "random", "initial layout for equalization", "equal pair"
     """
     try:
-        _, s_np = _create_np_image(bg_colour=bg_colour,
-                                                dot_colour=dot_colour,
-                                                min_radius=min_radius,
-                                                max_radius=max_radius,
-                                                attempts_limit=attempts_limit)
-        _, m_np = _create_np_image(bg_colour=bg_colour,
-                                                dot_colour=dot_colour,
-                                                min_radius=min_radius,
-                                                max_radius=max_radius,
-                                                attempts_limit=attempts_limit)
-        s_points = generate_random_points(s_np, n_first)
-        m_points = generate_random_points(m_np, n_second)
+        s_np = NumberPoints(init_size=init_size,
+                           colour_1=dot_colour,
+                           bg_colour=bg_colour,
+                           min_point_radius=min_radius,
+                           max_point_radius=max_radius,
+                           attempts_limit=attempts_limit)
+        m_np = NumberPoints(init_size=init_size,
+                           colour_1=dot_colour,
+                           bg_colour=bg_colour,
+                           min_point_radius=min_radius,
+                           max_point_radius=max_radius,
+                           attempts_limit=attempts_limit)
+        s_points = s_np.design_n_points(n_first, "colour_1")
+        m_points = m_np.design_n_points(n_second, "colour_1")
         return s_np, s_points, m_np, m_points
     except PointLayoutError as e:
         print(f"Error generating {n_first},{n_second} {error_label}: {e}")
@@ -111,6 +112,7 @@ def generate_pair(n_first, n_second, args, error_label, equalize=False):
         n_second=n_second,
         bg_colour=args.background_colour,
         dot_colour=args.dot_colour,
+        init_size=args.init_size,
         min_radius=args.min_radius,
         max_radius=args.max_radius,
         attempts_limit=args.attempts_limit,
@@ -148,25 +150,30 @@ class MatchToSampleGenerator(BaseGenerator):
     
     def create_image_pair(self, n1, n2, equalize=False):
         """Create a pair of images (sample and match)."""
+        # TODO: remove this once we have a default init_size
+        init_size = self.config.get("init_size", 512)  # Default to 512 if not specified
+        
         # Create sample image
-        s_img, s_np = _create_np_image(
+        s_np = NumberPoints(
+            init_size=init_size,
+            colour_1=self.config["dot_colour"],
             bg_colour=self.config["background_colour"],
-            dot_colour=self.config["dot_colour"],
-            min_radius=self.config["min_radius"],
-            max_radius=self.config["max_radius"],
+            min_point_radius=self.config["min_radius"],
+            max_point_radius=self.config["max_radius"],
             attempts_limit=self.config["attempts_limit"]
         )
-        s_points = generate_random_points(s_np, n1)
+        s_points = s_np.design_n_points(n1, "colour_1")
         
         # Create match image
-        m_img, m_np = _create_np_image(
+        m_np = NumberPoints(
+            init_size=init_size,
+            colour_1=self.config["dot_colour"],
             bg_colour=self.config["background_colour"],
-            dot_colour=self.config["dot_colour"],
-            min_radius=self.config["min_radius"],
-            max_radius=self.config["max_radius"],
+            min_point_radius=self.config["min_radius"],
+            max_point_radius=self.config["max_radius"],
             attempts_limit=self.config["attempts_limit"]
         )
-        m_points = generate_random_points(m_np, n2)
+        m_points = m_np.design_n_points(n2, "colour_1")
         
         # Equalize areas if requested
         if equalize:

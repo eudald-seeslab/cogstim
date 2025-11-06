@@ -1,6 +1,5 @@
 import itertools
 from random import randint
-from PIL import ImageDraw
 import numpy as np
 
 
@@ -15,10 +14,32 @@ class NumberPoints:
     # We consider equal areas if their (r1 - r2) / r1 ratio differs by less than this number:
     area_tolerance = 0.001
 
-    def __init__(self, img, init_size, colour_1, colour_2, min_point_radius=8, max_point_radius=16, attempts_limit=10):
-        self.img = img
+    def __init__(self, init_size, colour_1, colour_2=None, bg_colour=None, mode=None,
+                 min_point_radius=None, max_point_radius=None, attempts_limit=None):
+        """Initialize NumberPoints for dot placement on an image.
+        
+        Args:
+            init_size: Image size in pixels (square)
+            colour_1: Primary dot colour
+            colour_2: Optional second dot colour for two-colour images
+            bg_colour: Background colour (uses defaults.IMAGE_DEFAULTS if None)
+            mode: Image mode (uses defaults.IMAGE_DEFAULTS if None)
+            min_point_radius: Minimum dot radius (uses defaults.DOT_DEFAULTS if None)
+            max_point_radius: Maximum dot radius (uses defaults.DOT_DEFAULTS if None)
+            attempts_limit: Maximum attempts to place dots without overlap (uses defaults.DOT_DEFAULTS if None)
+        """
+        from cogstim.image_utils import ImageCanvas
+        from cogstim.defaults import IMAGE_DEFAULTS, DOT_DEFAULTS
+        
+        # Apply defaults if not provided
+        bg_colour = bg_colour if bg_colour is not None else IMAGE_DEFAULTS["background_colour"]
+        mode = mode if mode is not None else IMAGE_DEFAULTS["mode"]
+        min_point_radius = min_point_radius if min_point_radius is not None else DOT_DEFAULTS["min_point_radius"]
+        max_point_radius = max_point_radius if max_point_radius is not None else DOT_DEFAULTS["max_point_radius"]
+        attempts_limit = attempts_limit if attempts_limit is not None else DOT_DEFAULTS["attempts_limit"]
+        
+        self.canvas = ImageCanvas(init_size, bg_colour, mode)
         self.init_size = init_size
-        self.draw = ImageDraw.Draw(img)
         self.colour_1 = colour_1
         self.colour_2 = colour_2
         self.min_point_radius = min_point_radius
@@ -78,11 +99,11 @@ class NumberPoints:
             fill_colour = self.colour_1
         else:
             fill_colour = self.colour_1 if colour == "colour_1" else self.colour_2
-        self.draw.ellipse((x1, y1, x2, y2), fill=fill_colour)
+        self.canvas.draw_ellipse((x1, y1, x2, y2), fill=fill_colour)
 
     def draw_points(self, point_array):
         [self._draw_point(a[0], a[1]) for a in point_array]
-        return self.img
+        return self.canvas.img
 
     @staticmethod
     def compute_area(point_array, colour):
@@ -239,3 +260,6 @@ class NumberPoints:
             if not self._check_points_not_overlapping(pair[0][0], pair[1][0]):
                 return False
         return True
+
+    def save(self, path):
+        self.canvas.save(path)

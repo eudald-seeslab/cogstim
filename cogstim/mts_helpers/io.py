@@ -7,8 +7,8 @@ def save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name):
     m_np.draw_points(m_points)
     s_path = os.path.join(output_dir, f"{base_name}_s.png")
     m_path = os.path.join(output_dir, f"{base_name}_m.png")
-    s_np.img.save(s_path)
-    m_np.img.save(m_path)
+    s_np.save(s_path)
+    m_np.save(m_path)
 
 
 def save_pair_with_basename(pair, output_dir, base_name):

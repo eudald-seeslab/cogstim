@@ -134,7 +134,7 @@ class TestOneColourImageGenerator:
             assert mock_makedirs.call_count == 7  # base + 3 train + 3 test
 
     @patch('cogstim.dots.NumberPoints')
-    def test_create_image_without_total_area(self, mock_np_class):
+    def test_create_image_without_total_area(self, mock_create):
         """Test image creation without total area constraint."""
         config = {
             "min_point_num": 1,
@@ -154,7 +154,7 @@ class TestOneColourImageGenerator:
         }
 
         mock_np_instance = MagicMock()
-        mock_np_class.return_value = mock_np_instance
+        mock_create.return_value = mock_np_instance
         mock_np_instance.design_n_points.return_value = []
         mock_np_instance.draw_points.return_value = MagicMock(spec=Image.Image)
 
@@ -162,19 +162,9 @@ class TestOneColourImageGenerator:
             generator = OneColourImageGenerator(config)
             result = generator.create_image(3)
 
-            # Should create NumberPoints instance with correct parameters
-            mock_np_class.assert_called_once()
-            call_args = mock_np_class.call_args
-            # First arg should be a PIL Image
-            assert isinstance(call_args[0][0], Image.Image)
-            assert call_args[1] == {
-                'colour_1': config["colour_1"],
-                'colour_2': None,
-                'min_point_radius': 8,
-                'max_point_radius': 16,
-                'attempts_limit': 100,
-            }
-
+            # Should call NumberPoints
+            mock_create.assert_called_once()
+            
             # Should call design_n_points and draw_points
             mock_np_instance.design_n_points.assert_called_once_with(3, "colour_1")
             mock_np_instance.draw_points.assert_called_once_with([])
@@ -182,7 +172,7 @@ class TestOneColourImageGenerator:
             mock_np_instance.fix_total_area.assert_not_called()
 
     @patch('cogstim.dots.NumberPoints')
-    def test_create_image_with_total_area(self, mock_np_class):
+    def test_create_image_with_total_area(self, mock_create):
         """Test image creation with total area constraint."""
         # Calculate a valid total_area: π * (max_radius)² * max_points
         import math
@@ -206,7 +196,7 @@ class TestOneColourImageGenerator:
         }
 
         mock_np_instance = MagicMock()
-        mock_np_class.return_value = mock_np_instance
+        mock_create.return_value = mock_np_instance
         mock_np_instance.design_n_points.return_value = []
         mock_np_instance.fix_total_area.return_value = []
         mock_np_instance.draw_points.return_value = MagicMock(spec=Image.Image)

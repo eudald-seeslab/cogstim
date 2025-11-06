@@ -1,9 +1,8 @@
 import os
-from PIL import Image
-from cogstim.dots_core import NumberPoints, PointLayoutError
 from tqdm import tqdm
 import logging
 
+from cogstim.dots_core import NumberPoints, PointLayoutError
 from cogstim.helpers import COLOUR_MAP, SIZES
 from cogstim.config import ANS_EASY_RATIOS, ANS_HARD_RATIOS
 from cogstim.base_generator import BaseGenerator
@@ -21,9 +20,6 @@ GENERAL_CONFIG = {
 }
 
 
-## Ratios moved to cogstim.config for reuse
-
-
 class TerminalPointLayoutError(ValueError):
     pass
 
@@ -33,6 +29,7 @@ class PointsGenerator(BaseGenerator):
         super().__init__(config)
         self.train_num = config["train_num"]
         self.test_num = config["test_num"]
+        
         ratios = self.config["ratios"]
         match ratios:
             case "easy":
@@ -58,27 +55,23 @@ class PointsGenerator(BaseGenerator):
         return subdirs
 
     def create_image(self, n1, n2, equalized):
-        img = Image.new(
-            "RGB",
-            (SIZES["init_size"], SIZES["init_size"]),
-            color=self.config["background_colour"],
-        )
         # Map configured colours to drawer colours. In one-colour mode, only pass colour_1.
         colour_2 = None if self.config["ONE_COLOUR"] else COLOUR_MAP[self.config["colour_2"]]
 
         number_points = NumberPoints(
-            img,
-            SIZES["init_size"],
+            init_size=SIZES["init_size"],
             colour_1=COLOUR_MAP[self.config["colour_1"]],
             colour_2=colour_2,
+            bg_colour=self.config["background_colour"],
+            mode="RGB",
             min_point_radius=self.config["min_point_radius"],
             max_point_radius=self.config["max_point_radius"],
-            attempts_limit=self.config["attempts_limit"],
+            attempts_limit=self.config["attempts_limit"]
         )
+        
         point_array = number_points.design_n_points(n1, "colour_1")
-        point_array = number_points.design_n_points(
-            n2, "colour_2", point_array=point_array
-        )
+        point_array = number_points.design_n_points(n2, "colour_2", point_array=point_array)
+        
         if equalized and not self.config["ONE_COLOUR"]:
             point_array = number_points.equalize_areas(point_array)
         return number_points.draw_points(point_array)

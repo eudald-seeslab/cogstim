@@ -1,15 +1,14 @@
-from PIL import Image
 from cogstim.dots_core import NumberPoints
 from cogstim.helpers import COLOUR_MAP
 
 
 def _make_number_points(init_size: int = 512):
-    img = Image.new("RGB", (init_size, init_size), color=COLOUR_MAP["black"])
     return NumberPoints(
-        img=img,
         init_size=init_size,
         colour_1=COLOUR_MAP["yellow"],
         colour_2=COLOUR_MAP["blue"],
+        bg_colour=COLOUR_MAP["black"],
+        mode="RGB",
         min_point_radius=5,
         max_point_radius=8,
         attempts_limit=500,

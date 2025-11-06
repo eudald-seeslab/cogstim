@@ -9,8 +9,9 @@ directory setup, and the image generation interface.
 
 import os
 import logging
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from abc import ABC
+from typing import Dict, Any
+from cogstim.random_seed import set_seed
 
 
 class BaseGenerator(ABC):
@@ -38,6 +39,7 @@ class BaseGenerator(ABC):
         Args:
             config: Configuration dictionary containing generator parameters.
                    Must include 'output_dir' key specifying where to save images.
+                   Optional 'seed' key for reproducible random generation.
         """
         self.config = config
         self._logger = logging.getLogger(self.__class__.__name__)
@@ -47,6 +49,10 @@ class BaseGenerator(ABC):
                 "Configuration must include 'output_dir' key specifying "
                 "where to save generated images."
             )
+        
+        # Set seed for reproducibility if provided
+        seed = config.get("seed", None)
+        set_seed(seed)
     
     @property
     def output_dir(self) -> str:

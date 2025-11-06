@@ -1,8 +1,8 @@
-"""Tests for new methods in cogstim.dots_core module."""
+"""Tests for cogstim.dots_core module."""
 
 import pytest
 import numpy as np
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from cogstim.dots_core import NumberPoints, PointLayoutError
 
@@ -12,13 +12,11 @@ class TestNumberPointsNewMethods:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.mock_img = MagicMock()
-        self.mock_img.size = (512, 512)
         self.np = NumberPoints(
-            self.mock_img, 
-            512, 
+            init_size=512,
             colour_1=(255, 255, 0),  # yellow
             colour_2=(0, 0, 255),    # blue
+            bg_colour=(0, 0, 0),     # black
             min_point_radius=10,
             max_point_radius=20,
             attempts_limit=100
@@ -242,13 +240,11 @@ class TestNumberPointsBoundaryCheck:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.mock_img = MagicMock()
-        self.mock_img.size = (512, 512)
         self.np = NumberPoints(
-            self.mock_img, 
-            512, 
+            init_size=512,
             colour_1=(255, 255, 0),
             colour_2=(0, 0, 255),
+            bg_colour=(0, 0, 0),
             min_point_radius=10,
             max_point_radius=20,
             attempts_limit=100

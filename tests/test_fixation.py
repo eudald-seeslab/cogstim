@@ -104,8 +104,12 @@ class TestFixationGenerator:
         }
 
         generator = FixationGenerator(config)
-        img = generator._blank_image()
-
+        canvas = generator._blank_canvas()
+        
+        from cogstim.image_utils import ImageCanvas
+        assert isinstance(canvas, ImageCanvas)
+        
+        img = canvas.img
         assert img.size == (128, 128)
         assert img.mode == "RGB"
 

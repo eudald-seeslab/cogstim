@@ -4,10 +4,9 @@ import os
 import random
 from typing import List, Tuple
 
-from PIL import Image, ImageDraw
-
 from cogstim.helpers import COLOUR_MAP
 from cogstim.base_generator import BaseGenerator
+from cogstim.image_utils import ImageCanvas
 
 
 class FixationGenerator(BaseGenerator):
@@ -64,30 +63,29 @@ class FixationGenerator(BaseGenerator):
         jy = random.randint(-self.jitter_px, self.jitter_px)
         return (half + jx, half + jy)
 
-    def _blank_image(self) -> Image.Image:
-        return Image.new("RGB", (self.size, self.size), color=self.background_colour)
+    def _blank_canvas(self) -> ImageCanvas:
+        return ImageCanvas(self.size, self.background_colour, mode="RGB")
 
-    def _draw_symbol(self, s_type: str) -> Image.Image:
-        img = self._blank_image()
-        draw = ImageDraw.Draw(img)
+    def _draw_symbol(self, s_type: str):
+        canvas = self._blank_canvas()
         cx, cy = self._center_with_jitter()
 
         # Helper lambdas
         def draw_dot(colour: str):
             r = self.dot_radius
-            draw.ellipse([(cx - r, cy - r), (cx + r, cy + r)], fill=colour)
+            canvas.draw_ellipse([(cx - r, cy - r), (cx + r, cy + r)], fill=colour)
 
         def draw_disk(colour: str):
             r = self.disk_radius
-            draw.ellipse([(cx - r, cy - r), (cx + r, cy + r)], fill=colour)
+            canvas.draw_ellipse([(cx - r, cy - r), (cx + r, cy + r)], fill=colour)
 
         def draw_cross(colour: str):
             t = self.cross_thickness
             a = self.cross_arm
             # Horizontal bar centered at (cx, cy) with half-length a
-            draw.rectangle([(cx - a, cy - t // 2), (cx + a, cy + t // 2)], fill=colour)
+            canvas.draw_rectangle([(cx - a, cy - t // 2), (cx + a, cy + t // 2)], fill=colour)
             # Vertical bar centered at (cx, cy) with half-length a
-            draw.rectangle([(cx - t // 2, cy - a), (cx + t // 2, cy + a)], fill=colour)
+            canvas.draw_rectangle([(cx - t // 2, cy - a), (cx + t // 2, cy + a)], fill=colour)
 
         # Compose according to type
         s_type = s_type.upper()
@@ -116,4 +114,4 @@ class FixationGenerator(BaseGenerator):
         else:
             raise ValueError(f"Unknown fixation type: {s_type}")
 
-        return img
+        return canvas.img

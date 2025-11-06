@@ -110,6 +110,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--cross_arm_px", type=int, default=FIXATION_DEFAULTS["cross_arm_px"], help=f"Half-length of each cross arm from the center in pixels (default: {FIXATION_DEFAULTS['cross_arm_px']})")
     parser.add_argument("--jitter_px", type=int, default=FIXATION_DEFAULTS["jitter_px"], help=f"Max positional jitter of the fixation center in pixels (default: {FIXATION_DEFAULTS['jitter_px']})")
 
+    # Reproducibility parameter (applies to all datasets)
+    parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducible generation (applies to all dataset types)")
+
     return parser.parse_args()
 
 
@@ -147,18 +150,21 @@ def build_shapes_generator(args: argparse.Namespace) -> ShapesGenerator:
         else:
             output_dir = f"images/{'_'.join(shapes)}_{'_'.join(colors)}"
 
-    return ShapesGenerator(
-        shapes=shapes,
-        colours=colors,
-        task_type=task_type,
-        output_dir=output_dir,
-        train_num=args.train_num,
-        test_num=args.test_num,
-        min_surface=args.min_surface,
-        max_surface=args.max_surface,
-        jitter=jitter,
-        background_colour=args.background_colour,
-    )
+    config = {
+        "shapes": shapes,
+        "colours": colors,
+        "task_type": task_type,
+        "output_dir": output_dir,
+        "train_num": args.train_num,
+        "test_num": args.test_num,
+        "min_surface": args.min_surface,
+        "max_surface": args.max_surface,
+        "jitter": jitter,
+        "background_colour": args.background_colour,
+        "seed": args.seed,
+    }
+    
+    return ShapesGenerator(**config)
 
 
 def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> None:
@@ -181,6 +187,7 @@ def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> No
             "background_colour": args.background_colour,
             "min_point_radius": args.min_point_radius,
             "max_point_radius": args.max_point_radius,
+            "seed": args.seed,
         },
     }
 
@@ -188,7 +195,6 @@ def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> No
     if one_colour:
         cfg["colour_1"] = args.dot_colour
         cfg["colour_2"] = None
-
     generator = PointsGenerator(cfg)
     generator.generate_images()
 
@@ -212,6 +218,7 @@ def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
             "max_point_radius": args.max_point_radius,
             "dot_colour": args.dot_colour,
             "attempts_limit": args.attempts_limit,
+            "seed": args.seed,
         },
     }
     
@@ -220,7 +227,6 @@ def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
         cfg["tolerance"] = args.tolerance
     if args.abs_tolerance is not None:
         cfg["abs_tolerance"] = args.abs_tolerance
-
     generator = MatchToSampleGenerator(cfg)
     generator.generate_images()
 
@@ -245,6 +251,7 @@ def generate_lines_dataset(args: argparse.Namespace) -> None:
         "min_spacing": args.min_spacing,
         "max_attempts": args.max_attempts,
         "background_colour": args.background_colour,
+        "seed": args.seed,
     }
     generator = StripePatternGenerator(cfg)
     generator.generate_images()
@@ -268,6 +275,7 @@ def generate_fixation_dataset(args: argparse.Namespace) -> None:
         "background_colour": args.background_colour,
         "symbol_colour": args.symbol_colour,
         "tag": args.tag,
+        "seed": args.seed,
     }
     generator = FixationGenerator(cfg)
     generator.generate_images()

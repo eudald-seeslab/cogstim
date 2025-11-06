@@ -43,16 +43,23 @@ usage: cli.py [-h] (--shape_recognition | --colour_recognition | --ans | --one_c
               [--types {A,B,C,AB,AC,BC,ABC} ...] [--all_types]
               [--dot_radius_px DOT_RADIUS_PX] [--disk_radius_px DISK_RADIUS_PX]
               [--cross_thickness_px CROSS_THICKNESS_PX] [--cross_arm_px CROSS_ARM_PX] [--jitter_px JITTER_PX]
+              [--seed SEED]
 ```
 
 > **Note**: train_num and test_num refer to the number of image _sets_ created. An image set is a group of images that comb all the possible parameter combinations. So, for shapes and colors, an image set is of about 200 images, whereas for ANS is of around 75 images, of course always depending on the other parameters.
 > **Note**: All cli arguments use British spelling.
+> **Note**: Use `--seed SEED` (where SEED is an integer) to make generation deterministic and reproducible. Without a seed, each run will produce different random variations.
 
 ## Examples
 
 ### Shape recognition – *circle vs star* in yellow
 ```bash
 python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
+```
+
+For reproducible results, add the `--seed` option:
+```bash
+python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20 --seed 42
 ```
 
 <table><tr>

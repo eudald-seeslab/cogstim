@@ -690,3 +690,331 @@ class TestImageProperties:
             with Image.open(img_path) as img:
                 assert img.format == "PNG", f"Image {img_path} is not a PNG"
                 assert img.size[0] > 0 and img.size[1] > 0, f"Image {img_path} has invalid size"
+
+
+class TestSeedDeterminism:
+    """Test that providing a seed makes generation deterministic."""
+
+    def test_ans_seed_determinism(self, tmp_path):
+        """Test that ANS generation with same seed produces identical images."""
+        test_images_dir = get_test_images_dir()
+        
+        # Generate images with seed=42 (first run)
+        config1 = {
+            **ANS_GENERAL_CONFIG,
+            "train_num": 1,
+            "test_num": 0,
+            "output_dir": str(test_images_dir / "ans_seed_test1"),
+            "ratios": "easy",
+            "ONE_COLOUR": False,
+            "min_point_num": 2,
+            "max_point_num": 4,
+            "background_colour": "white",
+            "dot_colour": "black",
+            "seed": 42,
+        }
+        
+        generator1 = PointsGenerator(config1)
+        generator1.generate_images()
+        
+        # Generate images with seed=42 (second run)
+        config2 = {
+            **ANS_GENERAL_CONFIG,
+            "train_num": 1,
+            "test_num": 0,
+            "output_dir": str(test_images_dir / "ans_seed_test2"),
+            "ratios": "easy",
+            "ONE_COLOUR": False,
+            "min_point_num": 2,
+            "max_point_num": 4,
+            "background_colour": "white",
+            "dot_colour": "black",
+            "seed": 42,
+        }
+        
+        generator2 = PointsGenerator(config2)
+        generator2.generate_images()
+        
+        # Get list of images from both runs
+        dir1 = Path(config1["output_dir"])
+        dir2 = Path(config2["output_dir"])
+        
+        images1 = sorted(dir1.glob("train/**/*.png"))
+        images2 = sorted(dir2.glob("train/**/*.png"))
+        
+        # Both runs should produce the same number of images
+        assert len(images1) > 0, "First run produced no images"
+        assert len(images1) == len(images2), "Different number of images generated"
+        
+        # Compare corresponding images pixel by pixel
+        for img_path1, img_path2 in zip(images1, images2):
+            with Image.open(img_path1) as img1, Image.open(img_path2) as img2:
+                arr1 = np.array(img1)
+                arr2 = np.array(img2)
+                
+                # Images should be identical
+                assert np.array_equal(arr1, arr2), f"Images {img_path1.name} differ between runs with same seed"
+
+    def test_shapes_seed_determinism(self, tmp_path):
+        """Test that shapes generation with same seed produces identical images."""
+        test_images_dir = get_test_images_dir()
+        
+        # Generate images with seed=123 (first run)
+        config1 = {
+            "shapes": ["circle", "star"],
+            "colours": ["yellow"],
+            "task_type": "two_shapes",
+            "output_dir": str(test_images_dir / "shapes_seed_test1"),
+            "train_num": 1,
+            "test_num": 0,
+            "min_surface": 8000,
+            "max_surface": 12000,
+            "jitter": True,
+            "background_colour": "white",
+            "seed": 123,
+        }
+        
+        generator1 = ShapesGenerator(**config1)
+        generator1.generate_images()
+        
+        # Generate images with seed=123 (second run)
+        config2 = {
+            "shapes": ["circle", "star"],
+            "colours": ["yellow"],
+            "task_type": "two_shapes",
+            "output_dir": str(test_images_dir / "shapes_seed_test2"),
+            "train_num": 1,
+            "test_num": 0,
+            "min_surface": 8000,
+            "max_surface": 12000,
+            "jitter": True,
+            "background_colour": "white",
+            "seed": 123,
+        }
+        
+        generator2 = ShapesGenerator(**config2)
+        generator2.generate_images()
+        
+        # Get list of images from both runs
+        dir1 = Path(config1["output_dir"])
+        dir2 = Path(config2["output_dir"])
+        
+        images1 = sorted(dir1.glob("train/**/*.png"))
+        images2 = sorted(dir2.glob("train/**/*.png"))
+        
+        # Both runs should produce the same number of images
+        assert len(images1) > 0, "First run produced no images"
+        assert len(images1) == len(images2), "Different number of images generated"
+        
+        # Compare corresponding images pixel by pixel
+        for img_path1, img_path2 in zip(images1, images2):
+            with Image.open(img_path1) as img1, Image.open(img_path2) as img2:
+                arr1 = np.array(img1)
+                arr2 = np.array(img2)
+                
+                # Images should be identical
+                assert np.array_equal(arr1, arr2), f"Images {img_path1.name} differ between runs with same seed"
+
+    def test_different_seeds_produce_different_images(self, tmp_path):
+        """Test that different seeds produce different images."""
+        test_images_dir = get_test_images_dir()
+        
+        # Generate images with seed=1
+        config1 = {
+            **ANS_GENERAL_CONFIG,
+            "train_num": 1,
+            "test_num": 0,
+            "output_dir": str(test_images_dir / "ans_seed_1"),
+            "ratios": "easy",
+            "ONE_COLOUR": False,
+            "min_point_num": 3,
+            "max_point_num": 5,
+            "background_colour": "white",
+            "dot_colour": "black",
+            "seed": 1,
+        }
+        
+        generator1 = PointsGenerator(config1)
+        generator1.generate_images()
+        
+        # Generate images with seed=2
+        config2 = {
+            **ANS_GENERAL_CONFIG,
+            "train_num": 1,
+            "test_num": 0,
+            "output_dir": str(test_images_dir / "ans_seed_2"),
+            "ratios": "easy",
+            "ONE_COLOUR": False,
+            "min_point_num": 3,
+            "max_point_num": 5,
+            "background_colour": "white",
+            "dot_colour": "black",
+            "seed": 2,
+        }
+        
+        generator2 = PointsGenerator(config2)
+        generator2.generate_images()
+        
+        # Get list of images from both runs
+        dir1 = Path(config1["output_dir"])
+        dir2 = Path(config2["output_dir"])
+        
+        images1 = sorted(dir1.glob("train/**/*.png"))
+        images2 = sorted(dir2.glob("train/**/*.png"))
+        
+        # Both runs should produce the same number of images
+        assert len(images1) > 0, "First run produced no images"
+        assert len(images1) == len(images2), "Different number of images generated"
+        
+        # At least some images should be different
+        different_count = 0
+        for img_path1, img_path2 in zip(images1, images2):
+            with Image.open(img_path1) as img1, Image.open(img_path2) as img2:
+                arr1 = np.array(img1)
+                arr2 = np.array(img2)
+                
+                if not np.array_equal(arr1, arr2):
+                    different_count += 1
+        
+        # At least one pair of images should be different
+        assert different_count > 0, "All images are identical despite different seeds"
+
+    def test_no_seed_allows_generation(self, tmp_path):
+        """Test that generation works without providing a seed."""
+        test_images_dir = get_test_images_dir()
+        
+        # Generate images without seed
+        config = {
+            **ANS_GENERAL_CONFIG,
+            "train_num": 1,
+            "test_num": 0,
+            "output_dir": str(test_images_dir / "ans_no_seed"),
+            "ratios": "easy",
+            "ONE_COLOUR": True,
+            "colour_1": "yellow",
+            "min_point_num": 2,
+            "max_point_num": 4,
+            "background_colour": "white",
+            "dot_colour": "yellow",
+        }
+        # Note: no "seed" key in config
+        
+        generator = PointsGenerator(config)
+        generator.generate_images()
+        
+        # Check that images were created
+        output_dir = Path(config["output_dir"])
+        images = list(output_dir.glob("train/**/*.png"))
+        
+        assert len(images) > 0, "No images generated without seed"
+        
+        # Verify at least one image is valid
+        with Image.open(images[0]) as img:
+            assert img.size == (512, 512), "Invalid image size"
+            assert img.mode == "RGB", "Invalid image mode"
+
+
+class TestCLISeedIntegration:
+    """Test that the CLI correctly passes the seed to generators."""
+
+    def test_cli_seed_flag_for_shapes(self, tmp_path, monkeypatch):
+        """Test that CLI --seed flag works for shapes dataset."""
+        import sys
+        from cogstim.cli import main
+        
+        test_images_dir = get_test_images_dir()
+        output_dir1 = str(test_images_dir / "cli_shapes_seed1")
+        output_dir2 = str(test_images_dir / "cli_shapes_seed2")
+        
+        # First run with seed=99
+        monkeypatch.setattr(sys, 'argv', [
+            'cli.py',
+            '--shape_recognition',
+            '--train_num', '1',
+            '--test_num', '0',
+            '--output_dir', output_dir1,
+            '--seed', '99'
+        ])
+        main()
+        
+        # Second run with seed=99
+        monkeypatch.setattr(sys, 'argv', [
+            'cli.py',
+            '--shape_recognition',
+            '--train_num', '1',
+            '--test_num', '0',
+            '--output_dir', output_dir2,
+            '--seed', '99'
+        ])
+        main()
+        
+        # Compare images from both runs
+        dir1 = Path(output_dir1)
+        dir2 = Path(output_dir2)
+        
+        images1 = sorted(dir1.glob("train/**/*.png"))
+        images2 = sorted(dir2.glob("train/**/*.png"))
+        
+        assert len(images1) > 0, "First run produced no images"
+        assert len(images1) == len(images2), "Different number of images generated"
+        
+        # At least check a few images are identical
+        for img_path1, img_path2 in zip(images1[:3], images2[:3]):
+            with Image.open(img_path1) as img1, Image.open(img_path2) as img2:
+                arr1 = np.array(img1)
+                arr2 = np.array(img2)
+                assert np.array_equal(arr1, arr2), f"CLI: Images {img_path1.name} differ with same seed"
+
+    def test_cli_seed_flag_for_ans(self, tmp_path, monkeypatch):
+        """Test that CLI --seed flag works for ANS dataset."""
+        import sys
+        from cogstim.cli import main
+        
+        test_images_dir = get_test_images_dir()
+        output_dir1 = str(test_images_dir / "cli_ans_seed1")
+        output_dir2 = str(test_images_dir / "cli_ans_seed2")
+        
+        # First run with seed=77
+        monkeypatch.setattr(sys, 'argv', [
+            'cli.py',
+            '--ans',
+            '--train_num', '1',
+            '--test_num', '0',
+            '--ratios', 'easy',
+            '--min_point_num', '2',
+            '--max_point_num', '4',
+            '--output_dir', output_dir1,
+            '--seed', '77'
+        ])
+        main()
+        
+        # Second run with seed=77
+        monkeypatch.setattr(sys, 'argv', [
+            'cli.py',
+            '--ans',
+            '--train_num', '1',
+            '--test_num', '0',
+            '--ratios', 'easy',
+            '--min_point_num', '2',
+            '--max_point_num', '4',
+            '--output_dir', output_dir2,
+            '--seed', '77'
+        ])
+        main()
+        
+        # Compare images from both runs
+        dir1 = Path(output_dir1)
+        dir2 = Path(output_dir2)
+        
+        images1 = sorted(dir1.glob("train/**/*.png"))
+        images2 = sorted(dir2.glob("train/**/*.png"))
+        
+        assert len(images1) > 0, "First run produced no images"
+        assert len(images1) == len(images2), "Different number of images generated"
+        
+        # Check a sample of images are identical
+        for img_path1, img_path2 in zip(images1[:3], images2[:3]):
+            with Image.open(img_path1) as img1, Image.open(img_path2) as img2:
+                arr1 = np.array(img1)
+                arr2 = np.array(img2)
+                assert np.array_equal(arr1, arr2), f"CLI: Images {img_path1.name} differ with same seed"

@@ -30,11 +30,8 @@ class LinesGenerator(BaseGenerator):
         self.dir_path = config["output_dir"]
         self.angles = config["angles"]
         self.max_attempts = config["max_attempts"]
-        self.train_num = config["train_num"]
-        self.test_num = config["test_num"]
         self.tag = config["tag"]
         self.background_colour = config["background_colour"]
-        self.config = config  # Store for summary check
         
         # Calculate circumscribed size for rotation
         self.c_size = int(self.size / 2 * np.sqrt(2)) * 2
@@ -43,7 +40,7 @@ class LinesGenerator(BaseGenerator):
         """Generate the complete set of images with different angles and stripe counts using unified planner."""
         self.setup_directories()
 
-        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
+        for phase, num_images in self.iter_phases():
             # Build generation plan
             plan = GenerationPlan(
                 task_type="lines",
@@ -73,10 +70,7 @@ class LinesGenerator(BaseGenerator):
                     logging.error(str(e))
                     raise
             
-            # Write summary CSV if enabled
-            if self.config.get("summary", False):
-                phase_output_dir = os.path.join(self.dir_path, phase)
-                plan.write_summary_csv(phase_output_dir)
+            self.write_summary_if_enabled(plan, phase)
 
     def create_rotated_stripes(self, num_stripes, angle):
         """Create an image with the specified number of stripes at the given angle."""

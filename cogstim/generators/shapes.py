@@ -215,7 +215,7 @@ class ShapesGenerator(BaseGenerator):
         dist_y = random.randint(-max_jitter, max_jitter)
         center = (int(pixels_x / 2) + dist_x, int(pixels_y / 2) + dist_y)
 
-        # for bookkeeping
+        # Calculate jitter metadata for image filename
         distance = int(np.sqrt(dist_x**2 + dist_y**2))
         angle = int((np.arctan2(dist_y, dist_x) / np.pi + 1) * 180)
 
@@ -238,7 +238,7 @@ class ShapesGenerator(BaseGenerator):
         """Generate all images for training and testing using unified planner."""
         self.setup_directories()
 
-        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
+        for phase, num_images in self.iter_phases():
             # Build generation plan
             plan = GenerationPlan(
                 task_type="shapes",
@@ -278,7 +278,4 @@ class ShapesGenerator(BaseGenerator):
                 
                 self.save_image(image, shape, surface, dist, angle, rep, path)
             
-            # Write summary CSV if enabled
-            if self.config.get("summary", False):
-                phase_output_dir = os.path.join(self.output_dir, phase)
-                plan.write_summary_csv(phase_output_dir)
+            self.write_summary_if_enabled(plan, phase)

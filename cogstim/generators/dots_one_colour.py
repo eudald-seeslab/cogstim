@@ -28,8 +28,6 @@ class DotsOneColourGenerator(BaseGenerator):
         self.nmin = self.config["min_point_num"]
         self.nmax = self.config["max_point_num"]
         self.total_area = self.config["total_area"]
-        self.train_num = self.config["train_num"]
-        self.test_num = self.config["test_num"]
         
         self._check_areas_make_sense()
 
@@ -107,7 +105,7 @@ class DotsOneColourGenerator(BaseGenerator):
 
     def generate_images(self):
         """Generate the full set of images based on configuration."""
-        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
+        for phase, num_images in self.iter_phases():
             total_images = num_images * (self.nmax - self.nmin + 1)
             self.log_generation_info(f"Generating {total_images} images for {phase}...")
 

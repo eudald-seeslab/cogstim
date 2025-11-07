@@ -10,6 +10,7 @@ from cogstim.helpers.planner import GenerationPlan, resolve_ratios
 logging.basicConfig(level=logging.INFO)
 
 
+# TODO: This should be moved elsewhere
 GENERAL_CONFIG = {
     "colour_1": "yellow",
     "colour_2": "blue",
@@ -27,16 +28,12 @@ class TerminalPointLayoutError(ValueError):
 class DotsANSGenerator(BaseGenerator):
     def __init__(self, config):
         super().__init__(config)
-        self.train_num = config["train_num"]
-        self.test_num = config["test_num"]
         
-        # Resolve ratios using unified planner
-        ratios_mode = self.config["ratios"]
-        if isinstance(ratios_mode, str):
-            self.ratios = resolve_ratios(ratios_mode, ANS_EASY_RATIOS, ANS_HARD_RATIOS)
-        else:
-            # Support direct ratio lists
-            self.ratios = ratios_mode
+        self.ratios = resolve_ratios(
+            self.config["ratios"], 
+            ANS_EASY_RATIOS, 
+            ANS_HARD_RATIOS
+        )
         
         self.setup_directories()
 
@@ -108,7 +105,7 @@ class DotsANSGenerator(BaseGenerator):
         )
 
     def get_positions(self):
-        """Get positions using unified planner (kept for backward compatibility)."""
+        """Get valid (n1, n2) position pairs based on configured ratios."""
         task_type = "one_colour" if self.config["ONE_COLOUR"] else "ans"
         plan = GenerationPlan(
             task_type=task_type,
@@ -123,8 +120,7 @@ class DotsANSGenerator(BaseGenerator):
         """Generate images using unified planning mechanism."""
         task_type = "one_colour" if self.config["ONE_COLOUR"] else "ans"
         
-        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
-            # Build generation plan
+        for phase, num_images in self.iter_phases():
             plan = GenerationPlan(
                 task_type=task_type,
                 min_point_num=self.config["min_point_num"],
@@ -139,22 +135,18 @@ class DotsANSGenerator(BaseGenerator):
             
             # Execute plan
             for task in tqdm(plan.tasks, desc=f"{phase}"):
-                # Handle different task types
                 if task.task_type == "one_colour":
                     n1 = task.params.get('n')
                     n2 = 0
                     equalized = False
                 else:  # ans (two-colour)
-                    n1 = task.n1
-                    n2 = task.n2 if task.n2 is not None else 0
-                    equalized = task.equalize
+                    n1 = task.params.get('n1')
+                    n2 = task.params.get('n2', 0)
+                    equalized = task.params.get('equalize', False)
                 
                 rep = task.rep
                 
                 # Create and save image
                 self.create_and_save(n1, n2, equalized=equalized, phase=phase, tag=rep)
             
-            # Write summary CSV if enabled
-            if self.config.get("summary", False):
-                phase_output_dir = os.path.join(self.output_dir, phase)
-                plan.write_summary_csv(phase_output_dir)
+            self.write_summary_if_enabled(plan, phase)

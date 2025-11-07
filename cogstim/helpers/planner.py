@@ -28,11 +28,6 @@ class GenerationTask:
         self.rep = rep
         self.params = params
         
-        # For backward compatibility with dot tasks
-        self.n1 = params.get('n1')
-        self.n2 = params.get('n2')
-        self.equalize = params.get('equalize', False)
-    
     def to_dict(self) -> Dict[str, Any]:
         """Convert task to dictionary format."""
         result = {
@@ -274,10 +269,6 @@ class GenerationPlan:
         
         return self
     
-    def get_tasks_as_dicts(self) -> List[Dict[str, Any]]:
-        """Get tasks as list of dictionaries (for backward compatibility)."""
-        return [task.to_dict() for task in self.tasks]
-    
     def __len__(self):
         """Return the number of tasks in the plan."""
         return len(self.tasks)
@@ -330,27 +321,30 @@ class GenerationPlan:
         print(f"Summary written to: {target_path}")
 
 
-def resolve_ratios(mode: str, easy_ratios: List[float], hard_ratios: List[float]) -> List[float]:
+def resolve_ratios(ratios, easy_ratios: List[float], hard_ratios: List[float]) -> List[float]:
     """
-    Resolve ratio mode string to actual ratio list.
+    Resolve ratios from either a string mode or a direct list.
     
     Args:
-        mode: One of 'easy', 'hard', or 'all'
-        easy_ratios: List of easy ratios
-        hard_ratios: List of hard ratios
+        ratios: Either a string mode ('easy', 'hard', 'all') or a list of ratios
+        easy_ratios: List of easy ratios (used if ratios is a string)
+        hard_ratios: List of hard ratios (used if ratios is a string)
     
     Returns:
-        Combined or filtered list of ratios
+        List of ratios
     
     Raises:
-        ValueError: If mode is invalid
+        ValueError: If string mode is invalid
+    
     """
-    if mode == "easy":
-        return list(easy_ratios)
-    elif mode == "hard":
-        return list(hard_ratios)
-    elif mode == "all":
-        return list(easy_ratios) + list(hard_ratios)
+    if isinstance(ratios, str):
+        if ratios == "easy":
+            return list(easy_ratios)
+        elif ratios == "hard":
+            return list(hard_ratios)
+        elif ratios == "all":
+            return list(easy_ratios) + list(hard_ratios)
+        else:
+            raise ValueError(f"Invalid ratio mode: {ratios}")
     else:
-        raise ValueError(f"Invalid ratio mode: {mode}")
-
+        return list(ratios)

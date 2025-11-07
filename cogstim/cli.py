@@ -224,7 +224,7 @@ def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
         },
     }
     
-    # Add tolerance parameters if provided (otherwise use defaults from MTS_GENERAL_CONFIG)
+    # Override default tolerances if specified via CLI
     if args.tolerance is not None:
         cfg["tolerance"] = args.tolerance
     if args.abs_tolerance is not None:

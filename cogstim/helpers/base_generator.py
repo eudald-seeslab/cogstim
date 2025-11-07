@@ -50,6 +50,10 @@ class BaseGenerator(ABC):
                 "where to save generated images."
             )
         
+        # Initialize common generator parameters
+        self.train_num = config.get("train_num", 0)
+        self.test_num = config.get("test_num", 0)
+        
         # Set seed for reproducibility if provided
         seed = config.get("seed", None)
         set_seed(seed)
@@ -96,6 +100,27 @@ class BaseGenerator(ABC):
             message: Information message to log
         """
         self._logger.info(message)
+    
+    def iter_phases(self):
+        """
+        Iterate over train and test phases with their image counts.
+        
+        Yields:
+            tuple: (phase_name, num_images) pairs for "train" and "test"
+        """
+        return [("train", self.train_num), ("test", self.test_num)]
+    
+    def write_summary_if_enabled(self, plan, phase: str):
+        """
+        Write summary CSV for the given phase if summary is enabled in config.
+        
+        Args:
+            plan: GenerationPlan instance with tasks to summarize
+            phase: Phase name ("train" or "test")
+        """
+        if self.config.get("summary", False):
+            phase_output_dir = os.path.join(self.output_dir, phase)
+            plan.write_summary_csv(phase_output_dir)
 
 
 

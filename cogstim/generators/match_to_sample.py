@@ -9,7 +9,7 @@ from cogstim.helpers.planner import GenerationPlan, resolve_ratios
 from cogstim.helpers.base_generator import BaseGenerator
 
 
-# Default general configuration
+# TODO: This should be moved elsewhere
 GENERAL_CONFIG = {
     **MTS_DEFAULTS,
     "ratios": "all",
@@ -22,15 +22,12 @@ class MatchToSampleGenerator(BaseGenerator):
     
     def __init__(self, config):
         super().__init__(config)
-        self.train_num = config["train_num"]
-        self.test_num = config["test_num"]
         
-        # Determine ratios to use - support both string and list
-        ratios_config = self.config["ratios"]
-        if isinstance(ratios_config, str):
-            self.ratios = resolve_ratios(ratios_config, MTS_EASY_RATIOS, MTS_HARD_RATIOS)
-        else:
-            self.ratios = ratios_config
+        self.ratios = resolve_ratios(
+            self.config["ratios"],
+            MTS_EASY_RATIOS,
+            MTS_HARD_RATIOS
+        )
         
         self.setup_directories()
     
@@ -92,7 +89,7 @@ class MatchToSampleGenerator(BaseGenerator):
     
     def generate_images(self):
         """Generate all image pairs for train and test using unified planner."""
-        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
+        for phase, num_images in self.iter_phases():
             plan = GenerationPlan(
                 task_type="mts",
                 min_point_num=self.config["min_point_num"],
@@ -104,12 +101,10 @@ class MatchToSampleGenerator(BaseGenerator):
             self.log_generation_info(f"Generating {len(plan)} image pairs for {phase}...")
             
             for task in tqdm(plan.tasks, desc=f"{phase}"):
-                n = task.n1
-                m = task.n2
+                n = task.params.get('n1')
+                m = task.params.get('n2')
+                equalize = task.params.get('equalize', False)
                 rep = task.rep
-                self.create_and_save(n, m, task.equalize, rep, phase)
+                self.create_and_save(n, m, equalize, rep, phase)
             
-            # Write summary CSV if enabled
-            if self.config.get("summary", False):
-                phase_output_dir = os.path.join(self.config["output_dir"], phase)
-                plan.write_summary_csv(phase_output_dir)
+            self.write_summary_if_enabled(plan, phase)

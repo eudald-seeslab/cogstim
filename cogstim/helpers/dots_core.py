@@ -143,7 +143,7 @@ class DotsCore:
         # pixel after pixel to all points until we are close to the target value
         while not self._check_areas_equal(big_area, small_area):
             point_array = [self._increase_radius(a) if a[1] == small else a for a in point_array]
-            # Recompute
+            # Recompute areas after adjustment
             small, big_area, small_area = self._get_areas(point_array)
 
         # Recheck that we haven't created any overlap
@@ -170,9 +170,8 @@ class DotsCore:
         num_points = len(point_array)
         # We give the same area increase to all points
         area_increase = int(area_diff / num_points)
-        # get current radii
+        # Calculate new radii
         radii = [a[0][2] for a in point_array]
-        # increase radii
         increases = [2 * np.sqrt(r**2 + area_increase) - r for r in radii]
         point_array = [self._increase_radius(a, i) for a, i in zip(point_array, increases)]
 
@@ -246,7 +245,7 @@ class DotsCore:
 
         return scaled
 
-    # --- New helpers for incremental equalization fallback ---
+    # --- Helpers for incremental equalization ---
     def increase_all_radii(self, point_array, increment=1):
         """Return a new point array with all radii increased by `increment`."""
         return [self._increase_radius(p, increment) for p in point_array]

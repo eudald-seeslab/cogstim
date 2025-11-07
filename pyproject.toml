@@ -31,8 +31,7 @@ dev   = ["pytest", "pytest-cov", "coverage", "coveralls", "black", "ruff"]
 docs  = ["mkdocs-material"]
 
 [project.scripts]
-# consolidated entry point
-cogstim-cli = "cogstim.cli:main"
+cogstim = "cogstim.cli:main"
 
 [tool.pytest.ini_options]
 addopts = "--cov=cogstim --cov-report=term-missing --cov-report=xml --cov-report=html"

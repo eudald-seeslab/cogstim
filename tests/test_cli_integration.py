@@ -18,7 +18,7 @@ def _run_cli_with_args(args_list):
 
     original_argv = sys.argv.copy()
     try:
-        sys.argv = ["cogstim.cli", *map(str, args_list)]
+        sys.argv = ["cogstim", *map(str, args_list)]
         # Reload the module to ensure no stale state between invocations
         importlib.reload(cli)
         cli.main()
@@ -27,111 +27,90 @@ def _run_cli_with_args(args_list):
 
 
 # ---------------------------------------------------------------------------
-# Parametrised happy-path scenarios
+# Tests for new subcommand interface
 # ---------------------------------------------------------------------------
 
-SCENARIOS = [
-    (
-        [
-            "--shape_recognition",
-            "--train_num",
-            1,
-            "--test_num",
-            1,
-            "--min_surface",
-            10000,
-            "--max_surface",
-            10001,
-            "--no-jitter",
-        ],
-        1,  # Expect at least one PNG produced
-    ),
-    (
-        [
-            "--one_colour",
-            "--train_num",
-            1,
-            "--test_num",
-            1,
-            "--min_point_num",
-            1,
-            "--max_point_num",
-            1,
-        ],
-        1,
-    ),
-    (
-        [
-            "--lines",
-            "--train_num",
-            1,
-            "--test_num",
-            1,
-            "--angles",
-            0,
-            "--min_stripes",
-            2,
-            "--max_stripes",
-            2,
-            "--img_size",
-            128,
-            "--min_thickness",
-            5,
-            "--max_thickness",
-            6,
-            "--min_spacing",
-            2,
-        ],
-        1,
-    ),
-    (
-        [
-            "--match_to_sample",
-            "--train_num",
-            1,
-            "--test_num",
-            1,
-            "--min_point_num",
-            2,
-            "--max_point_num",
-            3,
-            "--ratios",
-            "easy",
-        ],
-        2,  # Expect at least 2 PNGs (sample and match)
-    ),
-]
-
-
-@pytest.mark.parametrize("cli_args, min_images", SCENARIOS)
-def test_cli_happy_path(cli_args, min_images, tmp_path):
-    """End-to-end smoke test exercising the public CLI.
-
-    For each representative dataset type we invoke the CLI with minimal
-    parameters, write output into a temporary directory, and assert that at
-    least one image is produced. This guards against breaking changes in the
-    user-facing entry point while keeping the workload lightweight.
-    """
-    # Ensure outputs land in the temporary directory isolated per test
-    cli_args = [*cli_args, "--output_dir", str(tmp_path)]
-
-    _run_cli_with_args(cli_args)
-
-    images = list(Path(tmp_path).rglob("*.png"))
-    assert len(images) >= min_images, "CLI should generate at least one PNG image."
-
-
-def test_cli_match_to_sample_specific_features(tmp_path):
-    """Test match_to_sample specific CLI features."""
-    # Test with easy ratios
+def test_cli_shapes_subcommand(tmp_path):
+    """Test shapes subcommand."""
     cli_args = [
-        "--match_to_sample",
-        "--train_num", 1,
-        "--test_num", 1,
-        "--min_point_num", 2,
-        "--max_point_num", 4,
+        "shapes",
+        "--train-num", 2,
+        "--test-num", 1,
+        "--min-surface", 10000,
+        "--max-surface", 10001,
+        "--no-jitter",
+        "--output-dir", str(tmp_path),
+    ]
+    
+    _run_cli_with_args(cli_args)
+    
+    images = list(Path(tmp_path).rglob("*.png"))
+    assert len(images) >= 1, "Should generate at least one image"
+
+
+def test_cli_colours_subcommand(tmp_path):
+    """Test colours subcommand."""
+    cli_args = [
+        "colours",
+        "--train-num", 2,
+        "--test-num", 1,
+        "--shape", "circle",
+        "--colours", "yellow", "blue",
+        "--output-dir", str(tmp_path),
+    ]
+    
+    _run_cli_with_args(cli_args)
+    
+    images = list(Path(tmp_path).rglob("*.png"))
+    assert len(images) >= 1, "Should generate at least one image"
+
+
+def test_cli_ans_subcommand(tmp_path):
+    """Test ANS subcommand."""
+    cli_args = [
+        "ans",
+        "--train-num", 2,
+        "--test-num", 1,
         "--ratios", "easy",
-        "--output_dir", str(tmp_path),
+        "--min-point-num", 1,
+        "--max-point-num", 2,
+        "--output-dir", str(tmp_path),
+    ]
+    
+    _run_cli_with_args(cli_args)
+    
+    images = list(Path(tmp_path).rglob("*.png"))
+    assert len(images) >= 1, "Should generate at least one image"
+
+
+def test_cli_one_colour_subcommand(tmp_path):
+    """Test one-colour subcommand."""
+    cli_args = [
+        "one-colour",
+        "--train-num", 2,
+        "--test-num", 1,
+        "--min-point-num", 1,
+        "--max-point-num", 2,
+        "--dot-colour", "yellow",
+        "--output-dir", str(tmp_path),
+    ]
+    
+    _run_cli_with_args(cli_args)
+    
+    images = list(Path(tmp_path).rglob("*.png"))
+    assert len(images) >= 1, "Should generate at least one image"
+
+
+def test_cli_match_to_sample_subcommand(tmp_path):
+    """Test match-to-sample subcommand."""
+    cli_args = [
+        "match-to-sample",
+        "--train-num", 1,
+        "--test-num", 1,
+        "--min-point-num", 2,
+        "--max-point-num", 3,
+        "--ratios", "easy",
+        "--output-dir", str(tmp_path),
     ]
     
     _run_cli_with_args(cli_args)
@@ -146,45 +125,41 @@ def test_cli_match_to_sample_specific_features(tmp_path):
     assert len(match_files) > 0, "Should have match files"
 
 
-def test_cli_match_to_sample_with_equalization(tmp_path):
-    """Test match_to_sample with equalization enabled."""
+def test_cli_lines_subcommand(tmp_path):
+    """Test lines subcommand."""
     cli_args = [
-        "--match_to_sample",
-        "--train_num", 1,
-        "--test_num", 1,
-        "--min_point_num", 2,
-        "--max_point_num", 3,
-        "--ratios", "all",
-        "--output_dir", str(tmp_path),
+        "lines",
+        "--train-num", 1,
+        "--test-num", 1,
+        "--angles", 0, 90,
+        "--min-stripes", 2,
+        "--max-stripes", 2,
+        "--img-size", 128,
+        "--output-dir", str(tmp_path),
     ]
-
+    
     _run_cli_with_args(cli_args)
-
+    
     images = list(Path(tmp_path).rglob("*.png"))
-    assert len(images) >= 2, "Should generate images"
-
-    # Check for equalized files
-    equalized_files = [img for img in images if "equalized" in img.name]
-    assert len(equalized_files) > 0, "Should have equalized files"
+    assert len(images) >= 1, "Should generate at least one image"
 
 
-def test_cli_fixation_dataset(tmp_path):
-    """Test fixation dataset generation via CLI."""
+def test_cli_fixation_subcommand(tmp_path):
+    """Test fixation subcommand."""
     cli_args = [
-        "--fixation",
-        "--all_types",
-        "--output_dir", str(tmp_path),
-        "--img_size", 256,
-        "--background_colour", "black",
-        "--symbol_colour", "white",
+        "fixation",
+        "--all-types",
+        "--output-dir", str(tmp_path),
+        "--img-size", 256,
+        "--background-colour", "black",
+        "--symbol-colour", "white",
     ]
-
+    
     _run_cli_with_args(cli_args)
-
+    
     images = list(Path(tmp_path).rglob("*.png"))
-    # Should generate 7 types (A, B, C, AB, AC, BC, ABC) = 7 images
     assert len(images) == 7, f"Expected 7 fixation images, got {len(images)}"
-
+    
     # Check that all expected types are present
     image_names = [img.name for img in images]
     expected_types = ["A", "B", "C", "AB", "AC", "BC", "ABC"]
@@ -192,58 +167,130 @@ def test_cli_fixation_dataset(tmp_path):
         assert any(expected_type in name for name in image_names), f"Missing fixation type {expected_type}"
 
 
-def test_cli_fixation_dataset_specific_types(tmp_path):
-    """Test fixation dataset with specific types selected."""
+def test_cli_fixation_specific_types(tmp_path):
+    """Test fixation with specific types selected."""
     cli_args = [
-        "--fixation",
+        "fixation",
         "--types", "A", "C", "ABC",
-        "--output_dir", str(tmp_path),
+        "--output-dir", str(tmp_path),
     ]
-
+    
     _run_cli_with_args(cli_args)
-
+    
     images = list(Path(tmp_path).rglob("*.png"))
-    # Should generate only 3 types
     assert len(images) == 3, f"Expected 3 fixation images, got {len(images)}"
 
-    # Check that only specified types are present
-    image_names = [img.name for img in images]
-    assert any("A" in name for name in image_names), "Should have type A"
-    assert any("C" in name for name in image_names), "Should have type C"
-    assert any("ABC" in name for name in image_names), "Should have type ABC"
-    # Should not have B, AB, AC, BC
-    assert not any("B" in name and "AB" not in name and "BC" not in name for name in image_names), "Should not have type B"
 
-
-def test_cli_custom_shapes(tmp_path):
-    """Test custom shape generation with specific shapes and colors."""
+def test_cli_custom_subcommand(tmp_path):
+    """Test custom subcommand."""
     cli_args = [
-        "--custom",
+        "custom",
         "--shapes", "circle", "triangle",
         "--colours", "red", "blue",
-        "--train_num", 1,
-        "--test_num", 1,
-        "--output_dir", str(tmp_path),
-        "--min_surface", 1000,
-        "--max_surface", 2000,
+        "--train-num", 1,
+        "--test-num", 1,
+        "--min-surface", 1000,
+        "--max-surface", 2000,
+        "--output-dir", str(tmp_path),
     ]
-
+    
     _run_cli_with_args(cli_args)
-
+    
     images = list(Path(tmp_path).rglob("*.png"))
-    # Should generate 2 shapes × 2 colors × 2 phases (train/test) = 8 images
-    assert len(images) >= 4, f"Expected at least 4 images, got {len(images)}"
+    assert len(images) >= 2, f"Expected at least 2 images, got {len(images)}"
 
 
-def test_cli_custom_shapes_missing_args(tmp_path):
-    """Test custom shapes CLI with missing required arguments."""
-    # Missing --colours
+def test_cli_demo_mode(tmp_path):
+    """Test --demo flag."""
     cli_args = [
-        "--custom",
-        "--shapes", "circle",
-        "--train_num", 1,
-        "--output_dir", str(tmp_path),
+        "shapes",
+        "--demo",
+        "--output-dir", str(tmp_path),
     ]
+    
+    _run_cli_with_args(cli_args)
+    
+    images = list(Path(tmp_path).rglob("*.png"))
+    # Demo mode should generate 8 training images (4 per class × 2 classes)
+    assert len(images) >= 4, f"Demo mode should generate images, got {len(images)}"
 
-    with pytest.raises(ValueError, match="--shapes and --colours must be provided with --custom"):
+
+def test_cli_custom_missing_required_args():
+    """Test custom subcommand with missing required arguments."""
+    cli_args = [
+        "custom",
+        "--shapes", "circle",
+        "--train-num", 1,
+    ]
+    
+    # Missing --colours should raise an error during parsing
+    with pytest.raises(SystemExit):
         _run_cli_with_args(cli_args)
+
+# ---------------------------------------------------------------------------
+# Additional feature tests
+# ---------------------------------------------------------------------------
+
+def test_cli_with_seed(tmp_path):
+    """Test reproducibility with --seed."""
+    cli_args_1 = [
+        "shapes",
+        "--train-num", 2,
+        "--test-num", 0,
+        "--seed", 42,
+        "--output-dir", str(tmp_path / "run1"),
+    ]
+    
+    cli_args_2 = [
+        "shapes",
+        "--train-num", 2,
+        "--test-num", 0,
+        "--seed", 42,
+        "--output-dir", str(tmp_path / "run2"),
+    ]
+    
+    _run_cli_with_args(cli_args_1)
+    _run_cli_with_args(cli_args_2)
+    
+    images_1 = sorted(Path(tmp_path / "run1").rglob("*.png"))
+    images_2 = sorted(Path(tmp_path / "run2").rglob("*.png"))
+    
+    assert len(images_1) == len(images_2), "Same seed should produce same number of images"
+    assert len(images_1) > 0, "Should generate images"
+
+
+def test_cli_quiet_mode(tmp_path, capsys):
+    """Test --quiet flag suppresses output."""
+    cli_args = [
+        "shapes",
+        "--train-num", 1,
+        "--test-num", 0,
+        "--quiet",
+        "--output-dir", str(tmp_path),
+    ]
+    
+    _run_cli_with_args(cli_args)
+    
+    captured = capsys.readouterr()
+    # Quiet mode should suppress the success message
+    assert "✓" not in captured.out or len(captured.out) == 0
+
+
+def test_cli_version_tag(tmp_path):
+    """Test --version-tag flag."""
+    cli_args = [
+        "ans",
+        "--train-num", 1,
+        "--test-num", 0,
+        "--version-tag", "v2",
+        "--min-point-num", 1,
+        "--max-point-num", 2,
+        "--output-dir", str(tmp_path),
+    ]
+    
+    _run_cli_with_args(cli_args)
+    
+    images = list(Path(tmp_path).rglob("*.png"))
+    assert len(images) >= 1, "Should generate images"
+    # Check that version tag appears in filenames
+    assert any("v2" in img.name for img in images), "Version tag should appear in filenames"

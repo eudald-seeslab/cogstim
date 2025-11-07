@@ -1,160 +1,62 @@
 #!/usr/bin/env python3
-"""Unified CLI to generate synthetic image datasets (shapes, ANS dots, one-colour dots, …).
+"""CLI for cogstim with task-based subcommands.
 
-Example usage
--------------
-# Shape recognition
-python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
+Each task (shapes, colours, ans, etc.) has its own subcommand with relevant options.
 
-# Colour recognition
-python -m cogstim.cli --colour_recognition --no-jitter
-
-# ANS (dot arrays)
-python -m cogstim.cli --ans --train_num 100 --test_num 40
-
-# One-colour dot arrays
-python -m cogstim.cli --one_colour --train_num 80 --test_num 20
-
-# Custom shapes/colours
-python -m cogstim.cli --custom --shapes triangle square --colours red green
+Examples:
+  cogstim shapes --train-num 100 --test-num 40
+  cogstim ans --ratios easy --train-num 50 --demo
+  cogstim fixation --all-types
 """
 
+import sys
 import argparse
+from pathlib import Path
+from typing import Any, Dict
 
-# Generators
 from cogstim.generators.shapes import ShapesGenerator
-from cogstim.generators.dots_ans import (
-    DotsANSGenerator,
-    GENERAL_CONFIG as ANS_GENERAL_CONFIG,
-)
+from cogstim.generators.dots_ans import DotsANSGenerator, GENERAL_CONFIG as ANS_GENERAL_CONFIG
 from cogstim.generators.lines import LinesGenerator
 from cogstim.generators.fixation import FixationGenerator
-from cogstim.generators.match_to_sample import MatchToSampleGenerator, GENERAL_CONFIG as MTS_GENERAL_CONFIG
+from cogstim.generators.match_to_sample import (
+    MatchToSampleGenerator,
+    GENERAL_CONFIG as MTS_GENERAL_CONFIG,
+)
 from cogstim.helpers.constants import (
     IMAGE_DEFAULTS,
     DOT_DEFAULTS,
     SHAPE_DEFAULTS,
     LINE_DEFAULTS,
     FIXATION_DEFAULTS,
+    MTS_DEFAULTS,
 )
 
 
-# ---------------------------------------------------------------------------
-# Argument parsing
-# ---------------------------------------------------------------------------
+# =============================================================================
+# Builder Functions
+# =============================================================================
 
 
-def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Unified synthetic image dataset generator (shapes, dot arrays, …)"
-    )
-
-    # Dataset type (mutually exclusive)
-    ds_group = parser.add_mutually_exclusive_group(required=True)
-    ds_group.add_argument("--shape_recognition", action="store_true", help="Generate yellow circles & stars. Classes = shapes")
-    ds_group.add_argument("--colour_recognition", action="store_true", help="Generate circles in yellow and blue. Classes = colours")
-    ds_group.add_argument("--ans", action="store_true", help="Generate dot-array images for Approximate Number System task")
-    ds_group.add_argument("--one_colour", action="store_true", help="Generate single-colour dot-array images (number discrimination without colour cue)")
-    ds_group.add_argument("--custom", action="store_true", help="Custom combination of shapes and colours (provide --shapes and --colors)")
-    ds_group.add_argument("--lines", action="store_true", help="Generate images with rotated stripe/line patterns")  # NEW DATASET FLAG
-    ds_group.add_argument("--fixation", action="store_true", help="Generate fixation target images (A, B, C, AB, AC, BC, ABC)")
-    ds_group.add_argument("--match_to_sample", action="store_true", help="Generate match-to-sample dot-array pairs (sample/match)")
-
-    # Custom shapes/colours (only if --custom)
-    parser.add_argument("--shapes", nargs="+", choices=["circle", "star", "triangle", "square"], help="Shapes to include (only with --custom)")
-    parser.add_argument("--colours", nargs="+", choices=["yellow", "blue", "red", "green", "black", "white", "gray"], help="Colours to include (only with --custom)")
-
-    # General generation parameters
-    parser.add_argument("--train_num", type=int, default=50, help="Number of image sets for training")
-    parser.add_argument("--test_num", type=int, default=50, help="Number of image sets for testing")
-    parser.add_argument("--output_dir", type=str, default=None, help="Root output directory (default depends on dataset type)")
-    parser.add_argument("--background_colour", type=str, default=IMAGE_DEFAULTS["background_colour"], help=f"Background colour for generated images (default: {IMAGE_DEFAULTS['background_colour']})")
-    parser.add_argument("--symbol_colour", type=str, default=FIXATION_DEFAULTS["symbol_colour"], choices=["yellow", "blue", "red", "green", "black", "white", "gray"], help=f"Fixation symbol colour (default: {FIXATION_DEFAULTS['symbol_colour']})")
-
-    # Shape-specific parameters
-    parser.add_argument("--min_surface", type=int, default=SHAPE_DEFAULTS["min_surface"], help=f"Minimum shape surface area (shapes datasets, default: {SHAPE_DEFAULTS['min_surface']})")
-    parser.add_argument("--max_surface", type=int, default=SHAPE_DEFAULTS["max_surface"], help=f"Maximum shape surface area (shapes datasets, default: {SHAPE_DEFAULTS['max_surface']})")
-    parser.add_argument("--no-jitter", dest="no_jitter", action="store_true", help="Disable positional jitter for shapes datasets")
-
-    # Dot-array-specific parameters
-    parser.add_argument("--ratios", type=str, choices=["easy", "hard", "all"], default="all", help="Ratio set to use for dot-array datasets")
-    parser.add_argument("--version_tag", type=str, default="", help="Optional version tag appended to filenames (dot-array datasets)")
-    parser.add_argument("--min_point_num", type=int, default=1, help="Minimum number of points per colour (dot-array datasets)")
-    parser.add_argument("--max_point_num", type=int, default=10, help="Maximum number of points per colour (dot-array datasets)")
-    parser.add_argument("--min_point_radius", type=int, default=DOT_DEFAULTS["min_point_radius"], help=f"Minimum dot radius in pixels (dot-array datasets, default: {DOT_DEFAULTS['min_point_radius']})")
-    parser.add_argument("--max_point_radius", type=int, default=DOT_DEFAULTS["max_point_radius"], help=f"Maximum dot radius in pixels (dot-array datasets, default: {DOT_DEFAULTS['max_point_radius']})")
-    parser.add_argument("--dot_colour", type=str, choices=["yellow", "blue", "red", "green", "black", "white", "gray"], default=DOT_DEFAULTS["dot_colour"], help=f"Dot colour for one-colour dot-array images (default: {DOT_DEFAULTS['dot_colour']})")
-    parser.add_argument("--attempts_limit", type=int, default=DOT_DEFAULTS["attempts_limit"], help=f"Maximum attempts for dot placement (dot-array datasets, default: {DOT_DEFAULTS['attempts_limit']})")
+def build_shapes_config(args: argparse.Namespace) -> Dict[str, Any]:
+    """Build configuration for shapes/colours subcommands."""
+    shapes = args.shapes if hasattr(args, 'shapes') and args.shapes else ["circle", "star"]
+    colours = args.colours if hasattr(args, 'colours') and args.colours else ["yellow"]
     
-    # Match-to-sample specific parameters
-    parser.add_argument("--tolerance", type=float, help=f"Relative tolerance for area equalization in MTS (e.g., 0.01 for 1%%, default varies by task)")
-    parser.add_argument("--abs_tolerance", type=int, help=f"Absolute area tolerance in pixels for MTS equalization (default varies by task)")
-
-    # Line-pattern-specific parameters  # NEW ARGUMENT GROUP
-    parser.add_argument("--angles", type=int, nargs="+", default=[0, 45, 90, 135], help="Rotation angles for stripe patterns (lines dataset)")
-    parser.add_argument("--min_stripes", type=int, default=2, help="Minimum number of stripes per image (lines dataset)")
-    parser.add_argument("--max_stripes", type=int, default=10, help="Maximum number of stripes per image (lines dataset)")
-    parser.add_argument("--img_size", type=int, default=IMAGE_DEFAULTS["init_size"], help=f"Image size in pixels (lines dataset, default: {IMAGE_DEFAULTS['init_size']})")
-    parser.add_argument("--tag", type=str, default="", help="Optional tag appended to filenames (lines dataset)")
-    parser.add_argument("--min_thickness", type=int, default=LINE_DEFAULTS["min_thickness"], help=f"Minimum stripe thickness (lines dataset, default: {LINE_DEFAULTS['min_thickness']})")
-    parser.add_argument("--max_thickness", type=int, default=LINE_DEFAULTS["max_thickness"], help=f"Maximum stripe thickness (lines dataset, default: {LINE_DEFAULTS['max_thickness']})")
-    parser.add_argument("--min_spacing", type=int, default=LINE_DEFAULTS["min_spacing"], help=f"Minimum spacing between stripes (lines dataset, default: {LINE_DEFAULTS['min_spacing']})")
-    parser.add_argument("--max_attempts", type=int, default=10000, help="Maximum attempts to place non-overlapping stripes (lines dataset)")
-
-    # Fixation-specific parameters
-    parser.add_argument("--types", nargs="+", default=["A", "B", "C", "AB", "AC", "BC", "ABC"], choices=["A", "B", "C", "AB", "AC", "BC", "ABC"], help="Fixation target types to generate")
-    parser.add_argument("--all_types", action="store_true", help="Generate all fixation types (A, B, C, AB, AC, BC, ABC)")
-    parser.add_argument("--dot_radius_px", type=int, default=FIXATION_DEFAULTS["dot_radius_px"], help=f"Radius of the central dot in pixels (A/ABC, default: {FIXATION_DEFAULTS['dot_radius_px']})")
-    parser.add_argument("--disk_radius_px", type=int, default=FIXATION_DEFAULTS["disk_radius_px"], help=f"Radius of the filled disk in pixels (B/AB/BC/ABC, default: {FIXATION_DEFAULTS['disk_radius_px']})")
-    parser.add_argument("--cross_thickness_px", type=int, default=FIXATION_DEFAULTS["cross_thickness_px"], help=f"Bar thickness for the cross in pixels (C/AC/BC/ABC, default: {FIXATION_DEFAULTS['cross_thickness_px']})")
-    parser.add_argument("--cross_arm_px", type=int, default=FIXATION_DEFAULTS["cross_arm_px"], help=f"Half-length of each cross arm from the center in pixels (default: {FIXATION_DEFAULTS['cross_arm_px']})")
-    parser.add_argument("--jitter_px", type=int, default=FIXATION_DEFAULTS["jitter_px"], help=f"Max positional jitter of the fixation center in pixels (default: {FIXATION_DEFAULTS['jitter_px']})")
-
-    # Reproducibility parameter (applies to all datasets)
-    parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducible generation (applies to all dataset types)")
-
-    return parser.parse_args()
-
-
-# ---------------------------------------------------------------------------
-# Helper builders
-# ---------------------------------------------------------------------------
-
-
-def build_shapes_generator(args: argparse.Namespace) -> ShapesGenerator:
-    """Instantiate ShapesGenerator according to CLI flags."""
-
-    if args.shape_recognition:
+    # Determine task type based on shapes and colours
+    if len(shapes) == 2 and len(colours) == 1:
         task_type = "two_shapes"
-        shapes = ["circle", "star"]
-        colors = ["yellow"]
-    elif args.colour_recognition:
+    elif len(shapes) == 1 and len(colours) == 2:
         task_type = "two_colors"
-        shapes = ["circle"]
-        colors = ["yellow", "blue"]
-    else:  # custom
-        if not args.shapes or not args.colours:
-            raise ValueError("--shapes and --colours must be provided with --custom")
+    else:
         task_type = "custom"
-        shapes = args.shapes
-        colors = args.colours
 
     jitter = not args.no_jitter
 
-    output_dir = args.output_dir
-    if output_dir is None:
-        if task_type == "two_shapes":
-            output_dir = "images/two_shapes"
-        elif task_type == "two_colors":
-            output_dir = "images/two_colors"
-        else:
-            output_dir = f"images/{'_'.join(shapes)}_{'_'.join(colors)}"
-
-    config = {
+    return {
         "shapes": shapes,
-        "colours": colors,
+        "colours": colours,
         "task_type": task_type,
-        "output_dir": output_dir,
+        "output_dir": args.output_dir,
         "train_num": args.train_num,
         "test_num": args.test_num,
         "min_surface": args.min_surface,
@@ -164,24 +66,40 @@ def build_shapes_generator(args: argparse.Namespace) -> ShapesGenerator:
         "seed": args.seed,
     }
     
-    return ShapesGenerator(**config)
+
+def build_colours_config(args: argparse.Namespace) -> Dict[str, Any]:
+    """Build configuration for colour discrimination (same shape, different colours)."""
+    shape = args.shape if hasattr(args, 'shape') else "circle"
+    colours = args.colours if hasattr(args, 'colours') and args.colours else ["yellow", "blue"]
+    
+    jitter = not args.no_jitter
+    
+    return {
+        "shapes": [shape],
+        "colours": colours,
+        "task_type": "two_colors",
+        "output_dir": args.output_dir,
+        "train_num": args.train_num,
+        "test_num": args.test_num,
+        "min_surface": args.min_surface,
+        "max_surface": args.max_surface,
+        "jitter": jitter,
+        "background_colour": args.background_colour,
+        "seed": args.seed,
+    }
 
 
-def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> None:
-    """Generate train/test dot-array datasets using points_creator.ImageGenerator."""
-
-    base_dir_default = "images/one_colour" if one_colour else "images/ans"
-    base_dir = args.output_dir or base_dir_default
-
+def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
+    """Build configuration for ANS (two-colour dot arrays)."""
     cfg = {
         **ANS_GENERAL_CONFIG,
         **{
             "train_num": args.train_num,
             "test_num": args.test_num,
-            "output_dir": base_dir,
+            "output_dir": args.output_dir,
             "ratios": args.ratios,
-            "ONE_COLOUR": one_colour,
-            "version_tag": args.version_tag,
+            "ONE_COLOUR": False,
+            "version_tag": getattr(args, 'version_tag', ''),
             "min_point_num": args.min_point_num,
             "max_point_num": args.max_point_num,
             "background_colour": args.background_colour,
@@ -192,26 +110,51 @@ def generate_dot_array_dataset(args: argparse.Namespace, one_colour: bool) -> No
         },
     }
 
-    # Override colours for one-colour mode to use selected dot colour
-    if one_colour:
-        cfg["colour_1"] = args.dot_colour
-        cfg["colour_2"] = None
-    generator = DotsANSGenerator(cfg)
-    generator.generate_images()
+    # Allow custom colours for ANS
+    if hasattr(args, 'dot_colour1'):
+        cfg["colour_1"] = args.dot_colour1
+    if hasattr(args, 'dot_colour2'):
+        cfg["colour_2"] = args.dot_colour2
+    
+    return cfg
 
 
-def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
-    base_dir_default = "images/match_to_sample"
-    base_dir = args.output_dir or base_dir_default
+def build_one_colour_config(args: argparse.Namespace) -> Dict[str, Any]:
+    """Build configuration for one-colour dot arrays."""
+    cfg = {
+        **ANS_GENERAL_CONFIG,
+        **{
+            "train_num": args.train_num,
+            "test_num": args.test_num,
+            "output_dir": args.output_dir,
+            "ratios": getattr(args, 'ratios', 'all'),
+            "ONE_COLOUR": True,
+            "version_tag": getattr(args, 'version_tag', ''),
+            "min_point_num": args.min_point_num,
+            "max_point_num": args.max_point_num,
+            "background_colour": args.background_colour,
+            "min_point_radius": args.min_point_radius,
+            "max_point_radius": args.max_point_radius,
+            "attempts_limit": args.attempts_limit,
+            "seed": args.seed,
+            "colour_1": args.dot_colour,
+            "colour_2": None,
+        },
+    }
+    
+    return cfg
 
+
+def build_mts_config(args: argparse.Namespace) -> Dict[str, Any]:
+    """Build configuration for match-to-sample."""
     cfg = {
         **MTS_GENERAL_CONFIG,
         **{
             "train_num": args.train_num,
             "test_num": args.test_num,
-            "output_dir": base_dir,
+            "output_dir": args.output_dir,
             "ratios": args.ratios,
-            "version_tag": args.version_tag,
+            "version_tag": getattr(args, 'version_tag', ''),
             "min_point_num": args.min_point_num,
             "max_point_num": args.max_point_num,
             "background_colour": args.background_colour,
@@ -224,48 +167,46 @@ def generate_match_to_sample_dataset(args: argparse.Namespace) -> None:
         },
     }
     
-    # Override default tolerances if specified via CLI
-    if args.tolerance is not None:
+    # Override tolerances if specified
+    if hasattr(args, 'tolerance') and args.tolerance is not None:
         cfg["tolerance"] = args.tolerance
-    if args.abs_tolerance is not None:
+    if hasattr(args, 'abs_tolerance') and args.abs_tolerance is not None:
         cfg["abs_tolerance"] = args.abs_tolerance
-    generator = MatchToSampleGenerator(cfg)
-    generator.generate_images()
+    
+    return cfg
 
 
-def generate_lines_dataset(args: argparse.Namespace) -> None:
-    """Generate train/test stripe-pattern line datasets using LinesGenerator."""
-
-    base_dir_default = "images/lines"
-    base_dir = args.output_dir or base_dir_default
-
-    cfg = {
-        "output_dir": base_dir,
+def build_lines_config(args: argparse.Namespace) -> Dict[str, Any]:
+    """Build configuration for lines/stripes."""
+    return {
+        "output_dir": args.output_dir,
         "train_num": args.train_num,
         "test_num": args.test_num,
         "angles": args.angles,
         "min_stripe_num": args.min_stripes,
         "max_stripe_num": args.max_stripes,
         "img_size": args.img_size,
-        "tag": args.tag,
+        "tag": getattr(args, 'tag', ''),
         "min_thickness": args.min_thickness,
         "max_thickness": args.max_thickness,
         "min_spacing": args.min_spacing,
-        "max_attempts": args.max_attempts,
+        "max_attempts": getattr(args, 'max_attempts', 10000),
         "background_colour": args.background_colour,
         "seed": args.seed,
     }
-    generator = LinesGenerator(cfg)
-    generator.generate_images()
 
 
-def generate_fixation_dataset(args: argparse.Namespace) -> None:
-    """Generate train/test fixation-target datasets using FixationGenerator."""
-
+def build_fixation_config(args: argparse.Namespace) -> Dict[str, Any]:
+    """Build configuration for fixation targets."""
     all_types = ["A", "B", "C", "AB", "AC", "BC", "ABC"]
-    selected_types = all_types if args.all_types else args.types
-    cfg = {
-        "output_dir": args.output_dir or "images/fixation",
+    
+    if hasattr(args, 'all_types') and args.all_types:
+        selected_types = all_types
+    else:
+        selected_types = args.types if hasattr(args, 'types') and args.types else all_types
+    
+    return {
+        "output_dir": args.output_dir,
         "img_sets": 1,
         "types": selected_types,
         "img_size": args.img_size,
@@ -276,34 +217,695 @@ def generate_fixation_dataset(args: argparse.Namespace) -> None:
         "jitter_px": args.jitter_px,
         "background_colour": args.background_colour,
         "symbol_colour": args.symbol_colour,
-        "tag": args.tag,
+        "tag": getattr(args, 'tag', ''),
         "seed": args.seed,
     }
-    generator = FixationGenerator(cfg)
+
+
+def build_custom_config(args: argparse.Namespace) -> Dict[str, Any]:
+    """Build configuration for custom shapes/colours."""
+    if not args.shapes or not args.colours:
+        raise ValueError("--shapes and --colours are required for custom task")
+    
+    jitter = not args.no_jitter
+    
+    return {
+        "shapes": args.shapes,
+        "colours": args.colours,
+        "task_type": "custom",
+        "output_dir": args.output_dir,
+        "train_num": args.train_num,
+        "test_num": args.test_num,
+        "min_surface": args.min_surface,
+        "max_surface": args.max_surface,
+        "jitter": jitter,
+        "background_colour": args.background_colour,
+        "seed": args.seed,
+    }
+
+
+# =============================================================================
+# Dispatch Functions
+# =============================================================================
+
+
+def run_shapes(args: argparse.Namespace) -> None:
+    """Execute shapes generation."""
+    config = build_shapes_config(args)
+    generator = ShapesGenerator(**config)
+    generator.generate_images()
+    
+    if not args.quiet:
+        total = args.train_num + args.test_num
+        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+
+
+def run_colours(args: argparse.Namespace) -> None:
+    """Execute colour discrimination generation."""
+    config = build_colours_config(args)
+    generator = ShapesGenerator(**config)
+    generator.generate_images()
+    
+    if not args.quiet:
+        total = args.train_num + args.test_num
+        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+
+
+def run_ans(args: argparse.Namespace) -> None:
+    """Execute ANS dot array generation."""
+    config = build_ans_config(args)
+    generator = DotsANSGenerator(config)
+    generator.generate_images()
+    
+    if not args.quiet:
+        total = args.train_num + args.test_num
+        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+
+
+def run_one_colour(args: argparse.Namespace) -> None:
+    """Execute one-colour dot array generation."""
+    config = build_one_colour_config(args)
+    generator = DotsANSGenerator(config)
+    generator.generate_images()
+    
+    if not args.quiet:
+        total = args.train_num + args.test_num
+        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+
+
+def run_mts(args: argparse.Namespace) -> None:
+    """Execute match-to-sample generation."""
+    config = build_mts_config(args)
+    generator = MatchToSampleGenerator(config)
+    generator.generate_images()
+    
+    if not args.quiet:
+        total = args.train_num + args.test_num
+        print(f"\n✓ Generated {total} image pairs. Output: {config['output_dir']}")
+
+
+def run_lines(args: argparse.Namespace) -> None:
+    """Execute lines/stripes generation."""
+    config = build_lines_config(args)
+    generator = LinesGenerator(config)
+    generator.generate_images()
+    
+    if not args.quiet:
+        total = args.train_num + args.test_num
+        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+
+
+def run_fixation(args: argparse.Namespace) -> None:
+    """Execute fixation target generation."""
+    config = build_fixation_config(args)
+    generator = FixationGenerator(config)
     generator.generate_images()
 
+    if not args.quiet:
+        num_types = len(config['types'])
+        print(f"\n✓ Generated {num_types} fixation images. Output: {config['output_dir']}")
 
-# ---------------------------------------------------------------------------
-# Main entry
-# ---------------------------------------------------------------------------
+
+def run_custom(args: argparse.Namespace) -> None:
+    """Execute custom shapes/colours generation."""
+    config = build_custom_config(args)
+    generator = ShapesGenerator(**config)
+    generator.generate_images()
+
+    if not args.quiet:
+        total = args.train_num + args.test_num
+        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+
+
+# =============================================================================
+# Argument Parsing - Common Options
+# =============================================================================
+
+
+def add_common_options(parser: argparse.ArgumentParser) -> None:
+    """Add common options available to all subcommands."""
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Root output directory (default varies by task)"
+    )
+    parser.add_argument(
+        "--img-size",
+        type=int,
+        default=IMAGE_DEFAULTS["init_size"],
+        help=f"Image size in pixels (default: {IMAGE_DEFAULTS['init_size']})"
+    )
+    parser.add_argument(
+        "--background-colour",
+        type=str,
+        default=IMAGE_DEFAULTS["background_colour"],
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        help=f"Background colour (default: {IMAGE_DEFAULTS['background_colour']})"
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed for reproducible generation"
+    )
+    parser.add_argument(
+        "--version-tag",
+        type=str,
+        default="",
+        help="Optional version tag appended to filenames"
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output"
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress all non-error output"
+    )
+
+
+def add_train_test_options(parser: argparse.ArgumentParser) -> None:
+    """Add train/test count options."""
+    parser.add_argument(
+        "--train-num",
+        type=int,
+        default=0,
+        help="Number of training images to generate (default: 0)"
+    )
+    parser.add_argument(
+        "--test-num",
+        type=int,
+        default=0,
+        help="Number of test images to generate (default: 0)"
+    )
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="Generate a small demo dataset (8 training images)"
+    )
+
+
+def add_dot_options(parser: argparse.ArgumentParser, include_ratios: bool = True) -> None:
+    """Add dot-array-specific options."""
+    if include_ratios:
+        parser.add_argument(
+            "--ratios",
+            type=str,
+            choices=["easy", "hard", "all"],
+            default="all",
+            help="Ratio set to use (default: all)"
+        )
+    
+    parser.add_argument(
+        "--min-point-num",
+        type=int,
+        default=1,
+        help="Minimum number of points per colour (default: 1)"
+    )
+    parser.add_argument(
+        "--max-point-num",
+        type=int,
+        default=10,
+        help="Maximum number of points per colour (default: 10)"
+    )
+    parser.add_argument(
+        "--min-point-radius",
+        type=int,
+        default=DOT_DEFAULTS["min_point_radius"],
+        help=f"Minimum dot radius in pixels (default: {DOT_DEFAULTS['min_point_radius']})"
+    )
+    parser.add_argument(
+        "--max-point-radius",
+        type=int,
+        default=DOT_DEFAULTS["max_point_radius"],
+        help=f"Maximum dot radius in pixels (default: {DOT_DEFAULTS['max_point_radius']})"
+    )
+    parser.add_argument(
+        "--attempts-limit",
+        type=int,
+        default=DOT_DEFAULTS["attempts_limit"],
+        help=f"Maximum attempts for dot placement (default: {DOT_DEFAULTS['attempts_limit']})"
+    )
+
+
+def add_shape_options(parser: argparse.ArgumentParser) -> None:
+    """Add shape-specific options."""
+    parser.add_argument(
+        "--min-surface",
+        type=int,
+        default=SHAPE_DEFAULTS["min_surface"],
+        help=f"Minimum shape surface area (default: {SHAPE_DEFAULTS['min_surface']})"
+    )
+    parser.add_argument(
+        "--max-surface",
+        type=int,
+        default=SHAPE_DEFAULTS["max_surface"],
+        help=f"Maximum shape surface area (default: {SHAPE_DEFAULTS['max_surface']})"
+    )
+    parser.add_argument(
+        "--no-jitter",
+        action="store_true",
+        help="Disable positional jitter"
+    )
+
+
+# =============================================================================
+# Subcommand Definitions
+# =============================================================================
+
+
+def setup_shapes_subcommand(subparsers) -> None:
+    """Setup 'shapes' subcommand for shape discrimination."""
+    parser = subparsers.add_parser(
+        "shapes",
+        help="Generate shape discrimination dataset (e.g., circles vs stars)",
+        description="Generate images of different shapes in the same colour for shape recognition tasks.",
+        epilog="Example: cogstim shapes --train-num 100 --test-num 40",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    
+    add_common_options(parser)
+    add_train_test_options(parser)
+    add_shape_options(parser)
+    
+    parser.add_argument(
+        "--shapes",
+        nargs=2,
+        choices=["circle", "star", "triangle", "square"],
+        default=["circle", "star"],
+        help="Two shapes for discrimination"
+    )
+    parser.add_argument(
+        "--colours",
+        nargs=1,
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        default=["yellow"],
+        help="Colour for both shapes"
+    )
+    
+    parser.set_defaults(func=run_shapes)
+
+
+def setup_colours_subcommand(subparsers) -> None:
+    """Setup 'colours' subcommand for colour discrimination."""
+    parser = subparsers.add_parser(
+        "colours",
+        help="Generate colour discrimination dataset (same shape, different colours)",
+        description="Generate images of the same shape in different colours for colour recognition tasks.",
+        epilog="Example: cogstim colours --train-num 100 --test-num 40 --colours yellow blue",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    
+    add_common_options(parser)
+    add_train_test_options(parser)
+    add_shape_options(parser)
+    
+    parser.add_argument(
+        "--shape",
+        type=str,
+        choices=["circle", "star", "triangle", "square"],
+        default="circle",
+        help="Shape to use for both classes"
+    )
+    parser.add_argument(
+        "--colours",
+        nargs=2,
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        default=["yellow", "blue"],
+        help="Two colours for discrimination"
+    )
+    
+    parser.set_defaults(func=run_colours)
+
+
+def setup_ans_subcommand(subparsers) -> None:
+    """Setup 'ans' subcommand for two-colour dot arrays."""
+    parser = subparsers.add_parser(
+        "ans",
+        help="Generate ANS (Approximate Number System) dot arrays with two colours",
+        description="Generate two-colour dot array images for approximate number system tasks. Classes are based on dominant colour.",
+        epilog="Example: cogstim ans --ratios easy --train-num 100 --test-num 40",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    
+    add_common_options(parser)
+    add_train_test_options(parser)
+    add_dot_options(parser, include_ratios=True)
+    
+    parser.add_argument(
+        "--dot-colour1",
+        type=str,
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        default="yellow",
+        help="First dot colour"
+    )
+    parser.add_argument(
+        "--dot-colour2",
+        type=str,
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        default="blue",
+        help="Second dot colour"
+    )
+    
+    parser.set_defaults(func=run_ans)
+
+
+def setup_one_colour_subcommand(subparsers) -> None:
+    """Setup 'one-colour' subcommand for single-colour dot arrays."""
+    parser = subparsers.add_parser(
+        "one-colour",
+        help="Generate single-colour dot arrays (quantity discrimination)",
+        description="Generate single-colour dot array images. Classes are based on quantity without colour cues.",
+        epilog="Example: cogstim one-colour --train-num 80 --test-num 20 --dot-colour yellow",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    
+    add_common_options(parser)
+    add_train_test_options(parser)
+    add_dot_options(parser, include_ratios=False)
+    
+    parser.add_argument(
+        "--dot-colour",
+        type=str,
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        default=DOT_DEFAULTS["dot_colour"],
+        help=f"Dot colour (default: {DOT_DEFAULTS['dot_colour']})"
+    )
+    
+    parser.set_defaults(func=run_one_colour)
+
+
+def setup_mts_subcommand(subparsers) -> None:
+    """Setup 'match-to-sample' subcommand."""
+    parser = subparsers.add_parser(
+        "match-to-sample",
+        help="Generate match-to-sample dot array pairs",
+        description="Generate sample/match image pairs for match-to-sample tasks with area equalization.",
+        epilog="Example: cogstim match-to-sample --ratios easy --train-num 50 --test-num 20",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    
+    add_common_options(parser)
+    add_train_test_options(parser)
+    add_dot_options(parser, include_ratios=True)
+    
+    parser.add_argument(
+        "--dot-colour",
+        type=str,
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        default=MTS_DEFAULTS["dot_colour"],
+        help=f"Dot colour (default: {MTS_DEFAULTS['dot_colour']})"
+    )
+    parser.add_argument(
+        "--tolerance",
+        type=float,
+        default=None,
+        help=f"Relative tolerance for area equalization (default: {MTS_DEFAULTS['tolerance']})"
+    )
+    parser.add_argument(
+        "--abs-tolerance",
+        type=int,
+        default=None,
+        help=f"Absolute area tolerance in pixels (default: {MTS_DEFAULTS['abs_tolerance']})"
+    )
+    
+    parser.set_defaults(func=run_mts)
+
+
+def setup_lines_subcommand(subparsers) -> None:
+    """Setup 'lines' subcommand for stripe patterns."""
+    parser = subparsers.add_parser(
+        "lines",
+        help="Generate rotated stripe/line pattern images",
+        description="Generate images with rotated stripe patterns at different angles.",
+        epilog="Example: cogstim lines --train-num 50 --test-num 20 --angles 0 45 90 135",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    
+    add_common_options(parser)
+    add_train_test_options(parser)
+    
+    parser.add_argument(
+        "--angles",
+        type=int,
+        nargs="+",
+        default=[0, 45, 90, 135],
+        help="Rotation angles for stripe patterns"
+    )
+    parser.add_argument(
+        "--min-stripes",
+        type=int,
+        default=2,
+        help="Minimum number of stripes per image"
+    )
+    parser.add_argument(
+        "--max-stripes",
+        type=int,
+        default=10,
+        help="Maximum number of stripes per image"
+    )
+    parser.add_argument(
+        "--min-thickness",
+        type=int,
+        default=LINE_DEFAULTS["min_thickness"],
+        help=f"Minimum stripe thickness (default: {LINE_DEFAULTS['min_thickness']})"
+    )
+    parser.add_argument(
+        "--max-thickness",
+        type=int,
+        default=LINE_DEFAULTS["max_thickness"],
+        help=f"Maximum stripe thickness (default: {LINE_DEFAULTS['max_thickness']})"
+    )
+    parser.add_argument(
+        "--min-spacing",
+        type=int,
+        default=LINE_DEFAULTS["min_spacing"],
+        help=f"Minimum spacing between stripes (default: {LINE_DEFAULTS['min_spacing']})"
+    )
+    
+    parser.set_defaults(func=run_lines)
+
+
+def setup_fixation_subcommand(subparsers) -> None:
+    """Setup 'fixation' subcommand for fixation targets."""
+    parser = subparsers.add_parser(
+        "fixation",
+        help="Generate fixation target images (A, B, C, AB, AC, BC, ABC)",
+        description="Generate fixation target images with different element combinations.",
+        epilog="Example: cogstim fixation --all-types --background-colour black",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    
+    add_common_options(parser)
+    
+    parser.add_argument(
+        "--types",
+        nargs="+",
+        choices=["A", "B", "C", "AB", "AC", "BC", "ABC"],
+        default=["A", "B", "C", "AB", "AC", "BC", "ABC"],
+        help="Fixation target types to generate"
+    )
+    parser.add_argument(
+        "--all-types",
+        action="store_true",
+        help="Generate all fixation types"
+    )
+    parser.add_argument(
+        "--symbol-colour",
+        type=str,
+        default=FIXATION_DEFAULTS["symbol_colour"],
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        help=f"Fixation symbol colour (default: {FIXATION_DEFAULTS['symbol_colour']})"
+    )
+    parser.add_argument(
+        "--dot-radius-px",
+        type=int,
+        default=FIXATION_DEFAULTS["dot_radius_px"],
+        help=f"Radius of the central dot in pixels (default: {FIXATION_DEFAULTS['dot_radius_px']})"
+    )
+    parser.add_argument(
+        "--disk-radius-px",
+        type=int,
+        default=FIXATION_DEFAULTS["disk_radius_px"],
+        help=f"Radius of the filled disk in pixels (default: {FIXATION_DEFAULTS['disk_radius_px']})"
+    )
+    parser.add_argument(
+        "--cross-thickness-px",
+        type=int,
+        default=FIXATION_DEFAULTS["cross_thickness_px"],
+        help=f"Bar thickness for the cross in pixels (default: {FIXATION_DEFAULTS['cross_thickness_px']})"
+    )
+    parser.add_argument(
+        "--cross-arm-px",
+        type=int,
+        default=FIXATION_DEFAULTS["cross_arm_px"],
+        help=f"Half-length of each cross arm in pixels (default: {FIXATION_DEFAULTS['cross_arm_px']})"
+    )
+    parser.add_argument(
+        "--jitter-px",
+        type=int,
+        default=FIXATION_DEFAULTS["jitter_px"],
+        help=f"Maximum positional jitter in pixels (default: {FIXATION_DEFAULTS['jitter_px']})"
+    )
+    
+    parser.set_defaults(func=run_fixation)
+
+
+def setup_custom_subcommand(subparsers) -> None:
+    """Setup 'custom' subcommand for arbitrary shape/colour combinations."""
+    parser = subparsers.add_parser(
+        "custom",
+        help="Generate custom shape/colour combinations",
+        description="Generate images with custom combinations of shapes and colours.",
+        epilog="Example: cogstim custom --shapes triangle square --colours red green --train-num 50",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    
+    add_common_options(parser)
+    add_train_test_options(parser)
+    add_shape_options(parser)
+    
+    parser.add_argument(
+        "--shapes",
+        nargs="+",
+        choices=["circle", "star", "triangle", "square"],
+        required=True,
+        help="Shapes to include (required)"
+    )
+    parser.add_argument(
+        "--colours",
+        nargs="+",
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        required=True,
+        help="Colours to include (required)"
+    )
+    
+    parser.set_defaults(func=run_custom)
+
+
+# =============================================================================
+# Main Parser Setup
+# =============================================================================
+
+
+def create_parser() -> argparse.ArgumentParser:
+    """Create the main argument parser with subcommands."""
+    parser = argparse.ArgumentParser(
+        prog="cogstim",
+        description="Generate synthetic visual stimulus datasets for cognitive research",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Available tasks:
+  shapes          Shape discrimination (e.g., circles vs stars)
+  colours         Colour discrimination (same shape, different colours)
+  ans             Two-colour dot arrays (Approximate Number System)
+  one-colour      Single-colour dot arrays (quantity discrimination)
+  match-to-sample Match-to-sample dot array pairs
+  lines           Rotated stripe/line patterns
+  fixation        Fixation target images
+  custom          Custom shape/colour combinations
+
+Examples:
+  cogstim shapes --train-num 100 --test-num 40
+  cogstim ans --ratios easy --train-num 50 --demo
+  cogstim fixation --all-types --background-colour black
+
+For help on a specific task:
+  cogstim <task> --help
+        """,
+    )
+    
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="cogstim 0.4.1"
+    )
+    
+    subparsers = parser.add_subparsers(
+        title="tasks",
+        description="Available stimulus generation tasks",
+        dest="task",
+        required=False,
+    )
+    
+    setup_shapes_subcommand(subparsers)
+    setup_colours_subcommand(subparsers)
+    setup_ans_subcommand(subparsers)
+    setup_one_colour_subcommand(subparsers)
+    setup_mts_subcommand(subparsers)
+    setup_lines_subcommand(subparsers)
+    setup_fixation_subcommand(subparsers)
+    setup_custom_subcommand(subparsers)
+    
+    return parser
+
+
+# =============================================================================
+# Validation & Execution
+# =============================================================================
+
+
+def validate_and_adjust_args(args: argparse.Namespace) -> None:
+    """Validate arguments and apply demo mode adjustments."""
+    # Handle demo mode
+    if hasattr(args, 'demo') and args.demo:
+        if args.train_num == 0 and args.test_num == 0:
+            args.train_num = 8
+            args.test_num = 0
+            if not args.quiet:
+                print("Demo mode: generating 8 training images for quick preview.")
+    
+    # Check if no images would be generated
+    if hasattr(args, 'train_num') and hasattr(args, 'test_num'):
+        if args.train_num == 0 and args.test_num == 0 and not getattr(args, 'demo', False):
+            print("\nNo images would be generated (both train-num and test-num are 0).")
+            print("Try: --train-num 10 --test-num 5")
+            print("Or use: --demo for a quick preview")
+            sys.exit(2)
+    
+    # Set default output directories if not specified
+    if args.output_dir is None:
+        task_name = args.task if hasattr(args, 'task') else 'output'
+        args.output_dir = f"images/{task_name}"
+
+
+# =============================================================================
+# Main Entry Point
+# =============================================================================
 
 
 def main() -> None:
-    args = parse_arguments()
-
-    if args.ans:
-        generate_dot_array_dataset(args, one_colour=False)
-    elif args.one_colour:
-        generate_dot_array_dataset(args, one_colour=True)
-    elif args.lines:
-        generate_lines_dataset(args)
-    elif args.fixation:
-        generate_fixation_dataset(args)
-    elif args.match_to_sample:
-        generate_match_to_sample_dataset(args)
-    else:
-        generator = build_shapes_generator(args)
-        generator.generate_images()
+    """Main CLI entry point."""
+    try:
+        parser = create_parser()
+        args = parser.parse_args()
+        
+        # If no task specified, show help
+        if not hasattr(args, 'func'):
+            parser.print_help()
+            sys.exit(0)
+        
+        # Validate and adjust arguments
+        validate_and_adjust_args(args)
+        
+        # Execute the task
+        args.func(args)
+        
+    except KeyboardInterrupt:
+        print("\n\nInterrupted by user")
+        sys.exit(130)
+    except ValueError as e:
+        print(f"\nConfiguration error: {e}", file=sys.stderr)
+        sys.exit(2)
+    except Exception as e:
+        print(f"\nError: {e}", file=sys.stderr)
+        if hasattr(args, 'verbose') and args.verbose:
+            import traceback
+            traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -458,13 +458,13 @@ class TestCLIIntegration:
         
         test_images_dir = get_test_images_dir()
         cli_args = [
-            "--ans",
-            "--train_num", "1",
-            "--test_num", "1",
-            "--min_point_num", "2",
-            "--max_point_num", "4",
+            "ans",
+            "--train-num", "1",
+            "--test-num", "1",
+            "--min-point-num", "2",
+            "--max-point-num", "4",
             "--ratios", "easy",
-            "--output_dir", str(test_images_dir / "cli_ans"),
+            "--output-dir", str(test_images_dir / "cli_ans"),
         ]
         
         with patch.object(sys, 'argv', ['cogstim'] + cli_args):
@@ -496,13 +496,13 @@ class TestCLIIntegration:
         
         test_images_dir = get_test_images_dir()
         cli_args = [
-            "--match_to_sample",
-            "--train_num", "1",
-            "--test_num", "1",
-            "--min_point_num", "2",
-            "--max_point_num", "4",
+            "match-to-sample",
+            "--train-num", "1",
+            "--test-num", "1",
+            "--min-point-num", "2",
+            "--max-point-num", "4",
             "--ratios", "easy",
-            "--output_dir", str(test_images_dir / "cli_mts"),
+            "--output-dir", str(test_images_dir / "cli_mts"),
         ]
         
         with patch.object(sys, 'argv', ['cogstim'] + cli_args):
@@ -530,13 +530,12 @@ class TestCLIIntegration:
         
         test_images_dir = get_test_images_dir()
         cli_args = [
-            "--one_colour",
-            "--train_num", "1",
-            "--test_num", "1",
-            "--min_point_num", "2",
-            "--max_point_num", "4",
-            "--ratios", "all",
-            "--output_dir", str(test_images_dir / "cli_one_colour"),
+            "one-colour",
+            "--train-num", "1",
+            "--test-num", "1",
+            "--min-point-num", "2",
+            "--max-point-num", "4",
+            "--output-dir", str(test_images_dir / "cli_one_colour"),
         ]
         
         with patch.object(sys, 'argv', ['cogstim'] + cli_args):
@@ -928,22 +927,22 @@ class TestCLISeedIntegration:
         
         # First run with seed=99
         monkeypatch.setattr(sys, 'argv', [
-            'cli.py',
-            '--shape_recognition',
-            '--train_num', '1',
-            '--test_num', '0',
-            '--output_dir', output_dir1,
+            'cogstim',
+            'shapes',
+            '--train-num', '1',
+            '--test-num', '0',
+            '--output-dir', output_dir1,
             '--seed', '99'
         ])
         main()
         
         # Second run with seed=99
         monkeypatch.setattr(sys, 'argv', [
-            'cli.py',
-            '--shape_recognition',
-            '--train_num', '1',
-            '--test_num', '0',
-            '--output_dir', output_dir2,
+            'cogstim',
+            'shapes',
+            '--train-num', '1',
+            '--test-num', '0',
+            '--output-dir', output_dir2,
             '--seed', '99'
         ])
         main()
@@ -976,28 +975,28 @@ class TestCLISeedIntegration:
         
         # First run with seed=77
         monkeypatch.setattr(sys, 'argv', [
-            'cli.py',
-            '--ans',
-            '--train_num', '1',
-            '--test_num', '0',
+            'cogstim',
+            'ans',
+            '--train-num', '1',
+            '--test-num', '0',
             '--ratios', 'easy',
-            '--min_point_num', '2',
-            '--max_point_num', '4',
-            '--output_dir', output_dir1,
+            '--min-point-num', '2',
+            '--max-point-num', '4',
+            '--output-dir', output_dir1,
             '--seed', '77'
         ])
         main()
         
         # Second run with seed=77
         monkeypatch.setattr(sys, 'argv', [
-            'cli.py',
-            '--ans',
-            '--train_num', '1',
-            '--test_num', '0',
+            'cogstim',
+            'ans',
+            '--train-num', '1',
+            '--test-num', '0',
             '--ratios', 'easy',
-            '--min_point_num', '2',
-            '--max_point_num', '4',
-            '--output_dir', output_dir2,
+            '--min-point-num', '2',
+            '--max-point-num', '4',
+            '--output-dir', output_dir2,
             '--seed', '77'
         ])
         main()

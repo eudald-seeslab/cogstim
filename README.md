@@ -7,15 +7,15 @@
 
 CogStim is a small Python toolkit that produces **synthetic image datasets** commonly used in cognitive–neuroscience and psychophysics experiments, such as:
 
-* Two–shape discrimination (e.g. *circle vs star*).
-* Two–colour discrimination (e.g. *yellow vs blue* circles).
+* Shape discrimination (e.g. *circle vs star*).
+* Colour discrimination (e.g. *yellow vs blue* circles).
 * Approximate Number System (ANS) dot arrays with two colours.
 * Single-colour dot arrays for number-discrimination tasks.
 * Custom combinations of geometrical *shapes × colours*.
 * Rotated stripe patterns ("lines" dataset) for orientation discrimination.
 * Fixation targets (A, B, C, AB, AC, BC, ABC) with configurable colours.
 
-All stimuli are generated as 512 × 512 px PNG files ready to be fed into machine-learning pipelines or presented in behavioural experiments.
+All stimuli are generated as 512 × 512 pixels PNG files.
 
 ## Installation
 
@@ -24,33 +24,41 @@ pip install cogstim
 ```
 ## Command-line interface
 
-You can access the `cli` module via `python -m cogstim.cli …` or directly if the `cogstim` package is on your `$PYTHONPATH`. The arguments are (see below for examples):
+CogStim provides a simple command-line interface with task-specific subcommands:
 
-```text
-usage: cli.py [-h] (--shape_recognition | --colour_recognition | --ans | --one_colour | --lines | --fixation | --match_to_sample | --custom)
-              [--shapes {circle,star,triangle,square} ...]
-              [--colours {yellow,blue,red,green,black,white,gray} ...]
-              [--train_num TRAIN_NUM] [--test_num TEST_NUM] [--output_dir OUTPUT_DIR]
-              [--background_colour BACKGROUND_COLOUR]
-              [--symbol_colour {yellow,blue,red,green,black,white,gray}]
-              [--min_surface MIN_SURFACE] [--max_surface MAX_SURFACE] [--no-jitter]
-              [--ratios {easy,hard,all}] [--version_tag VERSION_TAG] 
-              [--min_point_num MIN_POINT_NUM] [--max_point_num MAX_POINT_NUM]
-              [--min_point_radius MIN_POINT_RADIUS] [--max_point_radius MAX_POINT_RADIUS]
-              [--dot_colour {yellow,blue,red,green,black,white,gray}]
-              [--angles ANGLES [ANGLES ...]] [--min_stripes MIN_STRIPES] 
-              [--max_stripes MAX_STRIPES] [--img_size IMG_SIZE] [--tag TAG] 
-              [--min_thickness MIN_THICKNESS] [--max_thickness MAX_THICKNESS]
-              [--min_spacing MIN_SPACING] [--max_attempts MAX_ATTEMPTS]
-              [--types {A,B,C,AB,AC,BC,ABC} ...] [--all_types]
-              [--dot_radius_px DOT_RADIUS_PX] [--disk_radius_px DISK_RADIUS_PX]
-              [--cross_thickness_px CROSS_THICKNESS_PX] [--cross_arm_px CROSS_ARM_PX] 
-              [--jitter_px JITTER_PX] [--seed SEED]
+```bash
+cogstim <task> [options]
 ```
 
-> **Note**: train_num and test_num refer to the number of image _sets_ created. An image set is a group of images that comb all the possible parameter combinations. So, for shapes and colors, an image set is of about 200 images, whereas for ANS is of around 75 images, of course always depending on the other parameters.
+Available tasks:
+- `shapes` – Shape discrimination (e.g., circles vs stars)
+- `colours` – Colour discrimination (same shape, different colours)
+- `ans` – Two-colour dot arrays (Approximate Number System)
+- `one-colour` – Single-colour dot arrays (quantity discrimination)
+- `match-to-sample` – Match-to-sample dot array pairs
+- `lines` – Rotated stripe/line patterns
+- `fixation` – Fixation target images
+- `custom` – Custom shape/colour combinations
 
-> **Note**: All cli arguments use British spelling.
+For help on a specific task:
+```bash
+cogstim <task> --help
+```
+
+### Common options
+
+Most tasks accept these options:
+- `--train-num N` – Number of training image sets (default: 0)
+- `--test-num N` – Number of test image sets (default: 0)
+- `--output-dir PATH` – Output directory (default: `images/<task>`)
+- `--img-size SIZE` – Image size in pixels (default: 512)
+- `--background-colour COLOUR` – Background colour (default: white)
+- `--seed SEED` – Random seed for reproducible generation
+- `--demo` – Generate a quick preview with 8 training images
+
+> **Note**: `--train-num` and `--test-num` refer to the number of image _sets_ created. An image set is a group of images that combines all the possible parameter combinations. For shapes and colours, an image set is about 200 images, whereas for ANS it's around 75 images, depending on the parameters.
+
+> **Note**: All CLI arguments use British spelling.
 
 > **Note**: Use `--seed SEED` (where SEED is an integer) to make generation deterministic and reproducible. Without a seed, each run will produce different random variations.
 
@@ -58,12 +66,12 @@ usage: cli.py [-h] (--shape_recognition | --colour_recognition | --ans | --one_c
 
 ### Shape recognition – *circle vs star* in yellow
 ```bash
-python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20
+cogstim shapes --train-num 60 --test-num 20
 ```
 
 For reproducible results, add the `--seed` option:
 ```bash
-python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20 --seed 1234
+cogstim shapes --train-num 60 --test-num 20 --seed 1234
 ```
 
 <table><tr>
@@ -73,7 +81,7 @@ python -m cogstim.cli --shape_recognition --train_num 60 --test_num 20 --seed 12
 
 ### Colour recognition – yellow vs blue circles (no positional jitter)
 ```bash
-python -m cogstim.cli --colour_recognition --no-jitter
+cogstim colours --train-num 60 --test-num 20 --no-jitter
 ```
 
 <table><tr>
@@ -83,7 +91,7 @@ python -m cogstim.cli --colour_recognition --no-jitter
 
 ###  Approximate Number System (ANS) dataset with easy ratios only
 ```bash
-python -m cogstim.cli --ans --ratios easy --train_num 100 --test_num 40
+cogstim ans --ratios easy --train-num 100 --test-num 40
 ```
 
 <table><tr>
@@ -97,11 +105,11 @@ This is based on Halberda et al. (2008).
 
 ### Match-to-sample (MTS) – dot arrays (sample/match) with controlled total surface
 ```bash
-python -m cogstim.cli --match_to_sample \
+cogstim match-to-sample \
   --ratios easy \
-  --train_num 50 --test_num 20 \
-  --min_point_num 1 --max_point_num 10 \
-  --dot_colour yellow
+  --train-num 50 --test-num 20 \
+  --min-point-num 1 --max-point-num 10 \
+  --dot-colour yellow
 ```
 
 - Generates pairs of images per trial: `s_*.png` (sample) and `m_*.png` (match).
@@ -110,9 +118,11 @@ python -m cogstim.cli --match_to_sample \
 - Unequal pairs are built from the same ratio set used by ANS, with both orders (n→m and m→n) included, and equal (n=m) trials added to balance labels.
 - Output layout: `images/match_to_sample/{train|test}/s_img_{n}_{m}_{k}[...].png` and corresponding `m_img_...`.
 
+This task is based on Sella et al. (2013).
+
 ### Single-colour dot arrays numbered 1-5, total surface area held constant
 ```bash
-python -m cogstim.cli --one_colour --min_point_num 1 --max_point_num 5
+cogstim one-colour --train-num 50 --test-num 20 --min-point-num 1 --max-point-num 5
 ```
 
 <table><tr>
@@ -122,7 +132,7 @@ python -m cogstim.cli --one_colour --min_point_num 1 --max_point_num 5
 
 ### Custom dataset – green/red triangles & squares
 ```bash
-python -m cogstim.cli --custom --shapes triangle square --colours red green
+cogstim custom --shapes triangle square --colours red green --train-num 50 --test-num 20
 ```
 
 <table><tr>
@@ -132,7 +142,7 @@ python -m cogstim.cli --custom --shapes triangle square --colours red green
 
 ### Lines dataset – rotated stripe patterns
 ```bash
-python -m cogstim.cli --lines --train_num 50 --test_num 20 --angles 0 45 90 135 --min_stripes 3 --max_stripes 5
+cogstim lines --train-num 50 --test-num 20 --angles 0 45 90 135 --min-stripes 3 --max-stripes 5
 ```
 
 <table><tr>
@@ -140,23 +150,22 @@ python -m cogstim.cli --lines --train_num 50 --test_num 20 --angles 0 45 90 135 
   <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/lines_horizontal.png" alt="Horizontal lines" width="220"/></td>
 </tr></table>
 
-This is based on Srinivasan (2021).
+This task is based on Srinivasan (2021).
 
 ### Fixation targets – A/B/C/AB/AC/BC/ABC
 ```bash
-python -m cogstim.cli \
-  --fixation \
-  --all_types \
-  --background_colour black --symbol_colour white \
-  --img_size 512 --dot_radius_px 6 --disk_radius_px 128 --cross_thickness_px 24 \
-  --cross_arm_px 128
+cogstim fixation \
+  --all-types \
+  --background-colour black --symbol-colour white \
+  --img-size 512 --dot-radius-px 6 --disk-radius-px 128 --cross-thickness-px 24 \
+  --cross-arm-px 128
 ```
 
-- The symbol uses a single colour (`--symbol_colour`).
+- The symbol uses a single colour (`--symbol-colour`).
 - Composite types BC/ABC are rendered by overdrawing the cross and/or central dot with the background colour to create cut-outs, matching the figure convention in Thaler et al. (2013).
-- For fixation targets, exactly one image is generated regardless of `--train_num`/`--test_num`.
-- Use `--all_types` to generate all seven types; otherwise, choose a subset via `--types`.
-- Control cross bar length using `--cross_arm_px` (half-length from center), and thickness via `--cross_thickness_px`.
+- For fixation targets, exactly one image is generated per type.
+- Use `--all-types` to generate all seven types; otherwise, choose a subset via `--types`.
+- Control cross bar length using `--cross-arm-px` (half-length from center), and thickness via `--cross-thickness-px`.
 
 Output folder layout for fixation targets:
 ```
@@ -183,9 +192,18 @@ images/two_shapes/
 
 This project is distributed under the **MIT License** – see the `LICENCE` file for details.
 
+## TODO's
+
+- Allow for more image sizes.
+- The equalization algorithm of match-to-sample could be improved.
+- Let users create stimuli based on a csv with the specific images they need
+
+
 ## References
 
 - Halberda, J., Mazzocco, M. M. M., & Feigenson, L. (2008). Individual differences in non-verbal number acuity correlate with maths achievement. Nature, 455(7213), 665-668. https://doi.org/10.1038/nature07246
+
+- Sella, F., Lanfranchi, S., & Zorzi, M. (2013). Enumeration skills in Down syndrome. Research in Developmental Disabilities, 34(11), 3798-3806. https://doi.org/10.1016/j.ridd.2013.07.038
 
 - Srinivasan, M. V. (2021). Vision, perception, navigation and ‘cognition’ in honeybees and applications to aerial robotics. Biochemical and Biophysical Research Communications, 564, 4-17. https://doi.org/10.1016/j.bbrc.2020.09.052
 

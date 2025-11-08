@@ -211,3 +211,6 @@ images
 
 # Test images for manual inspection
 test_images/
+
+# Code counter
+.VSCodeCounter/

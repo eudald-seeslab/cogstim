@@ -29,6 +29,7 @@ class TestOneColourImageGenerator:
             "colour_1": (255, 255, 0),
             "attempts_limit": 100,
             "version_tag": "",
+            "img_format": "png",
         }
 
         with patch('cogstim.generators.dots_one_colour.os.makedirs'):
@@ -56,6 +57,7 @@ class TestOneColourImageGenerator:
             "colour_1": (255, 255, 0),
             "attempts_limit": 100,
             "version_tag": "",
+            "img_format": "png",
         }
 
         with pytest.raises(ValueError, match="min_point_num must be at least 1"):
@@ -78,6 +80,7 @@ class TestOneColourImageGenerator:
             "colour_1": (255, 255, 0),
             "attempts_limit": 100,
             "version_tag": "",
+            "img_format": "png",
         }
 
         with pytest.raises(ValueError, match="total_area is too small"):
@@ -100,6 +103,7 @@ class TestOneColourImageGenerator:
             "colour_1": (255, 255, 0),
             "attempts_limit": 100,
             "version_tag": "",
+            "img_format": "png",
         }
 
         with pytest.raises(ValueError, match="Total_area is very large"):
@@ -122,6 +126,7 @@ class TestOneColourImageGenerator:
             "colour_1": (255, 255, 0),
             "attempts_limit": 100,
             "version_tag": "",
+            "img_format": "png",
         }
 
         with patch('os.makedirs') as mock_makedirs:
@@ -149,6 +154,7 @@ class TestOneColourImageGenerator:
             "colour_1": (255, 255, 0),
             "attempts_limit": 100,
             "version_tag": "",
+            "img_format": "png",
         }
 
         mock_np_instance = MagicMock()
@@ -191,6 +197,7 @@ class TestOneColourImageGenerator:
             "colour_1": (255, 255, 0),
             "attempts_limit": 100,
             "version_tag": "",
+            "img_format": "png",
         }
 
         mock_np_instance = MagicMock()
@@ -224,12 +231,13 @@ class TestOneColourImageGenerator:
             "colour_1": (255, 255, 0),
             "attempts_limit": 100,
             "version_tag": "v1",
+            "img_format": "png",
         }
 
         mock_image = MagicMock(spec=Image.Image)
         mock_create_image.return_value = mock_image
 
-        with patch('os.makedirs'):
+        with patch('os.makedirs'), patch.object(mock_image, "save") as mock_save:
             generator = DotsOneColourGenerator(config)
             generator.create_and_save_once("test.png", 3, "train")
 
@@ -238,7 +246,10 @@ class TestOneColourImageGenerator:
 
             # Should save image to correct path (now with phase)
             expected_path = os.path.join("/tmp/test", "train", "3", "test.png")
-            mock_image.save.assert_called_once_with(expected_path)
+            mock_save.assert_called_once()
+            # assert that 'expected_path' is among the call arguments
+            called_path = mock_save.call_args[0][0]
+            assert called_path == expected_path
 
     def test_generate_images(self):
         """Test generate_images method."""
@@ -259,6 +270,7 @@ class TestOneColourImageGenerator:
             "version_tag": "",
             "train_num": 1,
             "test_num": 1,
+            "img_format": "png",
         }
 
         with patch('os.makedirs'), \
@@ -297,6 +309,7 @@ class TestDotsCLI:
                 version_tag="",
                 min_points=1,
                 max_points=5,
+                img_format="png",
             )
 
             args = parse_args()
@@ -327,6 +340,7 @@ class TestDotsCLI:
                 max_points=4,
                 train_num=10,
                 test_num=2,
+                img_format="png",
             )
             mock_parse.return_value = mock_args
 
@@ -370,6 +384,7 @@ class TestDotsCLI:
                 version_tag="",
                 min_points=1,
                 max_points=5,
+                img_format="png",
             )
             mock_parse.return_value = mock_args
 

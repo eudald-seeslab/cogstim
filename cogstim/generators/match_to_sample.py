@@ -74,7 +74,8 @@ class MatchToSampleGenerator(BaseGenerator):
         """Save a pair of images."""
         s_np, s_points, m_np, m_points = pair
         output_dir = os.path.join(self.config["output_dir"], phase)
-        save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name)
+        img_format = self.config["img_format"]
+        save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name, img_format)
     
     def create_and_save(self, n1, n2, equalize, tag, phase="train"):
         """Create and save a pair of images."""

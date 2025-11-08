@@ -42,6 +42,7 @@ class TestANSImageGeneration:
             "dot_colour": "black",
             "min_point_radius": 8,
             "max_point_radius": 12,
+            "img_format": "png",
         }
         
         generator = DotsANSGenerator(config)
@@ -100,6 +101,7 @@ class TestANSImageGeneration:
             "dot_colour": "black",
             "min_point_radius": 6,
             "max_point_radius": 10,
+            "img_format": "png",
         }
         
         generator = DotsANSGenerator(config)
@@ -144,6 +146,7 @@ class TestANSImageGeneration:
             "dot_colour": "red",
             "min_point_radius": 10,
             "max_point_radius": 15,
+            "img_format": "png",
         }
         
         generator = DotsANSGenerator(config)
@@ -191,6 +194,7 @@ class TestMatchToSampleImageGeneration:
             "max_radius": 12,
             "tolerance": 0.01,
             "attempts_limit": 1000,
+            "img_format": "png",
         }
         
         generator = MatchToSampleGenerator(config)
@@ -245,6 +249,7 @@ class TestMatchToSampleImageGeneration:
             "max_radius": 10,
             "tolerance": 0.005,  # Stricter tolerance
             "attempts_limit": 2000,
+            "img_format": "png",
         }
         
         generator = MatchToSampleGenerator(config)
@@ -287,6 +292,7 @@ class TestMatchToSampleImageGeneration:
             "max_radius": 15,
             "tolerance": 0.01,
             "attempts_limit": 1000,
+            "img_format": "png",
         }
         
         generator = MatchToSampleGenerator(config)
@@ -335,6 +341,9 @@ class TestShapesImageGeneration:
             min_surface=50,
             max_surface=100,
             background_colour="white",
+            seed=None,
+            random_rotation=False,
+            img_format="png",
         )
         generator.generate_images()
         
@@ -378,6 +387,7 @@ class TestLinesImageGeneration:
             "max_attempts": 1000,  # Increased attempts
             "tag": "test",
             "background_colour": "#000000",  # Black background
+            "img_format": "png",
         }
         
         generator = LinesGenerator(config)
@@ -423,6 +433,7 @@ class TestFixationImageGeneration:
             "background_colour": "white",
             "symbol_colour": "black",
             "tag": "test",
+            "img_format": "png",
         }
         
         generator = FixationGenerator(config)
@@ -465,6 +476,7 @@ class TestCLIIntegration:
             "--max-point-num", "4",
             "--ratios", "easy",
             "--output-dir", str(test_images_dir / "cli_ans"),
+            "--img-format", "png",
         ]
         
         with patch.object(sys, 'argv', ['cogstim'] + cli_args):
@@ -503,6 +515,7 @@ class TestCLIIntegration:
             "--max-point-num", "4",
             "--ratios", "easy",
             "--output-dir", str(test_images_dir / "cli_mts"),
+            "--img-format", "png",
         ]
         
         with patch.object(sys, 'argv', ['cogstim'] + cli_args):
@@ -536,6 +549,7 @@ class TestCLIIntegration:
             "--min-point-num", "2",
             "--max-point-num", "4",
             "--output-dir", str(test_images_dir / "cli_one_colour"),
+            "--img-format", "png",
         ]
         
         with patch.object(sys, 'argv', ['cogstim'] + cli_args):
@@ -575,6 +589,7 @@ class TestImageProperties:
                 "colour_1": "blue",
                 "min_point_num": 2,
                 "max_point_num": 4,
+                "img_format": "png",
             },
             {
                 **MTS_GENERAL_CONFIG,
@@ -584,6 +599,7 @@ class TestImageProperties:
                 "ratios": "easy",
                 "min_point_num": 2,
                 "max_point_num": 4,
+                "img_format": "png",
             },
         ]
         
@@ -624,6 +640,7 @@ class TestImageProperties:
             "colour_1": "red",
             "min_point_num": 2,
             "max_point_num": 8,
+            "img_format": "png",
         }
 
         generator = DotsANSGenerator(config)
@@ -666,6 +683,7 @@ class TestImageProperties:
             "ratios": "easy",
             "min_point_num": 2,
             "max_point_num": 4,
+            "img_format": "png",
         }
         
         generator = MatchToSampleGenerator(config)
@@ -704,6 +722,7 @@ class TestSeedDeterminism:
             "train_num": 1,
             "test_num": 0,
             "output_dir": str(test_images_dir / "ans_seed_test1"),
+            "img_format": "png",
             "ratios": "easy",
             "ONE_COLOUR": False,
             "min_point_num": 2,
@@ -729,6 +748,7 @@ class TestSeedDeterminism:
             "background_colour": "white",
             "dot_colour": "black",
             "seed": 42,
+            "img_format": "png",
         }
         
         generator2 = DotsANSGenerator(config2)
@@ -771,6 +791,8 @@ class TestSeedDeterminism:
             "jitter": True,
             "background_colour": "white",
             "seed": 123,
+            "random_rotation": False,
+            "img_format": "png",
         }
         
         generator1 = ShapesGenerator(**config1)
@@ -789,6 +811,8 @@ class TestSeedDeterminism:
             "jitter": True,
             "background_colour": "white",
             "seed": 123,
+            "random_rotation": False,
+            "img_format": "png",
         }
         
         generator2 = ShapesGenerator(**config2)
@@ -831,6 +855,7 @@ class TestSeedDeterminism:
             "background_colour": "white",
             "dot_colour": "black",
             "seed": 1,
+            "img_format": "png",
         }
         
         generator1 = DotsANSGenerator(config1)
@@ -849,6 +874,7 @@ class TestSeedDeterminism:
             "background_colour": "white",
             "dot_colour": "black",
             "seed": 2,
+            "img_format": "png",
         }
         
         generator2 = DotsANSGenerator(config2)
@@ -895,8 +921,8 @@ class TestSeedDeterminism:
             "max_point_num": 4,
             "background_colour": "white",
             "dot_colour": "yellow",
+            "img_format": "png",
         }
-        # Note: no "seed" key in config
         
         generator = DotsANSGenerator(config)
         generator.generate_images()
@@ -932,7 +958,8 @@ class TestCLISeedIntegration:
             '--train-num', '1',
             '--test-num', '0',
             '--output-dir', output_dir1,
-            '--seed', '99'
+            '--seed', '99',
+            '--img-format', 'png'
         ])
         main()
         
@@ -943,7 +970,8 @@ class TestCLISeedIntegration:
             '--train-num', '1',
             '--test-num', '0',
             '--output-dir', output_dir2,
-            '--seed', '99'
+            '--seed', '99',
+            '--img-format', 'png'
         ])
         main()
         
@@ -983,7 +1011,8 @@ class TestCLISeedIntegration:
             '--min-point-num', '2',
             '--max-point-num', '4',
             '--output-dir', output_dir1,
-            '--seed', '77'
+            '--seed', '77',
+            '--img-format', 'png'
         ])
         main()
         
@@ -997,7 +1026,8 @@ class TestCLISeedIntegration:
             '--min-point-num', '2',
             '--max-point-num', '4',
             '--output-dir', output_dir2,
-            '--seed', '77'
+            '--seed', '77',
+            '--img-format', 'png'
         ])
         main()
         

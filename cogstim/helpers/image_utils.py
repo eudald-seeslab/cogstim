@@ -8,6 +8,49 @@ all image creation and drawing functionality.
 from PIL import Image, ImageDraw
 
 
+def get_file_extension(img_format):
+    """Convert image format to file extension.
+    
+    Args:
+        img_format: Image format (e.g., 'png', 'jpeg', 'jpg', 'bmp', 'tiff')
+    
+    Returns:
+        File extension (e.g., 'png', 'jpg', 'bmp', 'tiff')
+    """
+    return "jpg" if img_format == "jpeg" else img_format
+
+
+def save_image(img, path, img_format):
+    """Save image with the appropriate format.
+    
+    Args:
+        img: PIL Image, ImageCanvas, or DotsCore instance
+        path: File path to save to
+        img_format: Image format (e.g., 'png', 'jpeg', 'jpg', 'bmp', 'tiff')
+    """
+    # Handle DotsCore (it has its own save method that doesn't take format)
+    # DotsCore will delegate to its ImageCanvas.save() which accepts kwargs
+    if hasattr(img, 'canvas') and hasattr(img, 'draw_points'):
+        # This is a DotsCore instance
+        if img_format in ["jpg", "jpeg"]:
+            img.canvas.save(path, format="JPEG", quality=95)
+        else:
+            img.canvas.save(path, format=img_format.upper())
+    # Handle ImageCanvas wrapper
+    elif hasattr(img, '_img'):
+        pil_img = img._img
+        if img_format in ["jpg", "jpeg"]:
+            pil_img.save(path, format="JPEG", quality=95)
+        else:
+            pil_img.save(path, format=img_format.upper())
+    # Handle PIL Image
+    else:
+        if img_format in ["jpg", "jpeg"]:
+            img.save(path, format="JPEG", quality=95)
+        else:
+            img.save(path, format=img_format.upper())
+
+
 class ImageCanvas:
     """Wrapper class for PIL Image and ImageDraw operations.
     

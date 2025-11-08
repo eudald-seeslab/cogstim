@@ -75,6 +75,13 @@ IMAGE_DEFAULTS = {
     "init_size": 512,
     "background_colour": "white",
     "mode": "RGB",
+    "img_format": "png",
+}
+
+# CLI defaults
+CLI_DEFAULTS = {
+    "train_num": 10,
+    "test_num": 0,
 }
 
 # Dot generation defaults
@@ -89,6 +96,9 @@ DOT_DEFAULTS = {
 SHAPE_DEFAULTS = {
     "min_surface": 10000,
     "max_surface": 20000,
+    "random_rotation": False,
+    "min_rotation": 0,
+    "max_rotation": 360,
 }
 
 # Line generation defaults

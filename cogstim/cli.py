@@ -29,7 +29,35 @@ from cogstim.helpers.constants import (
     LINE_DEFAULTS,
     FIXATION_DEFAULTS,
     MTS_DEFAULTS,
+    CLI_DEFAULTS,
 )
+
+
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+
+def parse_ratios(value):
+    """Parse ratios argument - either a preset string or comma-separated fractions."""
+    if value in ["easy", "hard", "all"]:
+        return value
+    # Try to parse as comma-separated fractions (e.g., "1/2,2/3,3/4")
+    try:
+        ratios = []
+        for fraction_str in value.split(","):
+            fraction_str = fraction_str.strip()
+            if "/" in fraction_str:
+                numerator, denominator = fraction_str.split("/")
+                ratios.append(float(numerator) / float(denominator))
+            else:
+                # Also accept plain decimals for backwards compatibility
+                ratios.append(float(fraction_str))
+        return ratios
+    except (ValueError, ZeroDivisionError):
+        raise argparse.ArgumentTypeError(
+            f"Invalid ratios: '{value}'. Must be 'easy', 'hard', 'all', or comma-separated fractions (e.g., '1/2,2/3,3/4')"
+        )
 
 
 # =============================================================================
@@ -64,6 +92,10 @@ def build_shapes_config(args: argparse.Namespace) -> Dict[str, Any]:
         "jitter": jitter,
         "background_colour": args.background_colour,
         "seed": args.seed,
+        "random_rotation": args.random_rotation,
+        "min_rotation": args.min_rotation,
+        "max_rotation": args.max_rotation,
+        "img_format": args.img_format,
     }
     
 
@@ -86,6 +118,10 @@ def build_colours_config(args: argparse.Namespace) -> Dict[str, Any]:
         "jitter": jitter,
         "background_colour": args.background_colour,
         "seed": args.seed,
+        "random_rotation": args.random_rotation,
+        "min_rotation": args.min_rotation,
+        "max_rotation": args.max_rotation,
+        "img_format": args.img_format,
     }
 
 
@@ -107,6 +143,7 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
             "max_point_radius": args.max_point_radius,
             "attempts_limit": args.attempts_limit,
             "seed": args.seed,
+            "img_format": args.img_format,
         },
     }
 
@@ -139,6 +176,7 @@ def build_one_colour_config(args: argparse.Namespace) -> Dict[str, Any]:
             "seed": args.seed,
             "colour_1": args.dot_colour,
             "colour_2": None,
+            "img_format": args.img_format,
         },
     }
     
@@ -164,6 +202,7 @@ def build_mts_config(args: argparse.Namespace) -> Dict[str, Any]:
             "attempts_limit": args.attempts_limit,
             "init_size": args.img_size,
             "seed": args.seed,
+            "img_format": args.img_format,
         },
     }
     
@@ -193,6 +232,7 @@ def build_lines_config(args: argparse.Namespace) -> Dict[str, Any]:
         "max_attempts": getattr(args, 'max_attempts', 10000),
         "background_colour": args.background_colour,
         "seed": args.seed,
+        "img_format": args.img_format,
     }
 
 
@@ -219,6 +259,7 @@ def build_fixation_config(args: argparse.Namespace) -> Dict[str, Any]:
         "symbol_colour": args.symbol_colour,
         "tag": getattr(args, 'tag', ''),
         "seed": args.seed,
+        "img_format": args.img_format,
     }
 
 
@@ -241,6 +282,10 @@ def build_custom_config(args: argparse.Namespace) -> Dict[str, Any]:
         "jitter": jitter,
         "background_colour": args.background_colour,
         "seed": args.seed,
+        "random_rotation": args.random_rotation,
+        "min_rotation": args.min_rotation,
+        "max_rotation": args.max_rotation,
+        "img_format": args.img_format,
     }
 
 
@@ -357,6 +402,13 @@ def add_common_options(parser: argparse.ArgumentParser) -> None:
         help=f"Image size in pixels (default: {IMAGE_DEFAULTS['init_size']})"
     )
     parser.add_argument(
+        "--img-format",
+        type=str,
+        default=IMAGE_DEFAULTS["img_format"],
+        choices=["png", "jpg", "jpeg", "bmp", "tiff"],
+        help=f"Image format (default: {IMAGE_DEFAULTS['img_format']})"
+    )
+    parser.add_argument(
         "--background-colour",
         type=str,
         default=IMAGE_DEFAULTS["background_colour"],
@@ -392,14 +444,14 @@ def add_train_test_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--train-num",
         type=int,
-        default=0,
-        help="Number of training images to generate (default: 0)"
+        default=CLI_DEFAULTS["train_num"],
+        help=f"Number of training images to generate (default: {CLI_DEFAULTS['train_num']})"
     )
     parser.add_argument(
         "--test-num",
         type=int,
-        default=0,
-        help="Number of test images to generate (default: 0)"
+        default=CLI_DEFAULTS["test_num"],
+        help=f"Number of test images to generate (default: {CLI_DEFAULTS['test_num']})"
     )
     parser.add_argument(
         "--demo",
@@ -413,10 +465,9 @@ def add_dot_options(parser: argparse.ArgumentParser, include_ratios: bool = True
     if include_ratios:
         parser.add_argument(
             "--ratios",
-            type=str,
-            choices=["easy", "hard", "all"],
+            type=parse_ratios,
             default="all",
-            help="Ratio set to use (default: all)"
+            help="Ratio set: 'easy', 'hard', 'all', or comma-separated fractions (e.g., '1/2,2/3,3/4') (default: all)"
         )
     
     parser.add_argument(
@@ -469,6 +520,23 @@ def add_shape_options(parser: argparse.ArgumentParser) -> None:
         "--no-jitter",
         action="store_true",
         help="Disable positional jitter"
+    )
+    parser.add_argument(
+        "--random-rotation",
+        action="store_true",
+        help="Enable random rotation of shapes"
+    )
+    parser.add_argument(
+        "--min-rotation",
+        type=int,
+        default=SHAPE_DEFAULTS["min_rotation"],
+        help=f"Minimum rotation angle in degrees (default: {SHAPE_DEFAULTS['min_rotation']})"
+    )
+    parser.add_argument(
+        "--max-rotation",
+        type=int,
+        default=SHAPE_DEFAULTS["max_rotation"],
+        help=f"Maximum rotation angle in degrees (default: {SHAPE_DEFAULTS['max_rotation']})"
     )
 
 
@@ -852,19 +920,10 @@ def validate_and_adjust_args(args: argparse.Namespace) -> None:
     """Validate arguments and apply demo mode adjustments."""
     # Handle demo mode
     if hasattr(args, 'demo') and args.demo:
-        if args.train_num == 0 and args.test_num == 0:
-            args.train_num = 8
-            args.test_num = 0
-            if not args.quiet:
-                print("Demo mode: generating 8 training images for quick preview.")
-    
-    # Check if no images would be generated
-    if hasattr(args, 'train_num') and hasattr(args, 'test_num'):
-        if args.train_num == 0 and args.test_num == 0 and not getattr(args, 'demo', False):
-            print("\nNo images would be generated (both train-num and test-num are 0).")
-            print("Try: --train-num 10 --test-num 5")
-            print("Or use: --demo for a quick preview")
-            sys.exit(2)
+        args.train_num = 8
+        args.test_num = 0
+        if not args.quiet:
+            print("Demo mode: generating 8 training images for quick preview.")
     
     # Set default output directories if not specified
     if args.output_dir is None:
@@ -902,9 +961,8 @@ def main() -> None:
         sys.exit(2)
     except Exception as e:
         print(f"\nError: {e}", file=sys.stderr)
-        if hasattr(args, 'verbose') and args.verbose:
-            import traceback
-            traceback.print_exc()
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 

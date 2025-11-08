@@ -24,6 +24,7 @@ def test_stripe_pattern_generator_single_set():
             "min_spacing": 2,
             "max_attempts": 100,
             "background_colour": "#000000",
+            "img_format": "png",
         }
 
         generator = LinesGenerator(cfg)
@@ -57,6 +58,7 @@ def test_stripe_pattern_generator_max_attempts_exceeded():
         "min_spacing": 1,  # Minimal spacing
         "max_attempts": 1,  # Very low attempts to force failure
         "background_colour": "#000000",
+        "img_format": "png",
     }
 
     generator = LinesGenerator(cfg)
@@ -82,6 +84,7 @@ def test_stripe_pattern_generator_exception_handling():
             "min_spacing": 1,
             "max_attempts": 1,  # Force failure
             "background_colour": "#000000",
+            "img_format": "png",
         }
 
         generator = LinesGenerator(cfg)
@@ -106,6 +109,7 @@ def test_parse_args_defaults():
             'max_thickness': 30,
             'min_spacing': 5,
             'max_attempts': 10000,
+            'img_format': 'png',
         })()
 
         args = parse_args()
@@ -121,7 +125,7 @@ def test_parse_args_defaults():
         assert args.max_thickness == 30
         assert args.min_spacing == 5
         assert args.max_attempts == 10000
-
+        assert args.img_format == 'png'
 
 @patch('cogstim.generators.lines.LinesGenerator')
 def test_main_success(mock_generator_class):
@@ -141,6 +145,7 @@ def test_main_success(mock_generator_class):
             'max_thickness': 10,
             'min_spacing': 2,
             'max_attempts': 1000,
+            'img_format': 'png',
         })()
 
         mock_parse.return_value = mock_args

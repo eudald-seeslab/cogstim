@@ -1,19 +1,24 @@
 import os
 import csv
 
+from cogstim.helpers.image_utils import get_file_extension, save_image
 
-def save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name):
+
+def save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name, img_format):
     s_np.draw_points(s_points)
     m_np.draw_points(m_points)
-    s_path = os.path.join(output_dir, f"{base_name}_s.png")
-    m_path = os.path.join(output_dir, f"{base_name}_m.png")
-    s_np.save(s_path)
-    m_np.save(m_path)
+    
+    ext = get_file_extension(img_format)
+    s_path = os.path.join(output_dir, f"{base_name}_s.{ext}")
+    m_path = os.path.join(output_dir, f"{base_name}_m.{ext}")
+    
+    save_image(s_np, s_path, img_format)
+    save_image(m_np, m_path, img_format)
 
 
-def save_pair_with_basename(pair, output_dir, base_name):
+def save_pair_with_basename(pair, output_dir, base_name, img_format):
     s_np, s_points, m_np, m_points = pair
-    save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name)
+    save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name, img_format)
 
 
 def build_basename(n1: int, n2: int, rep: int, equalized: bool, version_tag: str | None = None) -> str:

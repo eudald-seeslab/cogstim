@@ -6,7 +6,7 @@ import logging
 import numpy as np
 from tqdm import tqdm
 from cogstim.helpers.base_generator import BaseGenerator
-from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.image_utils import ImageCanvas, get_file_extension, save_image
 from cogstim.helpers.planner import GenerationPlan
 from cogstim.helpers.constants import IMAGE_DEFAULTS, LINE_DEFAULTS
 
@@ -32,7 +32,7 @@ class LinesGenerator(BaseGenerator):
         self.max_attempts = config["max_attempts"]
         self.tag = config["tag"]
         self.background_colour = config["background_colour"]
-        
+        self.img_format = config["img_format"]
         # Calculate circumscribed size for rotation
         self.c_size = int(self.size / 2 * np.sqrt(2)) * 2
 
@@ -61,8 +61,12 @@ class LinesGenerator(BaseGenerator):
                 try:
                     img = self.create_rotated_stripes(num_stripes, angle)
                     tag_suffix = f"_{self.tag}" if self.tag else ""
-                    filename = f"img_{num_stripes}_{rep}{tag_suffix}.png"
-                    img.save(os.path.join(self.dir_path, phase, str(angle), filename))
+                    
+                    ext = get_file_extension(self.img_format)
+                    filename = f"img_{num_stripes}_{rep}{tag_suffix}.{ext}"
+                    save_path = os.path.join(self.dir_path, phase, str(angle), filename)
+                    
+                    save_image(img, save_path, self.img_format)
                 except Exception as e:
                     logging.error(
                         f"Failed to generate image: angle={angle}, stripes={num_stripes}, set={rep}"

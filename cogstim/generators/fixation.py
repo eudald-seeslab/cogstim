@@ -4,9 +4,9 @@ import os
 import random
 from typing import List, Tuple
 
-from cogstim.helpers.constants import COLOUR_MAP
+from cogstim.helpers.constants import COLOUR_MAP, IMAGE_DEFAULTS
 from cogstim.helpers.base_generator import BaseGenerator
-from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.image_utils import ImageCanvas, get_file_extension, save_image
 
 
 class FixationGenerator(BaseGenerator):
@@ -42,18 +42,19 @@ class FixationGenerator(BaseGenerator):
         symbol_colour_name = config["symbol_colour"]
         self.symbol_colour: str = COLOUR_MAP.get(symbol_colour_name, symbol_colour_name)
         self.tag: str = config.get("tag", "")
-
-    # ----------------------------- public API ----------------------------- #
-
+        self.img_format = config["img_format"]
+        
     def generate_images(self) -> None:
         self.setup_directories()
         for t in self.types:
             img = self._draw_symbol(t)
             tag_suffix = f"_{self.tag}" if self.tag else ""
-            filename = f"fix_{t}{tag_suffix}.png"
-            img.save(os.path.join(self.output_dir, filename))
-
-    # ---------------------------- drawing utils --------------------------- #
+            
+            ext = get_file_extension(self.img_format)
+            filename = f"fix_{t}{tag_suffix}.{ext}"
+            save_path = os.path.join(self.output_dir, filename)
+            
+            save_image(img, save_path, self.img_format)
 
     def _center_with_jitter(self) -> Tuple[int, int]:
         half = self.size // 2

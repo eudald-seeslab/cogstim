@@ -15,13 +15,20 @@ CogStim is a small Python toolkit that produces **synthetic image datasets** com
 * Rotated stripe patterns ("lines" dataset) for orientation discrimination.
 * Fixation targets (A, B, C, AB, AC, BC, ABC) with configurable colours.
 
-All stimuli are generated as 512 × 512 pixels PNG files.
+All stimuli are generated as PNG files with a default size of 512 × 512 pixels (configurable via `--img-size`).
 
 ## Installation
 
 ```bash
 pip install cogstim  
 ```
+## Documentation
+
+- **[Quick Start](docs/index.md)** – Installation and first steps
+- **[User Guide](docs/guide.md)** – Detailed documentation for each task
+- **[Recipes](docs/recipes.md)** – Copy-paste commands for common goals
+- **[FAQ](docs/faq.md)** – Troubleshooting and common questions
+
 ## Command-line interface
 
 CogStim provides a simple command-line interface with task-specific subcommands:
@@ -48,7 +55,7 @@ cogstim <task> --help
 ### Common options
 
 Most tasks accept these options:
-- `--train-num N` – Number of training image sets (default: 0)
+- `--train-num N` – Number of training image sets (default: 10)
 - `--test-num N` – Number of test image sets (default: 0)
 - `--output-dir PATH` – Output directory (default: `images/<task>`)
 - `--img-size SIZE` – Image size in pixels (default: 512)
@@ -112,11 +119,11 @@ cogstim match-to-sample \
   --dot-colour yellow
 ```
 
-- Generates pairs of images per trial: `s_*.png` (sample) and `m_*.png` (match).
+- Generates pairs of images per trial: `*_s.png` (sample) and `*_m.png` (match).
 - For half of the trials, total dot surface is equalized between sample and match; for the other half, dot sizes are random.
 - The target total surface for the match is derived from the sample image of the same trial.
 - Unequal pairs are built from the same ratio set used by ANS, with both orders (n→m and m→n) included, and equal (n=m) trials added to balance labels.
-- Output layout: `images/match_to_sample/{train|test}/s_img_{n}_{m}_{k}[...].png` and corresponding `m_img_...`.
+- Output layout: `images/match_to_sample/{train|test}/img_{n}_{m}_{k}[...]_s.png` and corresponding `img_{n}_{m}_{k}[...]_m.png`.
 
 This task is based on Sella et al. (2013).
 
@@ -194,9 +201,9 @@ This project is distributed under the **MIT License** – see the `LICENCE` file
 
 ## TODO's
 
-- Allow for more image sizes.
 - The equalization algorithm of match-to-sample could be improved.
 - Let users create stimuli based on a csv with the specific images they need
+- Check that the image is big enough for the parameters set.
 
 
 ## References

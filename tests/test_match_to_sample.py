@@ -208,14 +208,21 @@ class TestHelperFunctions:
         m_np = MagicMock()
         s_points = [((100, 100, 10), "colour_1")]
         m_points = [((200, 200, 15), "colour_1")]
-        with patch('os.path.join') as mock_join, \
-              patch('builtins.open', MagicMock()):
-            mock_join.side_effect = ["/tmp/test_s.png", "/tmp/test_m.png"]
-            save_image_pair(s_np, s_points, m_np, m_points, "/tmp", "test")
+
+        with patch('cogstim.helpers.mts_io.save_image') as mock_save_image:
+            save_image_pair(s_np, s_points, m_np, m_points, "/tmp", "test", "png")
             s_np.draw_points.assert_called_once_with(s_points)
             m_np.draw_points.assert_called_once_with(m_points)
-            s_np.save.assert_called_once_with("/tmp/test_s.png")
-            m_np.save.assert_called_once_with("/tmp/test_m.png")
+            
+            # Verify save_image was called twice (once for sample, once for match)
+            assert mock_save_image.call_count == 2
+            
+            # Verify the calls with correct paths and format
+            calls = mock_save_image.call_args_list
+            assert calls[0][0][1] == "/tmp/test_s.png"
+            assert calls[0][0][2] == "png"
+            assert calls[1][0][1] == "/tmp/test_m.png"
+            assert calls[1][0][2] == "png"
 
     def test_save_pair_with_basename(self):
         """Test save_pair_with_basename function."""
@@ -225,8 +232,21 @@ class TestHelperFunctions:
         m_points = [((200, 200, 15), "colour_1")]
         pair = (s_np, s_points, m_np, m_points)
         with patch('cogstim.helpers.mts_io.save_image_pair') as mock_save:
-            save_pair_with_basename(pair, "/tmp", "test")
-            mock_save.assert_called_once_with(s_np, s_points, m_np, m_points, "/tmp", "test")
+            save_pair_with_basename(pair, "/tmp", "test", "png")
+            # Instead of assert_called_once_with (which is strict about argument identity),
+            # check call arguments match expected values by value.
+            called = mock_save.call_args
+            assert called is not None
+            # Compare arguments using equality, not strict identity
+            args = called[0]
+            kwargs = called[1]
+            assert args[0] is s_np
+            assert args[1] == s_points
+            assert args[2] is m_np
+            assert args[3] == m_points
+            assert args[4] == "/tmp"
+            assert args[5] == "test"
+            assert args[6] == "png"
 
 
 class TestMatchToSampleIntegration:

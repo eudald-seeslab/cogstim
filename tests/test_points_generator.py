@@ -13,6 +13,7 @@ def test_points_generator_creates_images(tmp_path):
         "version_tag": "",
         "min_point_num": 1,
         "max_point_num": 2,
+        "img_format": "png",
     }
 
     gen = DotsANSGenerator(cfg)

@@ -28,6 +28,7 @@ class TestFixationGenerator:
             "background_colour": "white",
             "symbol_colour": "black",
             "tag": "",
+            "img_format": "png",
         }
 
         generator = FixationGenerator(config)
@@ -53,6 +54,7 @@ class TestFixationGenerator:
             "background_colour": "white",
             "symbol_colour": "black",
             "tag": "",
+            "img_format": "png",
         }
 
         generator = FixationGenerator(config)
@@ -76,6 +78,7 @@ class TestFixationGenerator:
             "background_colour": "white",
             "symbol_colour": "black",
             "tag": "",
+            "img_format": "png",
         }
 
         generator = FixationGenerator(config)
@@ -101,6 +104,7 @@ class TestFixationGenerator:
             "background_colour": (255, 0, 0),  # Red background
             "symbol_colour": "black",
             "tag": "",
+            "img_format": "png",
         }
 
         generator = FixationGenerator(config)
@@ -132,6 +136,7 @@ class TestFixationGenerator:
             "background_colour": "white",
             "symbol_colour": "black",
             "tag": "",
+            "img_format": "png",
         }
 
         generator = FixationGenerator(config)
@@ -155,6 +160,7 @@ class TestFixationGenerator:
             "background_colour": "white",
             "symbol_colour": "black",
             "tag": "",
+            "img_format": "png",
         }
 
         generator = FixationGenerator(config)
@@ -178,6 +184,7 @@ class TestFixationGenerator:
                 "background_colour": "white",
                 "symbol_colour": "black",
                 "tag": "test",
+                "img_format": "png",
             }
 
             generator = FixationGenerator(config)

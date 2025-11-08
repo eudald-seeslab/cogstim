@@ -4,9 +4,9 @@ import random
 import numpy as np
 from tqdm import tqdm
 
-from cogstim.helpers.constants import COLOUR_MAP, IMAGE_DEFAULTS
+from cogstim.helpers.constants import COLOUR_MAP, IMAGE_DEFAULTS, SHAPE_DEFAULTS
 from cogstim.helpers.base_generator import BaseGenerator
-from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.image_utils import ImageCanvas, get_file_extension, save_image
 from cogstim.helpers.planner import GenerationPlan
 
 
@@ -37,8 +37,17 @@ class ShapesGenerator(BaseGenerator):
         min_surface,
         max_surface,
         background_colour,
-        seed=None,
+        seed,
+        img_format,
+        random_rotation,
+        min_rotation=None,
+        max_rotation=None,
     ):
+
+        # If random_rotation is True, min_rotation and max_rotation must be provided
+        if random_rotation and (min_rotation is None or max_rotation is None):
+            raise ValueError("min_rotation and max_rotation must be provided if random_rotation is True")
+
         # Set directory based on task if not provided explicitly
         if output_dir is not None:
             pass
@@ -64,6 +73,10 @@ class ShapesGenerator(BaseGenerator):
             'max_surface': max_surface,
             'background_colour': background_colour,
             'seed': seed,
+            'random_rotation': random_rotation,
+            'min_rotation': min_rotation,
+            'max_rotation': max_rotation,
+            'img_format': img_format,
         }
         super().__init__(config)
         
@@ -78,6 +91,10 @@ class ShapesGenerator(BaseGenerator):
         self.min_surface = min_surface
         self.max_surface = max_surface
         self.jitter = jitter
+        self.random_rotation = random_rotation
+        self.min_rotation = min_rotation
+        self.max_rotation = max_rotation
+        self.img_format = img_format.lower()
         self.img_paths = {}
 
     def get_subdirectories(self):
@@ -175,31 +192,61 @@ class ShapesGenerator(BaseGenerator):
             )
 
         return vertices
+    
+    def rotate_vertices(self, vertices, center, angle_deg):
+        """Rotate vertices around a center point by angle_deg degrees."""
+        if angle_deg == 0:
+            return vertices
+        
+        angle_rad = math.radians(angle_deg)
+        cos_angle = math.cos(angle_rad)
+        sin_angle = math.sin(angle_rad)
+        
+        rotated = []
+        for x, y in vertices:
+            # Translate to origin
+            x_translated = x - center[0]
+            y_translated = y - center[1]
+            
+            # Rotate
+            x_rotated = x_translated * cos_angle - y_translated * sin_angle
+            y_rotated = x_translated * sin_angle + y_translated * cos_angle
+            
+            # Translate back
+            rotated.append((x_rotated + center[0], y_rotated + center[1]))
+        
+        return rotated
 
-    def get_vertices(self, shape: str, center: tuple, radius: int) -> list:
+    def get_vertices(self, shape: str, center: tuple, radius: int, rotation_angle: int = 0) -> list:
         """Calculate vertices of the shapes based on the given parameters."""
         if shape == "circle":
-            return [
+            vertices = [
                 (center[0] - radius, center[1] - radius),
                 (center[0] + radius, center[1] + radius),
             ]
         elif shape == "triangle":
-            return [
+            vertices = [
                 (center[0], center[1] - radius),
                 (center[0] - radius, center[1] + radius),
                 (center[0] + radius, center[1] + radius),
             ]
         elif shape == "square":
-            return [
+            vertices = [
                 (center[0] - radius, center[1] - radius),
                 (center[0] + radius, center[1] - radius),
                 (center[0] + radius, center[1] + radius),
                 (center[0] - radius, center[1] + radius),
             ]
         elif shape == "star":
-            return self.create_star_vertices(center, radius)
+            vertices = self.create_star_vertices(center, radius)
         else:
             raise ValueError(f"Shape {shape} not implemented.")
+        
+        # Apply rotation
+        if rotation_angle != 0 and shape != "circle":
+            vertices = self.rotate_vertices(vertices, center, rotation_angle)
+        
+        return vertices
 
     def draw_shape(self, shape: str, surface: int, colour: str, jitter: bool = False):
         """Draws a single shape on an image and saves it to the appropriate directory."""
@@ -218,21 +265,27 @@ class ShapesGenerator(BaseGenerator):
         # Calculate jitter metadata for image filename
         distance = int(np.sqrt(dist_x**2 + dist_y**2))
         angle = int((np.arctan2(dist_y, dist_x) / np.pi + 1) * 180)
+        
+        # Generate random rotation if enabled
+        rotation = 0
+        if self.random_rotation:
+            rotation = random.randint(self.min_rotation, self.max_rotation)
 
-        vertices = self.get_vertices(shape, center, radius)
+        vertices = self.get_vertices(shape, center, radius, rotation)
         if shape == "circle":
             canvas.draw_ellipse(vertices, fill=colour)
         else:
             canvas.draw_polygon(vertices, fill=colour)
 
-        return canvas.img, distance, angle  
+        return canvas.img, distance, angle, rotation  
 
-    def save_image(self, image, shape, surface, dist_from_center, angle, it, path):
+    def save_image(self, image, shape, surface, dist_from_center, angle, it, path, rotation=0):
+        ext = get_file_extension(self.img_format)
         file_path = os.path.join(
             path,
-            f"{shape}_{surface}_{dist_from_center}_{angle}_{it}.png",
+            f"{shape}_{surface}_{dist_from_center}_{angle}_{rotation}_{it}.{ext}",
         )
-        image.save(file_path)
+        save_image(image, file_path, self.img_format)
 
     def generate_images(self):
         """Generate all images for training and testing using unified planner."""
@@ -265,7 +318,7 @@ class ShapesGenerator(BaseGenerator):
                 color_code = self.colors[color_name]
                 
                 # Generate image
-                image, dist, angle = self.draw_shape(shape, surface, color_code, self.jitter)
+                image, dist, angle, rotation = self.draw_shape(shape, surface, color_code, self.jitter)
                 
                 # Determine save path based on task type
                 if self.task_type == "two_shapes":
@@ -276,6 +329,6 @@ class ShapesGenerator(BaseGenerator):
                     class_name = f"{shape}_{color_name}"
                     path = self.img_paths[f"{phase}_{class_name}"]
                 
-                self.save_image(image, shape, surface, dist, angle, rep, path)
+                self.save_image(image, shape, surface, dist, angle, rep, path, rotation)
             
             self.write_summary_if_enabled(plan, phase)

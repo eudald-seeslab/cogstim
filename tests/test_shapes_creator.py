@@ -19,14 +19,17 @@ def test_draw_shape_circle():
             min_surface=10000,
             max_surface=10001,
             background_colour="black",
+            seed=None,
+            random_rotation=False,
+            img_format="png",
         )
-        img, dist, angle = sg.draw_shape("circle", 10000, COLOUR_MAP["yellow"], jitter=False)
+        img, dist, angle, rotation = sg.draw_shape("circle", 10000, COLOUR_MAP["yellow"], jitter=False)
 
         # Basic sanity checks
         assert img.size == (512, 512)
         assert 0 <= dist <= 124  # within max jitter range used in code
         assert 0 <= angle <= 360
-
+        assert rotation == 0
 
 def test_shapes_generator_directory_two_shapes():
     """Test directory creation for two_shapes task type."""
@@ -41,6 +44,9 @@ def test_shapes_generator_directory_two_shapes():
         min_surface=1000,
         max_surface=2000,
         background_colour="black",
+        seed=None,
+        random_rotation=False,
+        img_format="png",
     )
 
     assert sg.output_dir == "images/two_shapes"
@@ -59,6 +65,9 @@ def test_shapes_generator_directory_two_colors():
         min_surface=1000,
         max_surface=2000,
         background_colour="black",
+        seed=None,
+        random_rotation=False,
+        img_format="png",
     )
 
     assert sg.output_dir == "images/two_colors"
@@ -77,6 +86,9 @@ def test_shapes_generator_directory_custom():
         min_surface=1000,
         max_surface=2000,
         background_colour="black",
+        seed=None,
+        random_rotation=False,
+        img_format="png",
     )
 
     assert sg.output_dir == "images/circle_triangle_red_blue"
@@ -95,6 +107,9 @@ def test_shapes_generator_directory_explicit():
         min_surface=1000,
         max_surface=2000,
         background_colour="black",
+        seed=None,
+        random_rotation=False,
+        img_format="png",
     )
 
     assert sg.output_dir == "/custom/path"
@@ -114,6 +129,9 @@ def test_create_dirs_two_shapes():
             min_surface=1000,
             max_surface=2000,
             background_colour="black",
+            seed=None,
+            random_rotation=False,
+            img_format="png",
         )
 
         sg.setup_directories()
@@ -148,6 +166,9 @@ def test_create_dirs_two_colors():
             min_surface=1000,
             max_surface=2000,
             background_colour="black",
+            seed=None,
+            random_rotation=False,
+            img_format="png",
         )
 
         sg.setup_directories()
@@ -187,6 +208,9 @@ def test_get_vertices_invalid_shape():
         min_surface=1000,
         max_surface=2000,
         background_colour="black",
+        seed=None,
+        random_rotation=False,
+        img_format="png",
     )
 
     with pytest.raises(ValueError, match="Shape invalid not implemented"):
@@ -207,6 +231,9 @@ def test_generate_images_two_colors():
             min_surface=1000,
             max_surface=1001,  # Single surface value
             background_colour="black",
+            seed=None,
+            random_rotation=False,
+            img_format="png",
         )
 
         # Mock the save_image method to avoid actual file I/O

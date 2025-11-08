@@ -21,6 +21,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -38,6 +39,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -55,6 +57,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -73,6 +76,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "img_format": "png",
         }
 
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -91,6 +95,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -109,6 +114,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -131,6 +137,7 @@ class TestPointsGeneratorOneColourMode:
             "ONE_COLOUR": True,
             "min_point_num": 1,
             "max_point_num": 5,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -152,6 +159,7 @@ class TestPointsGeneratorOneColourMode:
             "ONE_COLOUR": True,
             "min_point_num": 1,
             "max_point_num": 3,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -175,6 +183,7 @@ class TestPointsGeneratorOneColourMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 3,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -202,6 +211,7 @@ class TestPointsGeneratorErrorHandling:
             "ONE_COLOUR": True,
             "min_point_num": 1,
             "max_point_num": 1,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -225,6 +235,7 @@ class TestPointsGeneratorErrorHandling:
             "colour_1": "yellow",
             "min_point_num": 1,
             "max_point_num": 1,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -257,6 +268,7 @@ class TestPointsGeneratorErrorHandling:
             "colour_2": "blue",
             "min_point_num": 1,
             "max_point_num": 1,
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs'):
@@ -291,6 +303,7 @@ class TestPointsGeneratorDirectorySetup:
             "ratios": "all",
             "ONE_COLOUR": True,
             "colour_1": "yellow",
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs') as mock_makedirs:
@@ -316,6 +329,7 @@ class TestPointsGeneratorDirectorySetup:
             "ONE_COLOUR": False,
             "colour_1": "yellow",
             "colour_2": "blue",
+            "img_format": "png",
         }
         
         with patch('cogstim.generators.dots_ans.os.makedirs') as mock_makedirs:

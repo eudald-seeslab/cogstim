@@ -11,7 +11,7 @@ authors:
     orcid: 0000-0001-8556-0469
     affiliation: 1
 affiliations:
-  - name: Innovamat Educaiton SL, Barcelona, Catalonia (Spain)
+  - name: Innovamat Education, Barcelona, Catalonia (Spain)
     index: 1
 date: 2025-11-08
 bibliography: paper.bib
@@ -19,7 +19,7 @@ bibliography: paper.bib
 
 # Summary
 
-**CogStim** is a Python library to generate *reproducible*, parameterized image datasets of visual stimuli for research in cognitive science, neuroscience, psychophysics, and machine learning. It produces images for common experimental paradigms – including two-colour dot arrays for Approximate Number System (ANS) numerosity tasks, single-colour dot arrays, match-to-sample (MTS) pairs with optional area equalization, geometric shapes, oriented line/stripe patterns, and fixation targets – and organizes outputs into standard `train/` and `test/` directories by class. A unified Python API and a comprehensive CLI enable deterministic generation via random seeds, facilitating transparent, replicable pipelines and dataset versioning.
+CogStim is an open‑source Python library for reproducible, parameterized offline generation of visual stimuli for psychology, neuroscience, and computer vision. It produces PNG/JPEG/SVG assets for common paradigms (two‑colour ANS arrays, match‑to‑sample pairs with optional total‑area equalization, single‑colour dot arrays, geometric shapes, oriented lines/stripes, and fixation targets). Deterministic seeding and robust geometric routines enforce non‑overlap, boundary validity, and equalization to minimise perceptual confounds. A compact Python API and command‑line interface make the tool accessible to both programmers and non‑programmers, enabling quick creation of controlled stimuli without special setup.
 
 # Statement of need
 
@@ -54,18 +54,12 @@ General‑purpose experiment frameworks such as PsychoPy, Psychtoolbox, and jsPs
 - **Stimulus equalization algorithms**: CogStim implements robust geometric equalization methods that adjust dot radii so that total surface areas are matched either within two-colour ANS arrays or between sample–match pairs. These procedures guarantee perceptually fair stimuli for numerosity and matching tasks, maintaining non-overlap and boundary validity while achieving precise area ratios within configurable tolerances.
 - **CLI & Python API**: consistent configuration via dictionaries in code and ergonomic subcommands in the CLI.
 
-##Implementation and dependencies
-CogStim is implemented in Python (≥3.10) [@python] and builds upon a small number of widely used open-source libraries. Image creation and drawing operations are handled through Pillow [@clark2015pillow], while all geometric computations and randomization routines rely on NumPy [@harris2020array]. The library uses tqdm [@tqdm] to provide progress bars processes and adopts standard Python modules such as argparse for command-line interfaces and pytest for automated testing.
+## Implementation and dependencies
+CogStim is implemented in Python (≥3.10) [@python] and builds upon a small number of widely used open-source libraries. Image creation and drawing operations are handled through Pillow [@clark2015pillow], while all geometric computations and randomization routines rely on NumPy [@harris2020array]. The library uses tqdm [@tqdm] to provide progress bars during generation processes and adopts standard Python modules such as argparse for command-line interfaces and pytest for automated testing.
 
 The codebase is organized around a small set of generator classes that call these dependencies through a unified interface. Each generator defines the parameters of a particular task (e.g., ANS, match-to-sample, shapes, lines, fixation) and uses Pillow for rendering, NumPy for geometric calculations, and tqdm for user feedback. This results in a lightweight, portable implementation that can run on any system supporting Python without special dependencies or graphical backends.
 
-All dependencies are open source, actively maintained, and available through the Python Package Index (PyPI), ensuring long-term accessibility and compatibility with typical research workflows.
-
-## Implementation & dependencies
-- **Language**: Python (≥3.10)  
-- **Core deps**: Pillow (image generation), NumPy (numerics), tqdm (progress).  
-- **License**: MIT (OSI-compliant).  
-- **Repository**: public Git repository with browsable source and open issue tracker.
+All dependencies are open source, actively maintained, and available through the Python Package Index (PyPI), ensuring long-term accessibility and compatibility with typical research workflows. The project is licensed under MIT, and available as a Git repository in Github.
 
 
 ## Example figures

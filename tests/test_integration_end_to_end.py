@@ -732,7 +732,6 @@ class TestSeedDeterminism:
         """Test that ANS generation with same seed produces identical images."""
         test_images_dir = get_test_images_dir()
         
-        # Generate images with seed=1234 (first run)
         config1 = {
             **ANS_GENERAL_CONFIG,
             "train_num": 1,

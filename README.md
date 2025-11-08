@@ -29,6 +29,10 @@ pip install cogstim
 - **[Recipes](docs/recipes.md)** – Copy-paste commands for common goals
 - **[FAQ](docs/faq.md)** – Troubleshooting and common questions
 
+### For LLM/AI Agents
+
+- **[LLM Documentation](docs/LLM_DOCUMENTATION.md)** – Single-file comprehensive documentation optimized for feeding to Large Language Models (Context + Architecture + API Reference)
+
 ## Command-line interface
 
 CogStim provides a simple command-line interface with task-specific subcommands:

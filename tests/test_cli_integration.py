@@ -40,6 +40,7 @@ def test_cli_shapes_subcommand(tmp_path):
         "--max-surface", 10001,
         "--no-jitter",
         "--output-dir", str(tmp_path),
+        "--version-tag", "",
     ]
     
     _run_cli_with_args(cli_args)
@@ -57,6 +58,7 @@ def test_cli_colours_subcommand(tmp_path):
         "--shape", "circle",
         "--colours", "yellow", "blue",
         "--output-dir", str(tmp_path),
+        "--version-tag", "",
     ]
     
     _run_cli_with_args(cli_args)
@@ -75,6 +77,7 @@ def test_cli_ans_subcommand(tmp_path):
         "--min-point-num", 1,
         "--max-point-num", 2,
         "--output-dir", str(tmp_path),
+        "--version-tag", "",
     ]
     
     _run_cli_with_args(cli_args)
@@ -93,6 +96,7 @@ def test_cli_one_colour_subcommand(tmp_path):
         "--max-point-num", 2,
         "--dot-colour", "yellow",
         "--output-dir", str(tmp_path),
+        "--version-tag", "",
     ]
     
     _run_cli_with_args(cli_args)
@@ -136,6 +140,7 @@ def test_cli_lines_subcommand(tmp_path):
         "--max-stripes", 2,
         "--img-size", 128,
         "--output-dir", str(tmp_path),
+        "--version-tag", "",
     ]
     
     _run_cli_with_args(cli_args)
@@ -192,6 +197,7 @@ def test_cli_custom_subcommand(tmp_path):
         "--min-surface", 1000,
         "--max-surface", 2000,
         "--output-dir", str(tmp_path),
+        "--version-tag", "",
     ]
     
     _run_cli_with_args(cli_args)
@@ -206,6 +212,7 @@ def test_cli_demo_mode(tmp_path):
         "shapes",
         "--demo",
         "--output-dir", str(tmp_path),
+        "--version-tag", "",
     ]
     
     _run_cli_with_args(cli_args)
@@ -267,6 +274,7 @@ def test_cli_quiet_mode(tmp_path, capsys):
         "--test-num", 0,
         "--quiet",
         "--output-dir", str(tmp_path),
+        "--version-tag", "",
     ]
     
     _run_cli_with_args(cli_args)

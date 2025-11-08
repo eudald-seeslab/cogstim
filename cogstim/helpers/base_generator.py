@@ -121,6 +121,73 @@ class BaseGenerator(ABC):
         if self.config.get("summary", False):
             phase_output_dir = os.path.join(self.output_dir, phase)
             plan.write_summary_csv(phase_output_dir)
-
-
-
+    
+    def get_img_format(self) -> str:
+        """
+        Get image format from configuration.
+        
+        Returns:
+            str: Image format (e.g., 'png', 'jpeg', 'jpg').
+        """
+        return self.config["img_format"].lower()
+    
+    def _get_file_extension(self, img_format: str) -> str:
+        """
+        Convert image format to file extension.
+        
+        Args:
+            img_format: Image format (e.g., 'png', 'jpeg', 'jpg', 'bmp', 'tiff')
+        
+        Returns:
+            str: File extension (e.g., 'png', 'jpg', 'bmp', 'tiff')
+        """
+        return "jpg" if img_format == "jpeg" else img_format
+    
+    def save_image(self, img, filename_without_ext: str, *subdirs):
+        """
+        Save an image to disk with proper path construction and format handling.
+        
+        This method handles all image saving operations, including:
+        - Path construction from output_dir + subdirectories + filename
+        - Format conversion (jpeg → jpg extension)
+        - Normalization of different image types to PIL Image
+        - Actual file saving with appropriate format parameters
+        
+        Args:
+            img: Image to save. Can be:
+                 - PIL Image
+                 - ImageCanvas wrapper
+                 - DotsCore instance (uses its canvas attribute)
+            filename_without_ext: Filename without extension (e.g., "img_5_0_v1")
+            *subdirs: Variable number of subdirectory names to construct the path
+                     Example: save_image(img, "file", "train", "5") 
+                              → output_dir/train/5/file.png
+        
+        Example:
+            self.save_image(img, "img_5_0", "train", "yellow")
+            # Saves to: output_dir/train/yellow/img_5_0.png
+        """
+        # Get format and extension
+        img_format = self.get_img_format()
+        ext = self._get_file_extension(img_format)
+        
+        # Build complete file path
+        filename = f"{filename_without_ext}.{ext}"
+        path = os.path.join(self.output_dir, *subdirs, filename)
+        
+        # Normalize image to PIL Image
+        if hasattr(img, 'canvas') and hasattr(img, 'draw_points'):
+            # DotsCore instance
+            pil_img = img.canvas.img
+        elif hasattr(img, '_img'):
+            # ImageCanvas wrapper
+            pil_img = img._img
+        else:
+            # Already a PIL Image
+            pil_img = img
+        
+        # Save with appropriate format
+        if img_format in ["jpg", "jpeg"]:
+            pil_img.save(path, format="JPEG", quality=95)
+        else:
+            pil_img.save(path, format=img_format.upper())

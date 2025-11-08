@@ -214,7 +214,8 @@ class TestOneColourImageGenerator:
             mock_np_instance.fix_total_area.assert_called_once_with([], valid_total_area)
 
     @patch('cogstim.generators.dots_one_colour.DotsOneColourGenerator.create_image')
-    def test_create_and_save_once(self, mock_create_image):
+    @patch('cogstim.generators.dots_one_colour.DotsOneColourGenerator.save_image')
+    def test_create_and_save_once(self, mock_save_image, mock_create_image):
         """Test create_and_save_once method."""
         config = {
             "min_point_num": 1,
@@ -237,19 +238,15 @@ class TestOneColourImageGenerator:
         mock_image = MagicMock(spec=Image.Image)
         mock_create_image.return_value = mock_image
 
-        with patch('os.makedirs'), patch.object(mock_image, "save") as mock_save:
+        with patch('os.makedirs'):
             generator = DotsOneColourGenerator(config)
-            generator.create_and_save_once("test.png", 3, "train")
+            generator.create_and_save_once("test", 3, "train")
 
             # Should call create_image
             mock_create_image.assert_called_once_with(3)
 
-            # Should save image to correct path (now with phase)
-            expected_path = os.path.join("/tmp/test", "train", "3", "test.png")
-            mock_save.assert_called_once()
-            # assert that 'expected_path' is among the call arguments
-            called_path = mock_save.call_args[0][0]
-            assert called_path == expected_path
+            # Should call save_image with correct arguments
+            mock_save_image.assert_called_once_with(mock_image, "test", "train", "3")
 
     def test_generate_images(self):
         """Test generate_images method."""

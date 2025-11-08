@@ -11,7 +11,7 @@ from cogstim.helpers.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS
 from cogstim.helpers.planner import GenerationPlan
 from cogstim.helpers.dots_core import DotsCore
 from cogstim.helpers.mts_geometry import equalize_pair as geometry_equalize_pair
-from cogstim.helpers.mts_io import save_image_pair, save_pair_with_basename
+from cogstim.generators.match_to_sample import save_image_pair, build_basename
 
 
 class TestMatchToSampleGenerator:
@@ -208,45 +208,42 @@ class TestHelperFunctions:
         m_np = MagicMock()
         s_points = [((100, 100, 10), "colour_1")]
         m_points = [((200, 200, 15), "colour_1")]
+        
+        # Create mock generator with save_image method
+        mock_generator = MagicMock()
+        mock_generator.save_image = MagicMock()
 
-        with patch('cogstim.helpers.mts_io.save_image') as mock_save_image:
-            save_image_pair(s_np, s_points, m_np, m_points, "/tmp", "test", "png")
-            s_np.draw_points.assert_called_once_with(s_points)
-            m_np.draw_points.assert_called_once_with(m_points)
-            
-            # Verify save_image was called twice (once for sample, once for match)
-            assert mock_save_image.call_count == 2
-            
-            # Verify the calls with correct paths and format
-            calls = mock_save_image.call_args_list
-            assert calls[0][0][1] == "/tmp/test_s.png"
-            assert calls[0][0][2] == "png"
-            assert calls[1][0][1] == "/tmp/test_m.png"
-            assert calls[1][0][2] == "png"
+        save_image_pair(mock_generator, s_np, s_points, m_np, m_points, "test", "train")
+        s_np.draw_points.assert_called_once_with(s_points)
+        m_np.draw_points.assert_called_once_with(m_points)
+        
+        # Verify generator.save_image was called twice (once for sample, once for match)
+        assert mock_generator.save_image.call_count == 2
+        
+        # Verify the calls with correct filenames and subdirs
+        calls = mock_generator.save_image.call_args_list
+        assert calls[0][0][1] == "test_s"  # filename for sample
+        assert calls[0][0][2] == "train"   # subdirs
+        assert calls[1][0][1] == "test_m"  # filename for match
+        assert calls[1][0][2] == "train"   # subdirs
 
-    def test_save_pair_with_basename(self):
-        """Test save_pair_with_basename function."""
-        s_np = MagicMock()
-        s_points = [((100, 100, 10), "colour_1")]
-        m_np = MagicMock()
-        m_points = [((200, 200, 15), "colour_1")]
-        pair = (s_np, s_points, m_np, m_points)
-        with patch('cogstim.helpers.mts_io.save_image_pair') as mock_save:
-            save_pair_with_basename(pair, "/tmp", "test", "png")
-            # Instead of assert_called_once_with (which is strict about argument identity),
-            # check call arguments match expected values by value.
-            called = mock_save.call_args
-            assert called is not None
-            # Compare arguments using equality, not strict identity
-            args = called[0]
-            kwargs = called[1]
-            assert args[0] is s_np
-            assert args[1] == s_points
-            assert args[2] is m_np
-            assert args[3] == m_points
-            assert args[4] == "/tmp"
-            assert args[5] == "test"
-            assert args[6] == "png"
+    def test_build_basename(self):
+        """Test build_basename function."""
+        # Test basic case
+        result = build_basename(5, 3, 0, False)
+        assert result == "img_5_3_0"
+        
+        # Test with equalized
+        result = build_basename(5, 3, 1, True)
+        assert result == "img_5_3_1_equalized"
+        
+        # Test with version tag
+        result = build_basename(5, 3, 2, False, "v1")
+        assert result == "img_5_3_2_v1"
+        
+        # Test with both
+        result = build_basename(5, 3, 3, True, "v2")
+        assert result == "img_5_3_3_equalized_v2"
 
 
 class TestMatchToSampleIntegration:

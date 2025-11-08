@@ -1,38 +1,43 @@
+#!/usr/bin/env python3
+"""
+Summary writer for image generation statistics.
+
+This module provides a CSV writer for recording statistics about
+generated image pairs and other generation metadata.
+"""
+
 import os
 import csv
 
-from cogstim.helpers.image_utils import get_file_extension, save_image
-
-
-def save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name, img_format):
-    s_np.draw_points(s_points)
-    m_np.draw_points(m_points)
-    
-    ext = get_file_extension(img_format)
-    s_path = os.path.join(output_dir, f"{base_name}_s.{ext}")
-    m_path = os.path.join(output_dir, f"{base_name}_m.{ext}")
-    
-    save_image(s_np, s_path, img_format)
-    save_image(m_np, m_path, img_format)
-
-
-def save_pair_with_basename(pair, output_dir, base_name, img_format):
-    s_np, s_points, m_np, m_points = pair
-    save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name, img_format)
-
-
-def build_basename(n1: int, n2: int, rep: int, equalized: bool, version_tag: str | None = None) -> str:
-    eq = "_equalized" if equalized else ""
-    v_tag = f"_{version_tag}" if version_tag else ""
-    return f"img_{n1}_{n2}_{rep}{eq}{v_tag}"
-
 
 class SummaryWriter:
+    """
+    Writer for image pair summary statistics.
+    
+    Records information about image pairs and writes to CSV.
+    """
+    
     def __init__(self, output_dir: str):
+        """
+        Initialize summary writer.
+        
+        Args:
+            output_dir: Directory to write summary.csv to
+        """
         self.output_dir = output_dir
         self.rows = []
 
     def add(self, num1, num2, area1_px, area2_px, equalized):
+        """
+        Add a row of statistics for an image pair.
+        
+        Args:
+            num1: Number of dots in first array
+            num2: Number of dots in second array
+            area1_px: Total area of first array in pixels
+            area2_px: Total area of second array in pixels
+            equalized: Whether areas were equalized
+        """
         ratio = num1 / num2 if num2 != 0 else 0
         abs_diff_px = abs(area1_px - area2_px)
         denom = max(area1_px, area2_px, 1)
@@ -49,6 +54,12 @@ class SummaryWriter:
         ])
 
     def write_csv(self, filename: str = "summary.csv"):
+        """
+        Write accumulated statistics to CSV file.
+        
+        Args:
+            filename: Name of CSV file (default: summary.csv)
+        """
         if not self.rows:
             return
         os.makedirs(self.output_dir, exist_ok=True)
@@ -67,3 +78,4 @@ class SummaryWriter:
             ])
             writer.writerows(self.rows)
         print(f"Summary written to: {target_path}")
+

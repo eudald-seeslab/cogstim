@@ -21,6 +21,7 @@ def test_draw_shape_circle():
             background_colour="black",
             seed=None,
             random_rotation=False,
+            version_tag="",
             img_format="png",
         )
         img, dist, angle, rotation = sg.draw_shape("circle", 10000, COLOUR_MAP["yellow"], jitter=False)
@@ -46,6 +47,7 @@ def test_shapes_generator_directory_two_shapes():
         background_colour="black",
         seed=None,
         random_rotation=False,
+        version_tag="",
         img_format="png",
     )
 
@@ -67,6 +69,7 @@ def test_shapes_generator_directory_two_colors():
         background_colour="black",
         seed=None,
         random_rotation=False,
+        version_tag="",
         img_format="png",
     )
 
@@ -88,6 +91,7 @@ def test_shapes_generator_directory_custom():
         background_colour="black",
         seed=None,
         random_rotation=False,
+        version_tag="",
         img_format="png",
     )
 
@@ -109,6 +113,7 @@ def test_shapes_generator_directory_explicit():
         background_colour="black",
         seed=None,
         random_rotation=False,
+        version_tag="",
         img_format="png",
     )
 
@@ -131,6 +136,7 @@ def test_create_dirs_two_shapes():
             background_colour="black",
             seed=None,
             random_rotation=False,
+            version_tag="",
             img_format="png",
         )
 
@@ -168,6 +174,7 @@ def test_create_dirs_two_colors():
             background_colour="black",
             seed=None,
             random_rotation=False,
+            version_tag="",
             img_format="png",
         )
 
@@ -210,6 +217,7 @@ def test_get_vertices_invalid_shape():
         background_colour="black",
         seed=None,
         random_rotation=False,
+        version_tag="",
         img_format="png",
     )
 
@@ -233,14 +241,15 @@ def test_generate_images_two_colors():
             background_colour="black",
             seed=None,
             random_rotation=False,
+            version_tag="",
             img_format="png",
         )
 
-        # Mock the save_image method to avoid actual file I/O
-        with patch.object(sg, 'save_image') as mock_save:
+        # Mock the save_shape_image method to avoid actual file I/O
+        with patch.object(sg, 'save_shape_image') as mock_save:
             sg.generate_images()
 
-            # Should call save_image for each color × each phase × each surface
+            # Should call save_shape_image for each color × each phase × each surface
             # 2 colors × 2 phases × 1 surface = 4 calls
             assert mock_save.call_count == 4
 

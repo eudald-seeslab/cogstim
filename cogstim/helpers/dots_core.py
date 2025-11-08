@@ -259,6 +259,3 @@ class DotsCore:
             if not self._check_points_not_overlapping(pair[0][0], pair[1][0]):
                 return False
         return True
-
-    def save(self, path):
-        self.canvas.save(path)

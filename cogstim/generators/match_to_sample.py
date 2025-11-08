@@ -4,7 +4,6 @@ from tqdm import tqdm
 from cogstim.helpers.dots_core import DotsCore
 from cogstim.helpers.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS, MTS_DEFAULTS, IMAGE_DEFAULTS
 from cogstim.helpers.mts_geometry import equalize_pair as _equalize_geom
-from cogstim.helpers.mts_io import save_image_pair, build_basename
 from cogstim.helpers.planner import GenerationPlan, resolve_ratios
 from cogstim.helpers.base_generator import BaseGenerator
 
@@ -15,6 +14,48 @@ GENERAL_CONFIG = {
     "ratios": "all",
     "init_size": IMAGE_DEFAULTS["init_size"],
 }
+
+
+def save_image_pair(generator, s_np, s_points, m_np, m_points, base_name, *subdirs):
+    """
+    Save a pair of images (sample and match) using a generator's save method.
+    
+    Args:
+        generator: BaseGenerator instance with save_image method
+        s_np: DotsCore instance for sample image
+        s_points: Point array for sample image
+        m_np: DotsCore instance for match image
+        m_points: Point array for match image
+        base_name: Base filename without extension
+        *subdirs: Subdirectories under output_dir to save to
+    """
+    s_np.draw_points(s_points)
+    m_np.draw_points(m_points)
+    
+    s_filename = f"{base_name}_s"
+    m_filename = f"{base_name}_m"
+    
+    generator.save_image(s_np, s_filename, *subdirs)
+    generator.save_image(m_np, m_filename, *subdirs)
+
+
+def build_basename(n1: int, n2: int, rep: int, equalized: bool, version_tag: str | None = None) -> str:
+    """
+    Build a standard basename for image pairs.
+    
+    Args:
+        n1: Number of dots in first array
+        n2: Number of dots in second array
+        rep: Repetition/iteration number
+        equalized: Whether areas are equalized
+        version_tag: Optional version tag to append
+    
+    Returns:
+        Basename string like "img_5_3_0_equalized_v1"
+    """
+    eq = "_equalized" if equalized else ""
+    v_tag = f"_{version_tag}" if version_tag else ""
+    return f"img_{n1}_{n2}_{rep}{eq}{v_tag}"
 
 
 class MatchToSampleGenerator(BaseGenerator):
@@ -73,9 +114,7 @@ class MatchToSampleGenerator(BaseGenerator):
     def save_image_pair(self, pair, base_name, phase="train"):
         """Save a pair of images."""
         s_np, s_points, m_np, m_points = pair
-        output_dir = os.path.join(self.config["output_dir"], phase)
-        img_format = self.config["img_format"]
-        save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name, img_format)
+        save_image_pair(self, s_np, s_points, m_np, m_points, base_name, phase)
     
     def create_and_save(self, n1, n2, equalize, tag, phase="train"):
         """Create and save a pair of images."""

@@ -42,6 +42,7 @@ class TestANSImageGeneration:
             "dot_colour": "black",
             "min_point_radius": 8,
             "max_point_radius": 12,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -101,6 +102,7 @@ class TestANSImageGeneration:
             "dot_colour": "black",
             "min_point_radius": 6,
             "max_point_radius": 10,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -146,6 +148,7 @@ class TestANSImageGeneration:
             "dot_colour": "red",
             "min_point_radius": 10,
             "max_point_radius": 15,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -194,6 +197,7 @@ class TestMatchToSampleImageGeneration:
             "max_radius": 12,
             "tolerance": 0.01,
             "attempts_limit": 1000,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -249,6 +253,7 @@ class TestMatchToSampleImageGeneration:
             "max_radius": 10,
             "tolerance": 0.005,  # Stricter tolerance
             "attempts_limit": 2000,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -292,6 +297,7 @@ class TestMatchToSampleImageGeneration:
             "max_radius": 15,
             "tolerance": 0.01,
             "attempts_limit": 1000,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -343,6 +349,7 @@ class TestShapesImageGeneration:
             background_colour="white",
             seed=None,
             random_rotation=False,
+            version_tag="",
             img_format="png",
         )
         generator.generate_images()
@@ -387,6 +394,7 @@ class TestLinesImageGeneration:
             "max_attempts": 1000,  # Increased attempts
             "tag": "test",
             "background_colour": "#000000",  # Black background
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -433,6 +441,7 @@ class TestFixationImageGeneration:
             "background_colour": "white",
             "symbol_colour": "black",
             "tag": "test",
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -476,6 +485,7 @@ class TestCLIIntegration:
             "--max-point-num", "4",
             "--ratios", "easy",
             "--output-dir", str(test_images_dir / "cli_ans"),
+            "--version-tag", "",
             "--img-format", "png",
         ]
         
@@ -515,6 +525,7 @@ class TestCLIIntegration:
             "--max-point-num", "4",
             "--ratios", "easy",
             "--output-dir", str(test_images_dir / "cli_mts"),
+            "--version-tag", "",
             "--img-format", "png",
         ]
         
@@ -549,6 +560,7 @@ class TestCLIIntegration:
             "--min-point-num", "2",
             "--max-point-num", "4",
             "--output-dir", str(test_images_dir / "cli_one_colour"),
+            "--version-tag", "",
             "--img-format", "png",
         ]
         
@@ -589,6 +601,7 @@ class TestImageProperties:
                 "colour_1": "blue",
                 "min_point_num": 2,
                 "max_point_num": 4,
+                "version_tag": "",
                 "img_format": "png",
             },
             {
@@ -599,6 +612,7 @@ class TestImageProperties:
                 "ratios": "easy",
                 "min_point_num": 2,
                 "max_point_num": 4,
+                "version_tag": "",
                 "img_format": "png",
             },
         ]
@@ -640,6 +654,7 @@ class TestImageProperties:
             "colour_1": "red",
             "min_point_num": 2,
             "max_point_num": 8,
+            "version_tag": "",
             "img_format": "png",
         }
 
@@ -683,6 +698,7 @@ class TestImageProperties:
             "ratios": "easy",
             "min_point_num": 2,
             "max_point_num": 4,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -730,6 +746,7 @@ class TestSeedDeterminism:
             "background_colour": "white",
             "dot_colour": "black",
             "seed": 42,
+            "version_tag": "",
         }
         
         generator1 = DotsANSGenerator(config1)
@@ -749,6 +766,7 @@ class TestSeedDeterminism:
             "dot_colour": "black",
             "seed": 42,
             "img_format": "png",
+            "version_tag": "",
         }
         
         generator2 = DotsANSGenerator(config2)
@@ -793,6 +811,7 @@ class TestSeedDeterminism:
             "seed": 123,
             "random_rotation": False,
             "img_format": "png",
+            "version_tag": "",
         }
         
         generator1 = ShapesGenerator(**config1)
@@ -813,6 +832,7 @@ class TestSeedDeterminism:
             "seed": 123,
             "random_rotation": False,
             "img_format": "png",
+            "version_tag": "",
         }
         
         generator2 = ShapesGenerator(**config2)
@@ -856,6 +876,7 @@ class TestSeedDeterminism:
             "dot_colour": "black",
             "seed": 1,
             "img_format": "png",
+            "version_tag": "",
         }
         
         generator1 = DotsANSGenerator(config1)
@@ -875,6 +896,7 @@ class TestSeedDeterminism:
             "dot_colour": "black",
             "seed": 2,
             "img_format": "png",
+            "version_tag": "",
         }
         
         generator2 = DotsANSGenerator(config2)
@@ -922,6 +944,7 @@ class TestSeedDeterminism:
             "background_colour": "white",
             "dot_colour": "yellow",
             "img_format": "png",
+            "version_tag": "",
         }
         
         generator = DotsANSGenerator(config)

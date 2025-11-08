@@ -96,6 +96,7 @@ def build_shapes_config(args: argparse.Namespace) -> Dict[str, Any]:
         "min_rotation": args.min_rotation,
         "max_rotation": args.max_rotation,
         "img_format": args.img_format,
+        "version_tag": args.version_tag,
     }
     
 
@@ -122,6 +123,7 @@ def build_colours_config(args: argparse.Namespace) -> Dict[str, Any]:
         "min_rotation": args.min_rotation,
         "max_rotation": args.max_rotation,
         "img_format": args.img_format,
+        "version_tag": args.version_tag,
     }
 
 
@@ -144,6 +146,7 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
             "attempts_limit": args.attempts_limit,
             "seed": args.seed,
             "img_format": args.img_format,
+            "version_tag": args.version_tag,
         },
     }
 
@@ -177,6 +180,7 @@ def build_one_colour_config(args: argparse.Namespace) -> Dict[str, Any]:
             "colour_1": args.dot_colour,
             "colour_2": None,
             "img_format": args.img_format,
+            "version_tag": args.version_tag,
         },
     }
     
@@ -203,6 +207,7 @@ def build_mts_config(args: argparse.Namespace) -> Dict[str, Any]:
             "init_size": args.img_size,
             "seed": args.seed,
             "img_format": args.img_format,
+            "version_tag": args.version_tag,
         },
     }
     
@@ -233,6 +238,7 @@ def build_lines_config(args: argparse.Namespace) -> Dict[str, Any]:
         "background_colour": args.background_colour,
         "seed": args.seed,
         "img_format": args.img_format,
+        "version_tag": args.version_tag,
     }
 
 
@@ -257,9 +263,9 @@ def build_fixation_config(args: argparse.Namespace) -> Dict[str, Any]:
         "jitter_px": args.jitter_px,
         "background_colour": args.background_colour,
         "symbol_colour": args.symbol_colour,
-        "tag": getattr(args, 'tag', ''),
         "seed": args.seed,
         "img_format": args.img_format,
+        "version_tag": args.version_tag,
     }
 
 
@@ -285,6 +291,7 @@ def build_custom_config(args: argparse.Namespace) -> Dict[str, Any]:
         "random_rotation": args.random_rotation,
         "min_rotation": args.min_rotation,
         "max_rotation": args.max_rotation,
+        "version_tag": args.version_tag,
         "img_format": args.img_format,
     }
 

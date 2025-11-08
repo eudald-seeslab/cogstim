@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from cogstim.helpers.constants import COLOUR_MAP, IMAGE_DEFAULTS, SHAPE_DEFAULTS
 from cogstim.helpers.base_generator import BaseGenerator
-from cogstim.helpers.image_utils import ImageCanvas, get_file_extension, save_image
+from cogstim.helpers.image_utils import ImageCanvas
 from cogstim.helpers.planner import GenerationPlan
 
 
@@ -39,6 +39,7 @@ class ShapesGenerator(BaseGenerator):
         background_colour,
         seed,
         img_format,
+        version_tag,
         random_rotation,
         min_rotation=None,
         max_rotation=None,
@@ -77,6 +78,7 @@ class ShapesGenerator(BaseGenerator):
             'min_rotation': min_rotation,
             'max_rotation': max_rotation,
             'img_format': img_format,
+            'version_tag': version_tag,
         }
         super().__init__(config)
         
@@ -94,7 +96,6 @@ class ShapesGenerator(BaseGenerator):
         self.random_rotation = random_rotation
         self.min_rotation = min_rotation
         self.max_rotation = max_rotation
-        self.img_format = img_format.lower()
         self.img_paths = {}
 
     def get_subdirectories(self):
@@ -277,15 +278,12 @@ class ShapesGenerator(BaseGenerator):
         else:
             canvas.draw_polygon(vertices, fill=colour)
 
-        return canvas.img, distance, angle, rotation  
-
-    def save_image(self, image, shape, surface, dist_from_center, angle, it, path, rotation=0):
-        ext = get_file_extension(self.img_format)
-        file_path = os.path.join(
-            path,
-            f"{shape}_{surface}_{dist_from_center}_{angle}_{rotation}_{it}.{ext}",
-        )
-        save_image(image, file_path, self.img_format)
+        return canvas.img, distance, angle, rotation
+    
+    def save_shape_image(self, image, shape, surface, dist_from_center, angle, it, rotation=0, *subdirs):
+        """Save a shape image with proper filename construction."""
+        filename = f"{shape}_{surface}_{dist_from_center}_{angle}_{rotation}_{it}"
+        self.save_image(image, filename, *subdirs)
 
     def generate_images(self):
         """Generate all images for training and testing using unified planner."""
@@ -320,15 +318,15 @@ class ShapesGenerator(BaseGenerator):
                 # Generate image
                 image, dist, angle, rotation = self.draw_shape(shape, surface, color_code, self.jitter)
                 
-                # Determine save path based on task type
+                # Determine save subdirectories based on task type
                 if self.task_type == "two_shapes":
-                    path = self.img_paths[f"{phase}_{shape}"]
+                    subdirs = (phase, shape)
                 elif self.task_type == "two_colors":
-                    path = self.img_paths[f"{phase}_{color_name}"]
+                    subdirs = (phase, color_name)
                 else:  # custom
                     class_name = f"{shape}_{color_name}"
-                    path = self.img_paths[f"{phase}_{class_name}"]
+                    subdirs = (phase, class_name)
                 
-                self.save_image(image, shape, surface, dist, angle, rep, path, rotation)
-            
+                self.save_shape_image(image, shape, surface, dist, angle, rep, rotation, *subdirs)
+
             self.write_summary_if_enabled(plan, phase)

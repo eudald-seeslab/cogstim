@@ -10,7 +10,6 @@ from tqdm import tqdm
 from cogstim.helpers.dots_core import DotsCore, PointLayoutError
 from cogstim.helpers.base_generator import BaseGenerator
 from cogstim.helpers.constants import IMAGE_DEFAULTS, DOT_DEFAULTS
-from cogstim.helpers.image_utils import get_file_extension, save_image
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -29,7 +28,6 @@ class DotsOneColourGenerator(BaseGenerator):
         self.nmin = self.config["min_point_num"]
         self.nmax = self.config["max_point_num"]
         self.total_area = self.config["total_area"]
-        self.img_format = self.config["img_format"]
         
         self._check_areas_make_sense()
 
@@ -84,30 +82,27 @@ class DotsOneColourGenerator(BaseGenerator):
         v_tag = f"_{self.config['version_tag']}" if self.config["version_tag"] else ""
         ac_tag = "_ac" if self.total_area is not None else ""
         
-        ext = get_file_extension(self.img_format)
-        name = f"img_{n}_{tag}{ac_tag}{v_tag}.{ext}"
+        filename = f"img_{n}_{tag}{ac_tag}{v_tag}"
 
         attempts = 0
         while attempts < self.config["attempts_limit"]:
             try:
-                self.create_and_save_once(name, n, phase)
+                self.create_and_save_once(filename, n, phase)
                 break
             except PointLayoutError as e:
-                logging.debug(f"Failed to create image {name} because '{e}' Retrying.")
+                logging.debug(f"Failed to create image {filename} because '{e}' Retrying.")
                 attempts += 1
 
                 if attempts == self.config["attempts_limit"]:
                     raise TerminalPointLayoutError(
-                        f"Failed to create image {name} after {attempts} attempts. "
+                        f"Failed to create image {filename} after {attempts} attempts. "
                         "Your points are probably too big, or there are too many. Stopping."
                     )
 
-    def create_and_save_once(self, name, n, phase):
+    def create_and_save_once(self, filename, n, phase):
         """Create and save a single image without retry logic."""
         img = self.create_image(n)
-        save_path = os.path.join(self.config["output_dir"], phase, str(n), name)
-        
-        save_image(img, save_path, self.img_format)
+        self.save_image(img, filename, phase, str(n))
 
     def generate_images(self):
         """Generate the full set of images based on configuration."""

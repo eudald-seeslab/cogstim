@@ -21,6 +21,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -39,6 +40,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -57,6 +59,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -76,6 +79,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "version_tag": "",
             "img_format": "png",
         }
 
@@ -95,6 +99,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -114,6 +119,7 @@ class TestPointsGeneratorRatiosMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 10,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -137,6 +143,7 @@ class TestPointsGeneratorOneColourMode:
             "ONE_COLOUR": True,
             "min_point_num": 1,
             "max_point_num": 5,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -159,6 +166,7 @@ class TestPointsGeneratorOneColourMode:
             "ONE_COLOUR": True,
             "min_point_num": 1,
             "max_point_num": 3,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -183,6 +191,7 @@ class TestPointsGeneratorOneColourMode:
             "ONE_COLOUR": False,
             "min_point_num": 1,
             "max_point_num": 3,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -211,6 +220,7 @@ class TestPointsGeneratorErrorHandling:
             "ONE_COLOUR": True,
             "min_point_num": 1,
             "max_point_num": 1,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -235,6 +245,7 @@ class TestPointsGeneratorErrorHandling:
             "colour_1": "yellow",
             "min_point_num": 1,
             "max_point_num": 1,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -268,6 +279,7 @@ class TestPointsGeneratorErrorHandling:
             "colour_2": "blue",
             "min_point_num": 1,
             "max_point_num": 1,
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -303,6 +315,7 @@ class TestPointsGeneratorDirectorySetup:
             "ratios": "all",
             "ONE_COLOUR": True,
             "colour_1": "yellow",
+            "version_tag": "",
             "img_format": "png",
         }
         
@@ -329,6 +342,7 @@ class TestPointsGeneratorDirectorySetup:
             "ONE_COLOUR": False,
             "colour_1": "yellow",
             "colour_2": "blue",
+            "version_tag": "",
             "img_format": "png",
         }
         

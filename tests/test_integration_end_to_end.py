@@ -732,7 +732,7 @@ class TestSeedDeterminism:
         """Test that ANS generation with same seed produces identical images."""
         test_images_dir = get_test_images_dir()
         
-        # Generate images with seed=42 (first run)
+        # Generate images with seed=1234 (first run)
         config1 = {
             **ANS_GENERAL_CONFIG,
             "train_num": 1,
@@ -745,14 +745,13 @@ class TestSeedDeterminism:
             "max_point_num": 4,
             "background_colour": "white",
             "dot_colour": "black",
-            "seed": 42,
+            "seed": 1234,
             "version_tag": "",
         }
         
         generator1 = DotsANSGenerator(config1)
         generator1.generate_images()
         
-        # Generate images with seed=42 (second run)
         config2 = {
             **ANS_GENERAL_CONFIG,
             "train_num": 1,
@@ -764,7 +763,7 @@ class TestSeedDeterminism:
             "max_point_num": 4,
             "background_colour": "white",
             "dot_colour": "black",
-            "seed": 42,
+            "seed": 1234,
             "img_format": "png",
             "version_tag": "",
         }

@@ -64,7 +64,7 @@ class TestMtsAreaReport:
             ("img_2_3_0_s.png", {"n": "2", "m": "3", "tag": "0", "eq": None}),
             ("img_4_5_10_equalized_s.png", {"n": "4", "m": "5", "tag": "10", "eq": "_equalized"}),
             ("img_1_1_test_s.png", {"n": "1", "m": "1", "tag": "test", "eq": None}),
-            ("img_6_8_42_equalized_s.png", {"n": "6", "m": "8", "tag": "42", "eq": "_equalized"}),
+            ("img_6_8_11_equalized_s.png", {"n": "6", "m": "8", "tag": "11", "eq": "_equalized"}),
         ]
         
         for filename, expected in valid_cases:

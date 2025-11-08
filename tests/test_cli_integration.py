@@ -244,7 +244,7 @@ def test_cli_with_seed(tmp_path):
         "shapes",
         "--train-num", 2,
         "--test-num", 0,
-        "--seed", 42,
+        "--seed", 1234,
         "--output-dir", str(tmp_path / "run1"),
     ]
     
@@ -252,7 +252,7 @@ def test_cli_with_seed(tmp_path):
         "shapes",
         "--train-num", 2,
         "--test-num", 0,
-        "--seed", 42,
+        "--seed", 1234,
         "--output-dir", str(tmp_path / "run2"),
     ]
     

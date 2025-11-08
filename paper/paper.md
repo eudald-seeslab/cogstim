@@ -42,14 +42,14 @@ The library is designed for: (i) behavioral and neuro‑cognitive tasks such as 
 
 General‑purpose experiment frameworks such as PsychoPy, Psychtoolbox, and jsPsych focus on stimulus presentation and timing during runtime, while various domain‑specific generators target single paradigms. CogStim complements these tools by producing offline, parameterized image assets that drop into any workflow with minimal setup. It emphasizes reproducibility through explicit seeding and systematic parameter sweeps, and it reduces perceptual confounds via robust non‑overlap placement, boundary checks, and stimulus equalization for numerosity and match‑to‑sample tasks. The library spans multiple paradigms (ANS, MTS, geometric shapes, oriented lines, fixation targets) and exports PNG, JPEG, and SVG for portability across experimental platforms and computer‑vision pipelines. A dual interface (command line and Python API), together with documentation tailored for LLM‑assisted use, makes it accessible to both programmers and non‑programmers and provides a clear template for extending to new stimulus classes.
 
-> This library has been used both for the creation of psychometric tests for children [@correig-fraga_development_2024] [@correig-fraga_interplay_2025], as well as for computer vision tasks [@correig-fraga_structure_nodate].
+This library has been used both for the creation of psychometric tests for children [@correig-fraga_development_2024] [@correig-fraga_interplay_2025], as well as for computer vision tasks [@correig-fraga_structure_nodate].
 
 # Software description
 
 ## Design and key features
 
 - **Task coverage**: ANS two-colour dot arrays; single-colour dot arrays; MTS pairs with optional area equalization; geometric shapes (circle, star, triangle, square); oriented line/stripe patterns; fixation targets.  
-- **Determinism & reproducibility**: global seed handling for Python/NumPy; same parameters + same seed ⇒ identical images.  
+- **Determinism & reproducibility**: global seed handling for Python/NumPy; same parameters and same seed will yield identical images.  
 - **Robust dot engine**: `DotsCore` enforces non-overlap, boundary validity, optional area equalization, and (for MTS) pair equalization within tolerances. 
 - **Stimulus equalization algorithms**: CogStim implements robust geometric equalization methods that adjust dot radii so that total surface areas are matched either within two-colour ANS arrays or between sample–match pairs. These procedures guarantee perceptually fair stimuli for numerosity and matching tasks, maintaining non-overlap and boundary validity while achieving precise area ratios within configurable tolerances.
 - **CLI & Python API**: consistent configuration via dictionaries in code and ergonomic subcommands in the CLI.

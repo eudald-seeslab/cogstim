@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Publishing DTD v1.2 20190208//EN"
+                  "JATS-publishing1.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" dtd-version="1.2" article-type="other">
+<front>
+<journal-meta>
+<journal-id></journal-id>
+<journal-title-group>
+<journal-title>Journal of Open Source Software</journal-title>
+<abbrev-journal-title>JOSS</abbrev-journal-title>
+</journal-title-group>
+<issn publication-format="electronic">2475-9066</issn>
+<publisher>
+<publisher-name>Open Journals</publisher-name>
+</publisher>
+</journal-meta>
+<article-meta>
+<article-id pub-id-type="publisher-id">0</article-id>
+<article-id pub-id-type="doi">N/A</article-id>
+<title-group>
+<article-title>CogStim: Reproducible visual stimulus generation for
+cognitive science, neuroscience, and vision research</article-title>
+</title-group>
+<contrib-group>
+<contrib contrib-type="author">
+<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0001-8556-0469</contrib-id>
+<name>
+<surname>Correig-Fraga</surname>
+<given-names>Eudald</given-names>
+</name>
+<xref ref-type="aff" rid="aff-1"/>
+</contrib>
+<aff id="aff-1">
+<institution-wrap>
+<institution>Innovamat Education, Barcelona, Catalonia
+(Spain)</institution>
+</institution-wrap>
+</aff>
+</contrib-group>
+<pub-date date-type="pub" publication-format="electronic" iso-8601-date="2025-11-08">
+<day>8</day>
+<month>11</month>
+<year>2025</year>
+</pub-date>
+<volume>¿VOL?</volume>
+<issue>¿ISSUE?</issue>
+<fpage>¿PAGE?</fpage>
+<permissions>
+<copyright-statement>Authors of papers retain copyright and release the
+work under a Creative Commons Attribution 4.0 International License (CC
+BY 4.0)</copyright-statement>
+<copyright-year>1970</copyright-year>
+<copyright-holder>The article authors</copyright-holder>
+<license license-type="open-access" xlink:href="https://creativecommons.org/licenses/by/4.0/">
+<license-p>Authors of papers retain copyright and release the work under
+a Creative Commons Attribution 4.0 International License (CC BY
+4.0)</license-p>
+</license>
+</permissions>
+<kwd-group kwd-group-type="author">
+<kwd>Python</kwd>
+<kwd>cognitive science</kwd>
+<kwd>neuroscience</kwd>
+<kwd>psychophysics</kwd>
+<kwd>computer vision</kwd>
+</kwd-group>
+</article-meta>
+</front>
+<body>
+<sec id="summary">
+  <title>Summary</title>
+  <p>CogStim is an open‑source Python library for reproducible,
+  parameterized offline generation of visual stimuli for psychology,
+  neuroscience, and computer vision. It produces PNG/JPEG/SVG assets for
+  common paradigms (two‑colour ANS arrays, match‑to‑sample pairs with
+  optional total‑area equalization, single‑colour dot arrays, geometric
+  shapes, oriented lines/stripes, and fixation targets). Deterministic
+  seeding and robust geometric routines enforce non‑overlap, boundary
+  validity, and equalization to minimise perceptual confounds. A compact
+  Python API and command‑line interface make the tool accessible to both
+  programmers and non‑programmers, enabling quick creation of controlled
+  stimuli without special setup.</p>
+</sec>
+<sec id="statement-of-need">
+  <title>Statement of need</title>
+  <p>Designing visual stimuli is a routine requirement in psychology,
+  neuroscience, and vision research. It requires precise control over
+  numerosity, size, spacing, color, and layout, alongside reproducible
+  randomization and strict study dependent constraints. When built ad
+  hoc, these demands make stimulus creation tedious and can introduce
+  small inconsistencies that affect comparisons across studies and model
+  evaluations. Researchers therefore benefit from a simple way to
+  generate controlled stimuli offline as standard image assets ready to
+  use wherever needed.</p>
+  <p>CogStim addresses this need by providing an offline, parameterized
+  generator for a range of paradigms: approximate number system
+  (<xref alt="Halberda et al., 2008" rid="ref-halberda_individual_2008" ref-type="bibr">Halberda
+  et al., 2008</xref>), match‑to‑sample
+  (<xref alt="Sella et al., 2013" rid="ref-sella_enumeration_2013" ref-type="bibr">Sella
+  et al., 2013</xref>), geometric shapes, oriented lines
+  (<xref alt="Srinivasan, 2021" rid="ref-srinivasan_vision_2021" ref-type="bibr">Srinivasan,
+  2021</xref>), and fixation targets
+  (<xref alt="Thaler et al., 2013" rid="ref-thaler_what_2013" ref-type="bibr">Thaler
+  et al., 2013</xref>). It produces images in any major image format
+  (e.g. PNG, JPEG, SVG) that can be dropped into experiment builders,
+  web or desktop presentation software, and computer‑vision pipelines
+  without heavy setup. A Python API and a command‑line interface enable
+  both quick prototyping and large batch generation; deterministic seeds
+  ensure the same configuration yields identical outputs; and built‑in
+  algorithms enforce non‑overlap and allow total‑area equalization when
+  required. In this way the library serves dual needs: controlled
+  stimuli for behavioral and neuro‑cognitive experiments, and
+  well‑specified synthetic datasets for model development and
+  evaluation.</p>
+  <p>CogStim provides a single, extensible library that: 1. covers
+  widely used paradigms (ANS, MTS, shapes, orientation discrimination,
+  fixation). 1. guarantees determinism via seed control and consistent
+  planning logic. 1. outputs ready‑to‑use datasets with standard
+  train/test splits and stable file names. 1. offers both a CLI and a
+  Python API, minimizing ramp‑up time for non‑specialists. 1. implements
+  stimulus equalization algorithms that balance total surface areas
+  within or between dot arrays, ensuring fair comparisons in numerosity
+  and match‑to‑sample tasks. 1. supports common image formats, including
+  PNG and JPEG via a configurable img_format parameter, and SVG for
+  vector export. 1. reduces manual stimulus‑creation effort by
+  automating parameter sweeps, placement rules, and file
+  organization.</p>
+  <p>The library is designed for: (i) behavioral and neuro‑cognitive
+  tasks such as numerosity discrimination, (ii) model evaluation in
+  computational neuroscience and computer vision, and (iii) dataset
+  creation for machine‑learning workflows that require well‑controlled
+  synthetic stimuli. It is equally accessible to users with and without
+  programming experience, thanks to its dual API/CLI design and
+  comprehensive documentation, which includes an LLM-optimized manual
+  that users can feed to their LLM’s of preference to generate the
+  instructions needed to create their stimuli.</p>
+</sec>
+<sec id="state-of-the-field-relation-to-similar-software">
+  <title>State of the field &amp; relation to similar software</title>
+  <p>General‑purpose experiment frameworks such as PsychoPy,
+  Psychtoolbox, and jsPsych focus on stimulus presentation and timing
+  during runtime, while various domain‑specific generators target single
+  paradigms. CogStim complements these tools by producing offline,
+  parameterized image assets that drop into any workflow with minimal
+  setup. It emphasizes reproducibility through explicit seeding and
+  systematic parameter sweeps, and it reduces perceptual confounds via
+  robust non‑overlap placement, boundary checks, and stimulus
+  equalization for numerosity and match‑to‑sample tasks. The library
+  spans multiple paradigms (ANS, MTS, geometric shapes, oriented lines,
+  fixation targets) and exports PNG, JPEG, and SVG for portability
+  across experimental platforms and computer‑vision pipelines. A dual
+  interface (command line and Python API), together with documentation
+  tailored for LLM‑assisted use, makes it accessible to both programmers
+  and non‑programmers and provides a clear template for extending to new
+  stimulus classes.</p>
+  <p>This library has been used both for the creation of psychometric
+  tests for children
+  (<xref alt="E. Correig-Fraga et al., 2024" rid="ref-correig-fraga_development_2024" ref-type="bibr">E.
+  Correig-Fraga et al., 2024</xref>)
+  (<xref alt="Correig-Fraga et al., 2025" rid="ref-correig-fraga_interplay_2025" ref-type="bibr">Correig-Fraga
+  et al., 2025</xref>), as well as for computer vision tasks
+  (<xref alt="E. Correig-Fraga et al., n.d." rid="ref-correig-fraga_structure_nodate" ref-type="bibr">E.
+  Correig-Fraga et al., n.d.</xref>).</p>
+</sec>
+<sec id="software-description">
+  <title>Software description</title>
+  <sec id="design-and-key-features">
+    <title>Design and key features</title>
+    <list list-type="bullet">
+      <list-item>
+        <p><bold>Task coverage</bold>: ANS two-colour dot arrays;
+        single-colour dot arrays; MTS pairs with optional area
+        equalization; geometric shapes (circle, star, triangle, square);
+        oriented line/stripe patterns; fixation targets.
+        </p>
+      </list-item>
+      <list-item>
+        <p><bold>Determinism &amp; reproducibility</bold>: global seed
+        handling for Python/NumPy; same parameters and same seed will
+        yield identical images.
+        </p>
+      </list-item>
+      <list-item>
+        <p><bold>Robust dot engine</bold>:
+        <monospace>DotsCore</monospace> enforces non-overlap, boundary
+        validity, optional area equalization, and (for MTS) pair
+        equalization within tolerances.</p>
+      </list-item>
+      <list-item>
+        <p><bold>Stimulus equalization algorithms</bold>: CogStim
+        implements robust geometric equalization methods that adjust dot
+        radii so that total surface areas are matched either within
+        two-colour ANS arrays or between sample–match pairs. These
+        procedures guarantee perceptually fair stimuli for numerosity
+        and matching tasks, maintaining non-overlap and boundary
+        validity while achieving precise area ratios within configurable
+        tolerances.</p>
+      </list-item>
+      <list-item>
+        <p><bold>CLI &amp; Python API</bold>: consistent configuration
+        via dictionaries in code and ergonomic subcommands in the
+        CLI.</p>
+      </list-item>
+    </list>
+  </sec>
+  <sec id="implementation-and-dependencies">
+    <title>Implementation and dependencies</title>
+    <p>CogStim is implemented in Python (≥3.10)
+    (<xref alt="Python Software Foundation, 2023" rid="ref-python" ref-type="bibr">Python
+    Software Foundation, 2023</xref>) and builds upon a small number of
+    widely used open-source libraries. Image creation and drawing
+    operations are handled through Pillow
+    (<xref alt="Clark, 2015" rid="ref-clark2015pillow" ref-type="bibr">Clark,
+    2015</xref>), while all geometric computations and randomization
+    routines rely on NumPy
+    (<xref alt="Harris et al., 2020" rid="ref-harris2020array" ref-type="bibr">Harris
+    et al., 2020</xref>). The library uses tqdm
+    (<xref alt="Costa-Luis &amp; others, 2022" rid="ref-tqdm" ref-type="bibr">Costa-Luis
+    &amp; others, 2022</xref>) to provide progress bars during
+    generation processes and adopts standard Python modules such as
+    argparse for command-line interfaces and pytest for automated
+    testing.</p>
+    <p>The codebase is organized around a small set of generator classes
+    that call these dependencies through a unified interface. Each
+    generator defines the parameters of a particular task (e.g., ANS,
+    match-to-sample, shapes, lines, fixation) and uses Pillow for
+    rendering, NumPy for geometric calculations, and tqdm for user
+    feedback. This results in a lightweight, portable implementation
+    that can run on any system supporting Python without special
+    dependencies or graphical backends.</p>
+    <p>All dependencies are open source, actively maintained, and
+    available through the Python Package Index (PyPI), ensuring
+    long-term accessibility and compatibility with typical research
+    workflows. The project is licensed under MIT, and available as a Git
+    repository in Github.</p>
+  </sec>
+  <sec id="example-figures">
+    <title>Example figures</title>
+    <fig>
+      <caption><p>Representative stimuli generated by
+      CogStim.<styled-content id="figU003Astimuli"></styled-content></p></caption>
+      <graphic mimetype="image" mime-subtype="png" xlink:href="stimuli_panel.png" />
+    </fig>
+    <p><bold>Figure 1.</bold> Representative stimuli generated by
+    CogStim across different task paradigms. <bold>(a, b)</bold>
+    Approximate Number System (ANS) two-colour dot arrays for numerosity
+    discrimination tasks, with (b) showing area-equalized dots between
+    colours. <bold>(c, d)</bold> Single geometric shapes (circle) in
+    different colours, used in shape discrimination tasks. <bold>(e,
+    f)</bold> Single-colour dot arrays suitable for numerosity
+    estimation, match-to-sample (MTS) paradigms, or as components in
+    multi-feature discrimination tasks. <bold>(g, h)</bold> Oriented
+    line/stripe patterns for orientation discrimination experiments.
+    <bold>(i, j, k)</bold> Additional geometric shapes (square, star,
+    triangle) in various colours, demonstrating the library’s shape
+    generation capabilities for categorical perception and visual search
+    tasks. <bold>(l)</bold> Fixation cross stimulus for experimental
+    trial preparation and gaze control.</p>
+  </sec>
+  <sec id="availability">
+    <title>Availability</title>
+    <list list-type="bullet">
+      <list-item>
+        <p>Repository: https://github.com/eudald-seeslab/cogstim</p>
+      </list-item>
+      <list-item>
+        <p>License: MIT</p>
+      </list-item>
+      <list-item>
+        <p>Issue tracker: enabled and publicly readable</p>
+      </list-item>
+      <list-item>
+        <p>Archive: upon acceptance, we will create a tagged release,
+        archive on Zenodo and include the DOI here.</p>
+      </list-item>
+    </list>
+  </sec>
+  <sec id="acknowledgements">
+    <title>Acknowledgements</title>
+    <p>We thank Innovamat Education for their support in the development
+    of this open source work.</p>
+  </sec>
+  <sec id="conflicts-of-interest">
+    <title>Conflicts of Interest</title>
+    <p>Authors declare no competing interests.</p>
+  </sec>
+</sec>
+</body>
+<back>
+<ref-list>
+  <title></title>
+  <ref id="ref-halberda_individual_2008">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Halberda</surname><given-names>Justin</given-names></name>
+        <name><surname>Mazzocco</surname><given-names>Michèle M. M.</given-names></name>
+        <name><surname>Feigenson</surname><given-names>Lisa</given-names></name>
+      </person-group>
+      <article-title>Individual differences in non-verbal number acuity correlate with maths achievement</article-title>
+      <source>Nature</source>
+      <year iso-8601-date="2008-10-02">2008</year><month>10</month><day>02</day>
+      <volume>455</volume>
+      <issue>7213</issue>
+      <pub-id pub-id-type="doi">10.1038/nature07246</pub-id>
+      <pub-id pub-id-type="pmid">18776888</pub-id>
+      <fpage>665</fpage>
+      <lpage>668</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-thaler_what_2013">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Thaler</surname><given-names>L.</given-names></name>
+        <name><surname>Schütz</surname><given-names>A. C.</given-names></name>
+        <name><surname>Goodale</surname><given-names>M. A.</given-names></name>
+        <name><surname>Gegenfurtner</surname><given-names>K. R.</given-names></name>
+      </person-group>
+      <article-title>What is the best fixation target? The effect of target shape on stability of fixational eye movements</article-title>
+      <source>Vision Research</source>
+      <year iso-8601-date="2013-01-14">2013</year><month>01</month><day>14</day>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2025-11-08">2025</year><month>11</month><day>08</day></date-in-citation>
+      <volume>76</volume>
+      <issn>0042-6989</issn>
+      <uri>https://www.sciencedirect.com/science/article/pii/S0042698912003380</uri>
+      <pub-id pub-id-type="doi">10.1016/j.visres.2012.10.012</pub-id>
+      <fpage>31</fpage>
+      <lpage>42</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-sella_enumeration_2013">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Sella</surname><given-names>Francesco</given-names></name>
+        <name><surname>Lanfranchi</surname><given-names>Silvia</given-names></name>
+        <name><surname>Zorzi</surname><given-names>Marco</given-names></name>
+      </person-group>
+      <article-title>Enumeration skills in down syndrome</article-title>
+      <source>Research in Developmental Disabilities</source>
+      <year iso-8601-date="2013-11">2013</year><month>11</month>
+      <volume>34</volume>
+      <issue>11</issue>
+      <issn>1873-3379</issn>
+      <pub-id pub-id-type="doi">10.1016/j.ridd.2013.07.038</pub-id>
+      <pub-id pub-id-type="pmid">24025435</pub-id>
+      <fpage>3798</fpage>
+      <lpage>3806</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-srinivasan_vision_2021">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Srinivasan</surname><given-names>Mandyam V.</given-names></name>
+      </person-group>
+      <article-title>Vision, perception, navigation and ‘cognition’ in honeybees and applications to aerial robotics</article-title>
+      <source>Biochemical and Biophysical Research Communications</source>
+      <year iso-8601-date="2021-07-30">2021</year><month>07</month><day>30</day>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2024-12-05">2024</year><month>12</month><day>05</day></date-in-citation>
+      <volume>564</volume>
+      <issn>0006-291X</issn>
+      <uri>https://www.sciencedirect.com/science/article/pii/S0006291X20317940</uri>
+      <pub-id pub-id-type="doi">10.1016/j.bbrc.2020.09.052</pub-id>
+      <fpage>4</fpage>
+      <lpage>17</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-harris2020array">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Harris</surname><given-names>Charles R.</given-names></name>
+        <name><surname>Millman</surname><given-names>K. Jarrod</given-names></name>
+        <name><surname>Walt</surname><given-names>Stéfan J. van der</given-names></name>
+        <name><surname>Gommers</surname><given-names>Ralf</given-names></name>
+        <name><surname>Virtanen</surname><given-names>Pauli</given-names></name>
+        <name><surname>Cournapeau</surname><given-names>David</given-names></name>
+        <name><surname>Wieser</surname><given-names>Eric</given-names></name>
+        <name><surname>Taylor</surname><given-names>Julian</given-names></name>
+        <name><surname>Berg</surname><given-names>Sebastian</given-names></name>
+        <name><surname>Smith</surname><given-names>Nathaniel J.</given-names></name>
+        <name><surname>Kern</surname><given-names>Robert</given-names></name>
+        <name><surname>Picus</surname><given-names>Matti</given-names></name>
+        <name><surname>Hoyer</surname><given-names>Stephan</given-names></name>
+        <name><surname>Kerkwijk</surname><given-names>Marten H. van</given-names></name>
+        <name><surname>Brett</surname><given-names>Matthew</given-names></name>
+        <name><surname>Haldane</surname><given-names>Allan</given-names></name>
+        <name><surname>Río</surname><given-names>Jaime Fernández del</given-names></name>
+        <name><surname>Wiebe</surname><given-names>Mark</given-names></name>
+        <name><surname>Peterson</surname><given-names>Pearu</given-names></name>
+        <name><surname>Gérard-Marchant</surname><given-names>Pierre</given-names></name>
+        <name><surname>Sheppard</surname><given-names>Kevin</given-names></name>
+        <name><surname>Reddy</surname><given-names>Tyler</given-names></name>
+        <name><surname>Weckesser</surname><given-names>Warren</given-names></name>
+        <name><surname>Abbasi</surname><given-names>Hameer</given-names></name>
+        <name><surname>Gohlke</surname><given-names>Christoph</given-names></name>
+        <name><surname>Oliphant</surname><given-names>Travis E.</given-names></name>
+      </person-group>
+      <article-title>Array programming with NumPy</article-title>
+      <source>Nature</source>
+      <publisher-name>Springer Science; Business Media LLC</publisher-name>
+      <year iso-8601-date="2020-09">2020</year><month>09</month>
+      <volume>585</volume>
+      <issue>7825</issue>
+      <uri>https://doi.org/10.1038/s41586-020-2649-2</uri>
+      <pub-id pub-id-type="doi">10.1038/s41586-020-2649-2</pub-id>
+      <fpage>357</fpage>
+      <lpage>362</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-clark2015pillow">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>Clark</surname><given-names>Alex</given-names></name>
+      </person-group>
+      <article-title>Pillow (PIL fork) documentation</article-title>
+      <publisher-name>readthedocs</publisher-name>
+      <year iso-8601-date="2015">2015</year>
+      <uri>https://buildmedia.readthedocs.org/media/pdf/pillow/latest/pillow.pdf</uri>
+    </element-citation>
+  </ref>
+  <ref id="ref-correig-fraga_development_2024">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Correig-Fraga</surname><given-names>Eudald</given-names></name>
+        <name><surname>Vilalta-Riera</surname><given-names>Albert</given-names></name>
+        <name><surname>Calvo-Pesce</surname><given-names>Cecilia</given-names></name>
+      </person-group>
+      <article-title>Development and validation of a semi-automated, scalable response to intervention framework in mathematics</article-title>
+      <source>SN Social Sciences</source>
+      <year iso-8601-date="2024-02-01">2024</year><month>02</month><day>01</day>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2025-02-19">2025</year><month>02</month><day>19</day></date-in-citation>
+      <volume>4</volume>
+      <issue>2</issue>
+      <issn>2662-9283</issn>
+      <uri>https://link.springer.com/article/10.1007/s43545-024-00835-7</uri>
+      <pub-id pub-id-type="doi">10.1007/s43545-024-00835-7</pub-id>
+      <fpage>1</fpage>
+      <lpage>19</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-correig-fraga_interplay_2025">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Correig-Fraga</surname></name>
+        <name><surname>Sales-Pardo</surname></name>
+        <name><surname>Guimerà</surname><given-names>Roger</given-names></name>
+      </person-group>
+      <article-title>Interplay between children’s cognitive profiles and within-school social interactions is nuanced and differs across ages</article-title>
+      <source>Communications psychology</source>
+      <year iso-8601-date="2025-03-20">2025</year><month>03</month><day>20</day>
+      <date-in-citation content-type="access-date"><year iso-8601-date="2025-11-08">2025</year><month>11</month><day>08</day></date-in-citation>
+      <volume>3</volume>
+      <issue>1</issue>
+      <issn>2731-9121</issn>
+      <uri>https://pubmed.ncbi.nlm.nih.gov/40113993/</uri>
+      <pub-id pub-id-type="doi">10.1038/s44271-025-00227-4</pub-id>
+      <pub-id pub-id-type="pmid">40113993</pub-id>
+    </element-citation>
+  </ref>
+  <ref id="ref-correig-fraga_structure_nodate">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Correig-Fraga</surname><given-names>Eudald</given-names></name>
+        <name><surname>Guimerà</surname><given-names>Roger</given-names></name>
+        <name><given-names>Sales-Pardo</given-names></name>
+      </person-group>
+      <article-title>Structure alone supports efficient visual computation in the drosophila visual system</article-title>
+      <source>Under Review</source>
+    </element-citation>
+  </ref>
+  <ref id="ref-tqdm">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>Costa-Luis</surname><given-names>Carlos da</given-names></name>
+        <name><surname>others</surname></name>
+      </person-group>
+      <article-title>Tqdm: A fast, extensible progress bar for python and CLI</article-title>
+      <publisher-name>https://github.com/tqdm/tqdm</publisher-name>
+      <year iso-8601-date="2022">2022</year>
+    </element-citation>
+  </ref>
+  <ref id="ref-python">
+    <element-citation>
+      <person-group person-group-type="author">
+        <string-name>Python Software Foundation</string-name>
+      </person-group>
+      <article-title>Python: A programming language for scientific computing</article-title>
+      <publisher-name>https://www.python.org/</publisher-name>
+      <year iso-8601-date="2023">2023</year>
+    </element-citation>
+  </ref>
+</ref-list>
+</back>
+</article>

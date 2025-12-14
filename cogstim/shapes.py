@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from cogstim.helpers import COLOUR_MAP
 from cogstim.base_generator import BaseGenerator
+from cogstim.mts_helpers.planner import GenerationPlan
 
 random.seed(1714)
 
@@ -69,7 +70,7 @@ class ShapesGenerator(BaseGenerator):
         self.shapes = shapes if isinstance(shapes, list) else [shapes]
         self.colors = {col: COLOUR_MAP[col] for col in colours}
         self.task_type = task_type
-        self.background_colour = background_colour
+        self.background_colour = COLOUR_MAP.get(background_colour, background_colour)
 
         # Override default generation params
         self.train_num = train_num
@@ -235,73 +236,52 @@ class ShapesGenerator(BaseGenerator):
         image.save(file_path)
 
     def generate_images(self):
-        """Generate all images for training and testing."""
+        """Generate all images for training and testing using unified GenerationPlan."""
         import logging
-
-        # Common factors
-        surfaces = len(range(self.min_surface, self.max_surface, 100))
-        combos = (
-            len(self.shapes)
-            if self.task_type == "two_shapes"
-            else len(self.colors)
-            if self.task_type == "two_colors"
-            else len(self.shapes) * len(self.colors)
-        )
 
         self.setup_directories()
 
         for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
-            total_phase = num_images * surfaces * combos
+            # Build generation plan for this phase
+            plan = GenerationPlan(
+                mode="shapes",
+                num_repeats=num_images,
+                min_surface=self.min_surface,
+                max_surface=self.max_surface,
+                surface_step=100,
+                shapes=self.shapes,
+                colours=list(self.colors.keys()),
+                task_type=self.task_type,
+            ).build()
+            
+            tasks = plan.get_tasks()
+            total_images = len(tasks)
+            
             self.log_generation_info(
-                f"Generating {total_phase} images: {num_images} sets x {surfaces} surfaces x {combos} class combos in '{self.output_dir}/{phase}'."
+                f"Generating {total_images} images for {phase} in '{self.output_dir}/{phase}'."
             )
-            for i in tqdm(range(num_images)):
-                # FIXME: we should specify how many we want and compute the step from this
-                for surface in range(self.min_surface, self.max_surface, 100):
-                    if self.task_type == "two_shapes":
-                        # For shape recognition: each shape in yellow is a class
-                        for shape in self.shapes:
-                            image, dist, angle = self.draw_shape(
-                                shape, surface, self.colors["yellow"], self.jitter
-                            )
-                            self.save_image(
-                                image,
-                                shape,
-                                surface,
-                                dist,
-                                angle,
-                                i,
-                                self.img_paths[f"{phase}_{shape}"],
-                            )
-                    elif self.task_type == "two_colors":
-                        # For colour recognition: circle in each colour is a class
-                        for color_name, color_code in self.colors.items():
-                            image, dist, angle = self.draw_shape(
-                                self.colour_task_base_shape, surface, color_code, self.jitter
-                            )
-                            self.save_image(
-                                image,
-                                self.colour_task_base_shape,
-                                surface,
-                                dist,
-                                angle,
-                                i,
-                                self.img_paths[f"{phase}_{color_name}"],
-                            )
-                    else:
-                        # For custom: each shape-color combination is a class
-                        for shape in self.shapes:
-                            for color_name, color_code in self.colors.items():
-                                image, dist, angle = self.draw_shape(
-                                    shape, surface, color_code, self.jitter
-                                )
-                                class_name = f"{shape}_{color_name}"
-                                self.save_image(
-                                    image,
-                                    shape,
-                                    surface,
-                                    dist,
-                                    angle,
-                                    i,
-                                    self.img_paths[f"{phase}_{class_name}"],
-                                )
+            
+            # Execute each task in the plan
+            for task in tqdm(tasks):
+                shape = task["shape"]
+                colour_name = task["colour"]
+                surface = task["surface"]
+                rep = task["rep"]
+                
+                # Draw the shape
+                colour_code = self.colors[colour_name]
+                image, dist, angle = self.draw_shape(shape, surface, colour_code, self.jitter)
+                
+                # Determine the path based on task type
+                if self.task_type == "two_shapes":
+                    class_name = shape
+                elif self.task_type == "two_colors":
+                    class_name = colour_name
+                else:  # custom
+                    class_name = f"{shape}_{colour_name}"
+                
+                # Save the image
+                self.save_image(
+                    image, shape, surface, dist, angle, rep,
+                    self.img_paths[f"{phase}_{class_name}"]
+                )

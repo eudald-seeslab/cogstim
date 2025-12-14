@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/tests/_debug_mts.py">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/tests/_debug_mts.py" />
+              <option name="originalContent" value="import cogstim.match_to_sample as mts&#10;from unittest.mock import patch, MagicMock&#10;&#10;config = {&#10;    **mts.GENERAL_CONFIG,&#10;    'train_num':1,&#10;    'test_num':1,&#10;    'output_dir':'/tmp/test',&#10;    'min_point_num':1,&#10;    'max_point_num':5,&#10;    'ratios':'easy'&#10;}&#10;&#10;with patch('cogstim.match_to_sample.os.makedirs'):&#10;    with patch('cogstim.match_to_sample.generate_pair') as mock_generate, patch('cogstim.match_to_sample.save_pair_with_basename') as mock_save:&#10;        mock_pair = (MagicMock(), [], MagicMock(), [])&#10;        mock_generate.return_value = (mock_pair, True)&#10;        g = mts.MatchToSampleGenerator(config)&#10;        print('before create_and_save: generate', mock_generate.call_count, 'save', mock_save.call_count)&#10;        g.create_and_save(3,4,True,'tag')&#10;        print('after create_and_save: generate', mock_generate.call_count, 'save', mock_save.call_count)&#10;" />
+              <option name="updatedContent" value="import cogstim.match_to_sample as mts&#10;from unittest.mock import patch, MagicMock&#10;&#10;config = {&#10;    **mts.GENERAL_CONFIG,&#10;    'train_num':1,&#10;    'test_num':1,&#10;    'output_dir':'/tmp/test',&#10;    'min_point_num':1,&#10;    'max_point_num':5,&#10;    'ratios':'easy'&#10;}&#10;&#10;with patch('cogstim.match_to_sample.os.makedirs'):&#10;    with patch('cogstim.match_to_sample.generate_pair') as mock_generate, patch('cogstim.match_to_sample.save_pair_with_basename') as mock_save:&#10;        mock_pair = (MagicMock(), [], MagicMock(), [])&#10;        mock_generate.return_value = (mock_pair, True)&#10;        g = mts.MatchToSampleGenerator(config)&#10;        print('before create_and_save: generate', mock_generate.call_count, 'save', mock_save.call_count)&#10;        g.create_and_save(3,4,True,'tag')&#10;        print('after create_and_save: generate', mock_generate.call_count, 'save', mock_save.call_count)&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

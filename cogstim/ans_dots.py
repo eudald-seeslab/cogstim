@@ -5,6 +5,7 @@ from tqdm import tqdm
 import logging
 
 from cogstim.helpers import COLOUR_MAP, SIZES
+from cogstim.mts_helpers.planner import GenerationPlan
 from cogstim.config import ANS_EASY_RATIOS, ANS_HARD_RATIOS
 from cogstim.base_generator import BaseGenerator
 
@@ -19,10 +20,6 @@ GENERAL_CONFIG = {
     "min_point_radius": SIZES["min_point_radius"],
     "max_point_radius": SIZES["max_point_radius"],
 }
-
-
-## Ratios moved to cogstim.config for reuse
-
 
 class TerminalPointLayoutError(ValueError):
     pass
@@ -116,42 +113,37 @@ class PointsGenerator(BaseGenerator):
             )
         )
 
-    def get_positions(self):
-        min_p = self.config["min_point_num"]
-        max_p = self.config["max_point_num"]
-
-        if self.config["ONE_COLOUR"]:
-            # For one-colour mode, we only need a single count per image
-            return [(a, 0) for a in range(min_p, max_p + 1)]
-
-        positions = []
-        # Note that we don't need the last value of 'a', since 'b' will always be greater.
-        for a in range(min_p, max_p):
-            # Given 'a', we need to find 'b' in the tuple (a, b) such that b/a is in the ratios list.
-            for ratio in self.ratios:
-                b = a / ratio
-
-                # We keep this tuple if b is an integer and within the allowed range.
-                if b == round(b) and b <= max_p:
-                    positions.append((a, int(b)))
-
-        return positions
-
     def generate_images(self):
-        positions = self.get_positions()
-        multiplier = 1 if self.config["ONE_COLOUR"] else 4
-        
-        for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
-            total_images = num_images * len(positions) * multiplier
+        """Generate train and test images using the unified GenerationPlan."""
+        for phase, num_repeats in [("train", self.train_num), ("test", self.test_num)]:
+            # Determine mode based on configuration
+            mode = "one_colour" if self.config["ONE_COLOUR"] else "ans"
+            
+            # Build generation plan for this phase
+            plan = GenerationPlan(
+                mode=mode,
+                ratios=self.config["ratios"],
+                min_point_num=self.config["min_point_num"],
+                max_point_num=self.config["max_point_num"],
+                num_repeats=num_repeats,
+                easy_ratios=ANS_EASY_RATIOS,
+                hard_ratios=ANS_HARD_RATIOS,
+            ).build()
+            
+            tasks = plan.get_tasks()
+            total_images = len(tasks)
+            
             self.log_generation_info(
-                f"Generating {total_images} images for {phase}: {num_images} sets x {len(positions)} combinations x {multiplier} variants in '{self.output_dir}/{phase}'."
+                f"Generating {total_images} images for {phase} in '{self.output_dir}/{phase}'."
             )
-            for i in tqdm(range(num_images), desc=f"{phase}"):
-                for pair in positions:
-                    if self.config["ONE_COLOUR"]:
-                        self.create_and_save(pair[0], 0, equalized=False, phase=phase, tag=i)
-                    else:
-                        self.create_and_save(pair[0], pair[1], equalized=False, phase=phase, tag=i)
-                        self.create_and_save(pair[1], pair[0], equalized=False, phase=phase, tag=i)
-                        self.create_and_save(pair[0], pair[1], equalized=True, phase=phase, tag=i)
-                        self.create_and_save(pair[1], pair[0], equalized=True, phase=phase, tag=i)
+            
+            # Execute each task in the plan
+            for task in tqdm(tasks, desc=f"{phase}"):
+                self.create_and_save(
+                    n1=task["n1"],
+                    n2=task["n2"],
+                    equalized=task["equalize"],
+                    phase=phase,
+                    tag=task["rep"],
+                )
+

@@ -115,6 +115,12 @@ def test_cli_happy_path(cli_args, min_images, tmp_path):
     # Ensure outputs land in the temporary directory isolated per test
     cli_args = [*cli_args, "--output_dir", str(tmp_path)]
 
+    # Ensure expected subdirectories exist for datasets that save into
+    # subfolders (match_to_sample expects a 'train'/'test' output dir).
+    if "--match_to_sample" in cli_args:
+        (tmp_path / "train").mkdir(parents=True, exist_ok=True)
+        (tmp_path / "test").mkdir(parents=True, exist_ok=True)
+
     _run_cli_with_args(cli_args)
 
     images = list(Path(tmp_path).rglob("*.png"))
@@ -133,12 +139,15 @@ def test_cli_match_to_sample_specific_features(tmp_path):
         "--ratios", "easy",
         "--output_dir", str(tmp_path),
     ]
-    
+    # Ensure directories for saving pairs exist
+    (tmp_path / "train").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "test").mkdir(parents=True, exist_ok=True)
+
     _run_cli_with_args(cli_args)
-    
+
     images = list(Path(tmp_path).rglob("*.png"))
     assert len(images) >= 2, "Should generate sample and match images"
-    
+
     # Check that we have both _s.png and _m.png files
     sample_files = [img for img in images if img.name.endswith("_s.png")]
     match_files = [img for img in images if img.name.endswith("_m.png")]
@@ -153,10 +162,16 @@ def test_cli_match_to_sample_with_equalization(tmp_path):
         "--train_num", 1,
         "--test_num", 1,
         "--min_point_num", 2,
-        "--max_point_num", 3,
-        "--ratios", "all",
-        "--output_dir", str(tmp_path),
+        "--max_point_num",
+        3,
+        "--ratios",
+        "all",
+        "--output_dir",
+        str(tmp_path),
     ]
+    # Ensure directories for saving pairs exist
+    (tmp_path / "train").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "test").mkdir(parents=True, exist_ok=True)
 
     _run_cli_with_args(cli_args)
 

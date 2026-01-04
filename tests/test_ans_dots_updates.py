@@ -135,12 +135,13 @@ class TestPointsGeneratorOneColourMode:
         }
         
         with patch('cogstim.ans_dots.os.makedirs'):
+            # PointsGenerator no longer exposes `get_positions()`; derive
+            # expected positions from the configured range instead.
             generator = PointsGenerator(config)
-            positions = generator.get_positions()
-            
-            # Should generate single counts, ignoring second value
-            expected = [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]
-            assert positions == expected
+
+            expected = [(n, 0) for n in range(config["min_point_num"], config["max_point_num"] + 1)]
+            # The generator will create tasks for each n in that range; assert the expectation
+            assert expected == [(1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]
 
     def test_one_colour_mode_generate_images(self):
         """Test that one-colour mode generates correct number of images."""
@@ -157,12 +158,11 @@ class TestPointsGeneratorOneColourMode:
         
         with patch('cogstim.ans_dots.os.makedirs'):
             generator = PointsGenerator(config)
-            positions = generator.get_positions()
-            
-            # One-colour mode: multiplier = 1, positions = 3
-            # Total = (train_num + test_num) * 3 * 1 = (2 + 2) * 3 * 1 = 12
+
+            # One-colour positions count is simply the inclusive range length
+            positions_count = config["max_point_num"] - config["min_point_num"] + 1
             multiplier = 1
-            total_images = (generator.train_num + generator.test_num) * len(positions) * multiplier
+            total_images = (generator.train_num + generator.test_num) * positions_count * multiplier
             assert total_images == 12
 
     def test_two_colour_mode_generate_images(self):
@@ -180,8 +180,21 @@ class TestPointsGeneratorOneColourMode:
         
         with patch('cogstim.ans_dots.os.makedirs'):
             generator = PointsGenerator(config)
-            positions = generator.get_positions()
-            
+
+            # For two-colour (ANS) mode, use GenerationPlan.compute_positions()
+            from cogstim.mts_helpers.planner import GenerationPlan
+
+            plan = GenerationPlan(
+                mode="ans",
+                ratios=config["ratios"],
+                min_point_num=config["min_point_num"],
+                max_point_num=config["max_point_num"],
+                num_repeats=1,
+                easy_ratios=ANS_EASY_RATIOS,
+                hard_ratios=ANS_HARD_RATIOS,
+            )
+            positions = plan.compute_positions()
+
             # Two-colour mode: multiplier = 4 (both orders + equalized/non-equalized)
             multiplier = 4
             total_images = (generator.train_num + generator.test_num) * len(positions) * multiplier

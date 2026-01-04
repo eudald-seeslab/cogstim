@@ -6,8 +6,8 @@ from cogstim.dots_core import PointLayoutError
 from cogstim.config import MTS_EASY_RATIOS, MTS_HARD_RATIOS
 from cogstim.mts_helpers.factory import create_numberpoints_image as _create_np_image, generate_random_points
 from cogstim.mts_helpers.geometry import equalize_pair as _equalize_geom
-from cogstim.mts_helpers.io import save_image_pair, save_pair_with_basename, SummaryWriter, build_basename
-from cogstim.mts_helpers.planner import GenerationPlan, resolve_mts_ratios
+from cogstim.mts_helpers.io import save_pair_with_basename, SummaryWriter
+from cogstim.mts_helpers.planner import GenerationPlan, resolve_ratios
 from cogstim.base_generator import BaseGenerator
 
 
@@ -135,76 +135,81 @@ def generate_pair(n_first, n_second, args, error_label, equalize=False):
 
 class MatchToSampleGenerator(BaseGenerator):
     """Generator for match-to-sample dot array pairs."""
-    
+
     def __init__(self, config):
         super().__init__(config)
         self.train_num = config["train_num"]
         self.test_num = config["test_num"]
-        
+
         # Determine ratios to use
-        self.ratios = resolve_mts_ratios(self.config["ratios"], MTS_EASY_RATIOS, MTS_HARD_RATIOS)
-        
+        self.ratios = resolve_ratios(
+            self.config["ratios"],
+            MTS_EASY_RATIOS,
+            MTS_HARD_RATIOS
+        )
+
         self.setup_directories()
-    
-    def create_image_pair(self, n1, n2, equalize=False):
-        """Create a pair of images (sample and match)."""
-        # Create sample image
-        s_img, s_np = _create_np_image(
-            bg_colour=self.config["background_colour"],
-            dot_colour=self.config["dot_colour"],
-            min_radius=self.config["min_radius"],
-            max_radius=self.config["max_radius"],
-            attempts_limit=self.config["attempts_limit"]
-        )
-        s_points = generate_random_points(s_np, n1)
-        
-        # Create match image
-        m_img, m_np = _create_np_image(
-            bg_colour=self.config["background_colour"],
-            dot_colour=self.config["dot_colour"],
-            min_radius=self.config["min_radius"],
-            max_radius=self.config["max_radius"],
-            attempts_limit=self.config["attempts_limit"]
-        )
-        m_points = generate_random_points(m_np, n2)
-        
-        # Equalize areas if requested
-        if equalize:
-            success, s_points, m_points = _equalize_geom(
-                s_np, s_points, m_np, m_points,
-                rel_tolerance=self.config["tolerance"],
-                abs_tolerance=DEFAULT_ABS_TOL,
-                attempts_limit=self.config["attempts_limit"]
-            )
-            if not success:
-                return None
-        
-        return (s_np, s_points, m_np, m_points)
-    
-    def save_image_pair(self, pair, base_name, phase="train"):
-        """Save a pair of images."""
-        s_np, s_points, m_np, m_points = pair
-        output_dir = os.path.join(self.config["output_dir"], phase)
-        save_image_pair(s_np, s_points, m_np, m_points, output_dir, base_name)
-    
+
     def create_and_save(self, n1, n2, equalize, tag, phase="train"):
-        """Create and save a pair of images."""
-        base_name = build_basename(n1, n2, tag, equalize, self.config.get("version_tag"))
-        
-        pair = self.create_image_pair(n1, n2, equalize)
-        if pair is not None:
-            self.save_image_pair(pair, base_name, phase)
-    
-    def get_subdirectories(self):
-        return [("train",), ("test",)]
-    
+        """Create and save a match-to-sample pair."""
+        # Create args object for generate_pair
+        class Args:
+            def __init__(self, config):
+                self.background_colour = config.get("background_colour", DEFAULT_BG_COLOUR)
+                self.dot_colour = config.get("dot_colour", DEFAULT_DOT_COLOUR)
+                self.min_radius = config.get("min_radius", 5)
+                self.max_radius = config.get("max_radius", 15)
+                self.attempts_limit = config.get("attempts_limit", DEFAULT_ATTEMPTS_LIMIT)
+                self.tolerance = config.get("tolerance", DEFAULT_TOLERANCE)
+                self.output_dir = os.path.join(config["output_dir"], phase)
+
+        args = Args(self.config)
+
+        # Generate the pair
+        base_root = f"img_{n1}_{n2}_{tag}"
+
+        if equalize:
+            pair, success = generate_pair(n_first=n1, n_second=n2, args=args,
+                                          error_label="initial layout for equalization",
+                                          equalize=True)
+            if pair is None:
+                return
+
+            # Only save if equalization succeeded or n1 == n2
+            should_save = True
+            if n1 != n2 and not success:
+                should_save = False
+            if should_save:
+                tag_suffix = "equalized" if success else "rnd"
+                save_pair_with_basename(pair, args.output_dir, f"{base_root}_{tag_suffix}")
+        else:
+            pair, _ = generate_pair(n_first=n1, n_second=n2, args=args,
+                                   error_label="random", equalize=False)
+            if pair is None:
+                return
+            save_pair_with_basename(pair, args.output_dir, f"{base_root}_rnd")
+
     def generate_images(self):
-        """Generate all image pairs for train and test."""
+        """Generate all image pairs for train and test using unified GenerationPlan."""
         for phase, num_images in [("train", self.train_num), ("test", self.test_num)]:
-            plan = GenerationPlan(self.ratios, self.config["min_point_num"], self.config["max_point_num"], num_images).build()
-            self.log_generation_info(f"Generating {len(plan.tasks)} image pairs for {phase}...")
+            # Build generation plan for this phase
+            plan = GenerationPlan(
+                mode="mts",
+                ratios=self.ratios,
+                min_point_num=self.config["min_point_num"],
+                max_point_num=self.config["max_point_num"],
+                num_repeats=num_images,
+            ).build()
             
-            for task in tqdm(plan.tasks, desc=f"{phase}"):
+            tasks = plan.get_tasks()
+            total_images = len(tasks)
+            
+            self.log_generation_info(
+                f"Generating {total_images} image pairs for {phase} in '{self.config['output_dir']}/{phase}'."
+            )
+            
+            # Execute each task in the plan
+            for task in tqdm(tasks, desc=f"{phase}"):
                 n = task["n1"]
                 m = task["n2"]
                 rep = task["rep"]

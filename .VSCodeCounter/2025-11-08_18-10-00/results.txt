@@ -1,0 +1,107 @@
+Date : 2025-11-08 18:10:00
+Directory : /home/eudald/Escriptori/doctorat/cogstim
+Total : 60 files,  12717 codes, 465 comments, 3187 blanks, all 16369 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| Python   |         38 |      6,405 |        465 |      1,427 |      8,297 |
+| Markdown |         12 |      5,705 |          0 |      1,733 |      7,438 |
+| XML      |          7 |        406 |          0 |          0 |        406 |
+| BibTeX   |          1 |        136 |          0 |         14 |        150 |
+| YAML     |          1 |         40 |          0 |          9 |         49 |
+| Ini      |          1 |         25 |          0 |          4 |         29 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                    | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                       |         60 |     12,717 |        465 |      3,187 |     16,369 |
+| . (Files)                                                                               |          2 |        191 |          0 |         60 |        251 |
+| .cursor                                                                                 |          2 |         68 |          0 |         31 |         99 |
+| .cursor/rules                                                                           |          2 |         68 |          0 |         31 |         99 |
+| .github                                                                                 |          1 |         40 |          0 |          9 |         49 |
+| .github/workflows                                                                       |          1 |         40 |          0 |          9 |         49 |
+| .idea                                                                                   |          7 |        406 |          0 |          0 |        406 |
+| .idea (Files)                                                                           |          5 |         44 |          0 |          0 |         44 |
+| .idea/inspectionProfiles                                                                |          2 |        362 |          0 |          0 |        362 |
+| cogstim                                                                                 |         18 |      2,735 |        180 |        591 |      3,506 |
+| cogstim (Files)                                                                         |          2 |        834 |         40 |        149 |      1,023 |
+| cogstim/generators                                                                      |          7 |        938 |         52 |        211 |      1,201 |
+| cogstim/helpers                                                                         |          9 |        963 |         88 |        231 |      1,282 |
+| docs                                                                                    |          8 |      5,372 |          0 |      1,606 |      6,978 |
+| docs (Files)                                                                            |          4 |        818 |          0 |        354 |      1,172 |
+| docs/llm_oriented                                                                       |          4 |      4,554 |          0 |      1,252 |      5,806 |
+| paper                                                                                   |          3 |        311 |         14 |         78 |        403 |
+| scripts                                                                                 |          4 |        469 |         21 |        130 |        620 |
+| tests                                                                                   |         15 |      3,125 |        250 |        682 |      4,057 |
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                                | language | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/eudald/Escriptori/doctorat/cogstim/.coveragerc.ini                                | Ini      |         25 |          0 |          4 |         29 |
+| /home/eudald/Escriptori/doctorat/cogstim/.cursor/rules/core.md                          | Markdown |         63 |          0 |         26 |         89 |
+| /home/eudald/Escriptori/doctorat/cogstim/.cursor/rules/project.md                       | Markdown |          5 |          0 |          5 |         10 |
+| /home/eudald/Escriptori/doctorat/cogstim/.github/workflows/ci.yml                       | YAML     |         40 |          0 |          9 |         49 |
+| /home/eudald/Escriptori/doctorat/cogstim/.idea/cogstim.iml                              | XML      |         17 |          0 |          0 |         17 |
+| /home/eudald/Escriptori/doctorat/cogstim/.idea/copilot.data.migration.agent.xml         | XML      |          6 |          0 |          0 |          6 |
+| /home/eudald/Escriptori/doctorat/cogstim/.idea/inspectionProfiles/Project_Default.xml   | XML      |        356 |          0 |          0 |        356 |
+| /home/eudald/Escriptori/doctorat/cogstim/.idea/inspectionProfiles/profiles_settings.xml | XML      |          6 |          0 |          0 |          6 |
+| /home/eudald/Escriptori/doctorat/cogstim/.idea/misc.xml                                 | XML      |          7 |          0 |          0 |          7 |
+| /home/eudald/Escriptori/doctorat/cogstim/.idea/modules.xml                              | XML      |          8 |          0 |          0 |          8 |
+| /home/eudald/Escriptori/doctorat/cogstim/.idea/vcs.xml                                  | XML      |          6 |          0 |          0 |          6 |
+| /home/eudald/Escriptori/doctorat/cogstim/README.md                                      | Markdown |        166 |          0 |         56 |        222 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/__init__.py                            | Python   |         36 |          5 |          4 |         45 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/cli.py                                 | Python   |        798 |         35 |        145 |        978 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/generators/__init__.py                 | Python   |         15 |          0 |          4 |         19 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/generators/dots_ans.py                 | Python   |        112 |          4 |         32 |        148 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/generators/dots_one_colour.py          | Python   |        163 |          3 |         36 |        202 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/generators/fixation.py                 | Python   |         89 |          7 |         19 |        115 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/generators/lines.py                    | Python   |        191 |         10 |         32 |        233 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/generators/match_to_sample.py          | Python   |        116 |          4 |         31 |        151 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/generators/shapes.py                   | Python   |        252 |         24 |         57 |        333 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/helpers/__init__.py                    | Python   |         40 |          4 |          4 |         48 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/helpers/base_generator.py              | Python   |        146 |         11 |         37 |        194 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/helpers/constants.py                   | Python   |         94 |         19 |         20 |        133 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/helpers/dots_core.py                   | Python   |        178 |         26 |         58 |        262 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/helpers/image_utils.py                 | Python   |         80 |          2 |         22 |        104 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/helpers/mts_geometry.py                | Python   |         57 |          4 |          9 |         70 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/helpers/planner.py                     | Python   |        274 |         20 |         57 |        351 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/helpers/random_seed.py                 | Python   |         26 |          1 |         11 |         38 |
+| /home/eudald/Escriptori/doctorat/cogstim/cogstim/helpers/summary_writer.py              | Python   |         68 |          1 |         13 |         82 |
+| /home/eudald/Escriptori/doctorat/cogstim/docs/faq.md                                    | Markdown |        173 |          0 |        109 |        282 |
+| /home/eudald/Escriptori/doctorat/cogstim/docs/guide.md                                  | Markdown |        409 |          0 |        157 |        566 |
+| /home/eudald/Escriptori/doctorat/cogstim/docs/index.md                                  | Markdown |         69 |          0 |         37 |        106 |
+| /home/eudald/Escriptori/doctorat/cogstim/docs/llm_oriented/api_reference.md             | Markdown |      1,048 |          0 |        327 |      1,375 |
+| /home/eudald/Escriptori/doctorat/cogstim/docs/llm_oriented/architecture.md              | Markdown |        647 |          0 |        134 |        781 |
+| /home/eudald/Escriptori/doctorat/cogstim/docs/llm_oriented/context.md                   | Markdown |        576 |          0 |        160 |        736 |
+| /home/eudald/Escriptori/doctorat/cogstim/docs/llm_oriented/llm_documentation.md         | Markdown |      2,283 |          0 |        631 |      2,914 |
+| /home/eudald/Escriptori/doctorat/cogstim/docs/recipes.md                                | Markdown |        167 |          0 |         51 |        218 |
+| /home/eudald/Escriptori/doctorat/cogstim/paper/generate_stimuli_panel.py                | Python   |         76 |         14 |         24 |        114 |
+| /home/eudald/Escriptori/doctorat/cogstim/paper/paper.bib                                | BibTeX   |        136 |          0 |         14 |        150 |
+| /home/eudald/Escriptori/doctorat/cogstim/paper/paper.md                                 | Markdown |         99 |          0 |         40 |        139 |
+| /home/eudald/Escriptori/doctorat/cogstim/scripts/docs_smoke.py                          | Python   |        287 |          6 |         70 |        363 |
+| /home/eudald/Escriptori/doctorat/cogstim/scripts/generate_llm_docs.py                   | Python   |         43 |          7 |         24 |         74 |
+| /home/eudald/Escriptori/doctorat/cogstim/scripts/mts_area_report.py                     | Python   |         56 |          4 |         19 |         79 |
+| /home/eudald/Escriptori/doctorat/cogstim/scripts/mts_check_equalization.py              | Python   |         83 |          4 |         17 |        104 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/__init__.py                              | Python   |          5 |          1 |          2 |          8 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_ans_dots_updates.py                 | Python   |        297 |         14 |         51 |        362 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_base_generator.py                   | Python   |        117 |         24 |         47 |        188 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_cli_integration.py                  | Python   |        223 |         16 |         66 |        305 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_config.py                           | Python   |         50 |         16 |         20 |         86 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_dots.py                             | Python   |        319 |         18 |         56 |        393 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_dots_core_new_methods.py            | Python   |        213 |         22 |         57 |        292 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_fixation.py                         | Python   |        171 |          6 |         30 |        207 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_integration_end_to_end.py           | Python   |        815 |         73 |        183 |      1,071 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_lines_generator.py                  | Python   |        146 |          6 |         31 |        183 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_match_to_sample.py                  | Python   |        231 |          9 |         37 |        277 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_points.py                           | Python   |         33 |          4 |         13 |         50 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_points_generator.py                 | Python   |         19 |          0 |          4 |         23 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_scripts.py                          | Python   |        269 |         30 |         52 |        351 |
+| /home/eudald/Escriptori/doctorat/cogstim/tests/test_shapes_creator.py                   | Python   |        217 |         11 |         33 |        261 |
+| Total                                                                                   |          |     12,717 |        465 |      3,187 |     16,369 |
++-----------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+

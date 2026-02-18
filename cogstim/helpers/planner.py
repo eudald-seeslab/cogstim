@@ -155,27 +155,22 @@ class GenerationPlan:
         """
         Expand match-to-sample tasks for a given (n, m) pair.
         
-        Generates 6 variants:
-        - (n, m) non-equalized
-        - (m, n) non-equalized (order swap)
-        - (n, m) equalized
-        - (m, n) equalized (order swap)
-        - (n, n) equalized (equal pair)
-        - (m, m) non-equalized (equal pair)
+        Generates 8 variants (balanced 50/50 match vs non-match):
+        - (n, m) non-equalized, (m, n) non-equalized, (n, m) equalized, (m, n) equalized (4 different)
+        - (n, n) equalized, (n, n) non-equalized, (m, m) equalized, (m, m) non-equalized (4 equal)
         
         Args:
             n: First point count
             m: Second point count
             rep: Repetition number
         """
-        # Random orders
         self.tasks.append(GenerationTask("mts", rep, n1=n, n2=m, equalize=False))
         self.tasks.append(GenerationTask("mts", rep, n1=m, n2=n, equalize=False))
-        # Equalized orders
         self.tasks.append(GenerationTask("mts", rep, n1=n, n2=m, equalize=True))
         self.tasks.append(GenerationTask("mts", rep, n1=m, n2=n, equalize=True))
-        # Equal pairs
         self.tasks.append(GenerationTask("mts", rep, n1=n, n2=n, equalize=True))
+        self.tasks.append(GenerationTask("mts", rep, n1=n, n2=n, equalize=False))
+        self.tasks.append(GenerationTask("mts", rep, n1=m, n2=m, equalize=True))
         self.tasks.append(GenerationTask("mts", rep, n1=m, n2=m, equalize=False))
     
     def expand_one_colour_tasks(self, n: int, rep: int) -> None:

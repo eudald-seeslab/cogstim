@@ -216,6 +216,10 @@ def build_mts_config(args: argparse.Namespace) -> Dict[str, Any]:
         cfg["tolerance"] = args.tolerance
     if hasattr(args, 'abs_tolerance') and args.abs_tolerance is not None:
         cfg["abs_tolerance"] = args.abs_tolerance
+
+    if getattr(args, 'tasks_csv', None):
+        cfg["tasks_csv"] = args.tasks_csv
+        cfg["tasks_copies"] = getattr(args, 'tasks_copies', 1)
     
     return cfg
 
@@ -705,6 +709,20 @@ def setup_mts_subcommand(subparsers) -> None:
         type=int,
         default=None,
         help=f"Absolute area tolerance in pixels (default: {MTS_DEFAULTS['abs_tolerance']})"
+    )
+    parser.add_argument(
+        "--tasks-csv",
+        type=str,
+        default=None,
+        metavar="PATH",
+        help="Path to CSV file specifying tasks (columns: sample, match, equalized). When set, ratios and min/max-point-num are ignored."
+    )
+    parser.add_argument(
+        "--tasks-copies",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Number of copies of the tasks distribution (default: 1). Applies when --tasks-csv is used."
     )
     
     parser.set_defaults(func=run_mts)

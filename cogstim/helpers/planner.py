@@ -5,6 +5,8 @@ This module provides a common interface for planning image generation tasks,
 replacing the previously duplicated logic in different generators.
 """
 
+import csv
+from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
 
 
@@ -263,6 +265,34 @@ class GenerationPlan:
             raise ValueError(f"Unknown task_type: {self.task_type}")
         
         return self
+
+    def build_from_mts_csv(
+        self, csv_path: str | Path, num_copies: int = 1
+    ) -> "GenerationPlan":
+        """
+        Build MTS task list from a CSV file.
+
+        CSV must have columns: sample, match, equalized.
+        Each row defines one (n1, n2, equalize) task.
+        num_copies repeats the entire distribution that many times (rep 0..num_copies-1).
+
+        Args:
+            csv_path: Path to CSV file
+            num_copies: Number of copies of the statement distribution (default 1)
+
+        Returns:
+            self (for method chaining)
+        """
+        if self.task_type != "mts":
+            raise ValueError("build_from_mts_csv only applies to task_type='mts'")
+        tasks_spec = load_mts_tasks_from_csv(csv_path)
+        self.tasks = []
+        for rep in range(num_copies):
+            for n1, n2, equalize in tasks_spec:
+                self.tasks.append(
+                    GenerationTask("mts", rep, n1=n1, n2=n2, equalize=equalize)
+                )
+        return self
     
     def __len__(self):
         """Return the number of tasks in the plan."""
@@ -314,6 +344,34 @@ class GenerationPlan:
                     writer.writerow(row)
         
         print(f"Summary written to: {target_path}")
+
+
+def load_mts_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, bool]]:
+    """
+    Load match-to-sample task specifications from a CSV file.
+
+    Expected columns: sample, match, equalized
+    - sample: number of dots in sample image
+    - match: number of dots in match image
+    - equalized: TRUE/FALSE (case-insensitive)
+
+    Returns:
+        List of (n1, n2, equalize) tuples.
+    """
+    path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Tasks CSV not found: {path}")
+
+    tasks = []
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            sample = int(row["sample"])
+            match = int(row["match"])
+            eq_val = str(row.get("equalized", "FALSE")).strip().upper()
+            equalize = eq_val in ("TRUE", "1", "YES")
+            tasks.append((sample, match, equalize))
+    return tasks
 
 
 def resolve_ratios(ratios, easy_ratios: List[float], hard_ratios: List[float]) -> List[float]:

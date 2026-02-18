@@ -73,6 +73,17 @@ Most tasks accept these options:
 
 > **Note**: Use `--seed SEED` (where SEED is an integer) to make generation deterministic and reproducible. Without a seed, each run will produce different random variations.
 
+### Task specification from CSV
+
+For some tasks, you can specify exactly which stimuli to generate via a CSV file instead of using ratios or parameter ranges. You can do this with the `--tasks-csv PATH` to point to a CSV (find below the format of the CSV depending on the task). This method allows to create "n" copies of the tasks in the CSV (`--tasks-copies N` (default: 1) to repeat the distribution N times). When `--tasks-csv` is set, `--ratios` and `--min-point-num` / `--max-point-num` are ignored.
+
+For now, this is supported only for the following tasks, with the CSV specifications
+
+| Task             | CSV columns                 |
+|------------------|-----------------------------|
+| Match to sample  | sample, match, equalized    |
+
+
 ## Examples
 
 ### Shape recognition – *circle vs star* in yellow
@@ -206,7 +217,7 @@ This project is distributed under the **MIT License** – see the `LICENCE` file
 ## TODO's
 
 - The equalization algorithm of match-to-sample could be improved.
-- Let users create stimuli based on a csv with the specific images they need
+- Extend CSV-based task specification to other tasks (ANS, one-colour, shapes, etc.).
 - Check that the image is big enough for the parameters set.
 
 

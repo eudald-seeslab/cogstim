@@ -128,23 +128,33 @@ class MatchToSampleGenerator(BaseGenerator):
         return [("train",), ("test",)]
     
     def generate_images(self):
-        """Generate all image pairs for train and test using unified planner."""
+        """Generate all image pairs for train and test using unified planner or CSV."""
+        tasks_csv = self.config.get("tasks_csv")
+        tasks_copies = self.config.get("tasks_copies", 1)
+
         for phase, num_images in self.iter_phases():
+            if num_images <= 0:
+                continue
             plan = GenerationPlan(
                 task_type="mts",
                 min_point_num=self.config["min_point_num"],
                 max_point_num=self.config["max_point_num"],
                 num_repeats=num_images,
                 ratios=self.ratios
-            ).build()
-            
+            )
+            if tasks_csv:
+                copies = max(1, num_images) * tasks_copies
+                plan.build_from_mts_csv(tasks_csv, num_copies=copies)
+            else:
+                plan.build()
+
             self.log_generation_info(f"Generating {len(plan)} image pairs for {phase}...")
-            
+
             for task in tqdm(plan.tasks, desc=f"{phase}"):
-                n = task.params.get('n1')
-                m = task.params.get('n2')
-                equalize = task.params.get('equalize', False)
+                n = task.params.get("n1")
+                m = task.params.get("n2")
+                equalize = task.params.get("equalize", False)
                 rep = task.rep
                 self.create_and_save(n, m, equalize, rep, phase)
-            
+
             self.write_summary_if_enabled(plan, phase)

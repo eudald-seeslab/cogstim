@@ -8,7 +8,7 @@ from cogstim.generators.match_to_sample import (
     GENERAL_CONFIG as MTS_GENERAL_CONFIG,
 )
 from cogstim.helpers.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS
-from cogstim.helpers.planner import GenerationPlan
+from cogstim.helpers.planner import GenerationPlan, load_mts_tasks_from_csv
 from cogstim.helpers.dots_core import DotsCore
 from cogstim.helpers.mts_geometry import equalize_pair as geometry_equalize_pair
 from cogstim.generators.match_to_sample import save_image_pair, build_basename
@@ -49,6 +49,27 @@ class TestMatchToSampleGenerator:
             generator = MatchToSampleGenerator(config)
             expected_ratios = MTS_EASY_RATIOS + MTS_HARD_RATIOS
             assert generator.ratios == expected_ratios
+
+    def test_load_mts_tasks_from_csv(self, tmp_path):
+        """Test loading MTS tasks from CSV."""
+        csv_path = tmp_path / "tasks.csv"
+        csv_path.write_text("sample,match,equalized\n4,4,TRUE\n2,3,FALSE\n5,5,TRUE\n")
+        tasks = load_mts_tasks_from_csv(csv_path)
+        assert tasks == [(4, 4, True), (2, 3, False), (5, 5, True)]
+
+    def test_build_from_mts_csv(self, tmp_path):
+        """Test building plan from CSV with num_copies."""
+        csv_path = tmp_path / "tasks.csv"
+        csv_path.write_text("sample,match,equalized\n3,4,TRUE\n")
+        plan = GenerationPlan("mts", 1, 10, 1, ratios=[]).build_from_mts_csv(
+            csv_path, num_copies=3
+        )
+        assert len(plan.tasks) == 3
+        for rep, task in enumerate(plan.tasks):
+            assert task.params["n1"] == 3
+            assert task.params["n2"] == 4
+            assert task.params["equalize"] is True
+            assert task.rep == rep
 
     def test_get_positions(self):
         """Test compute_positions via GenerationPlan."""

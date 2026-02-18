@@ -129,6 +129,25 @@ def test_cli_match_to_sample_subcommand(tmp_path):
     assert len(match_files) > 0, "Should have match files"
 
 
+def test_cli_match_to_sample_with_tasks_csv(tmp_path):
+    """Test match-to-sample with --tasks-csv and --tasks-copies."""
+    csv_path = tmp_path / "tasks.csv"
+    csv_path.write_text("sample,match,equalized\n3,4,TRUE\n5,5,FALSE\n")
+    cli_args = [
+        "match-to-sample",
+        "--tasks-csv", str(csv_path),
+        "--tasks-copies", 2,
+        "--train-num", 1,
+        "--test-num", 0,
+        "--output-dir", str(tmp_path),
+    ]
+    _run_cli_with_args(cli_args)
+    images = list(Path(tmp_path).rglob("*.png"))
+    assert len(images) >= 2, "Should generate sample and match images (2 tasks * 2 copies = 4 pairs)"
+    sample_files = [img for img in images if img.name.endswith("_s.png")]
+    assert len(sample_files) >= 2
+
+
 def test_cli_lines_subcommand(tmp_path):
     """Test lines subcommand."""
     cli_args = [

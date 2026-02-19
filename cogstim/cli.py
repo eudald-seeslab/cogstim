@@ -356,7 +356,7 @@ def run_mts(args: argparse.Namespace) -> None:
     total = generator.generate_images()
     
     if not args.quiet:
-        print(f"\n✓ Generated {total} image pairs. Output: {config['output_dir']}")
+        print(f"\n✓ Generated {total} sets (image pairs). Output: {config['output_dir']}")
 
 
 def run_lines(args: argparse.Namespace) -> None:

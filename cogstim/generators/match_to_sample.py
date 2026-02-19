@@ -131,6 +131,7 @@ class MatchToSampleGenerator(BaseGenerator):
         """Generate all image pairs for train and test using unified planner or CSV."""
         tasks_csv = self.config.get("tasks_csv")
         tasks_copies = self.config.get("tasks_copies", 1)
+        total_pairs = 0
 
         for phase, num_images in self.iter_phases():
             if num_images <= 0:
@@ -149,6 +150,7 @@ class MatchToSampleGenerator(BaseGenerator):
                 plan.build()
 
             self.log_generation_info(f"Generating {len(plan)} image pairs for {phase}...")
+            total_pairs += len(plan)
 
             for task in tqdm(plan.tasks, desc=f"{phase}"):
                 n = task.params.get("n1")
@@ -158,3 +160,5 @@ class MatchToSampleGenerator(BaseGenerator):
                 self.create_and_save(n, m, equalize, rep, phase)
 
             self.write_summary_if_enabled(plan, phase)
+
+        return total_pairs

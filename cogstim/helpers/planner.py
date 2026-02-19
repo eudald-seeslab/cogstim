@@ -287,11 +287,22 @@ class GenerationPlan:
             raise ValueError("build_from_mts_csv only applies to task_type='mts'")
         tasks_spec = load_mts_tasks_from_csv(csv_path)
         self.tasks = []
-        for rep in range(num_copies):
+        task_id = 0
+        for copy_idx in range(num_copies):
             for n1, n2, equalize in tasks_spec:
+                # Use a unique rep per emitted task so repeated CSV rows do not
+                # overwrite each other when filenames include n1/n2/equalized/rep.
                 self.tasks.append(
-                    GenerationTask("mts", rep, n1=n1, n2=n2, equalize=equalize)
+                    GenerationTask(
+                        "mts",
+                        task_id,
+                        n1=n1,
+                        n2=n2,
+                        equalize=equalize,
+                        copy_idx=copy_idx,
+                    )
                 )
+                task_id += 1
         return self
     
     def __len__(self):

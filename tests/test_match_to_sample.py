@@ -71,6 +71,24 @@ class TestMatchToSampleGenerator:
             assert task.params["equalize"] is True
             assert task.rep == rep
 
+    def test_build_from_mts_csv_duplicate_rows_keep_unique_rep(self, tmp_path):
+        """Duplicate CSV rows should not collide on output filenames."""
+        csv_path = tmp_path / "tasks.csv"
+        csv_path.write_text("sample,match,equalized\n6,6,TRUE\n6,6,TRUE\n")
+
+        plan = GenerationPlan("mts", 1, 10, 1, ratios=[]).build_from_mts_csv(
+            csv_path, num_copies=1
+        )
+
+        assert len(plan.tasks) == 2
+        assert plan.tasks[0].params["n1"] == 6
+        assert plan.tasks[0].params["n2"] == 6
+        assert plan.tasks[0].params["equalize"] is True
+        assert plan.tasks[1].params["n1"] == 6
+        assert plan.tasks[1].params["n2"] == 6
+        assert plan.tasks[1].params["equalize"] is True
+        assert plan.tasks[0].rep != plan.tasks[1].rep
+
     def test_get_positions(self):
         """Test compute_positions via GenerationPlan."""
         plan = GenerationPlan("mts", self.config["min_point_num"], self.config["max_point_num"], self.config["train_num"], ratios=MTS_EASY_RATIOS).build()

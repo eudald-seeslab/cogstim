@@ -353,10 +353,9 @@ def run_mts(args: argparse.Namespace) -> None:
     """Execute match-to-sample generation."""
     config = build_mts_config(args)
     generator = MatchToSampleGenerator(config)
-    generator.generate_images()
+    total = generator.generate_images()
     
     if not args.quiet:
-        total = args.train_num + args.test_num
         print(f"\n✓ Generated {total} image pairs. Output: {config['output_dir']}")
 
 

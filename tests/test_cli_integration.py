@@ -122,9 +122,9 @@ def test_cli_match_to_sample_subcommand(tmp_path):
     images = list(Path(tmp_path).rglob("*.png"))
     assert len(images) >= 2, "Should generate sample and match images"
     
-    # Check that we have both _s.png and _m.png files
-    sample_files = [img for img in images if img.name.endswith("_s.png")]
-    match_files = [img for img in images if img.name.endswith("_m.png")]
+    # Check that we have both sample (role b) and match (role a) files
+    sample_files = [img for img in images if "_b_" in img.name and img.name.endswith(".png")]
+    match_files = [img for img in images if "_a_" in img.name and img.name.endswith(".png")]
     assert len(sample_files) > 0, "Should have sample files"
     assert len(match_files) > 0, "Should have match files"
 
@@ -144,7 +144,7 @@ def test_cli_match_to_sample_with_tasks_csv(tmp_path):
     _run_cli_with_args(cli_args)
     images = list(Path(tmp_path).rglob("*.png"))
     assert len(images) >= 2, "Should generate sample and match images (2 tasks * 2 copies = 4 pairs)"
-    sample_files = [img for img in images if img.name.endswith("_s.png")]
+    sample_files = [img for img in images if "_b_" in img.name and img.name.endswith(".png")]
     assert len(sample_files) >= 2
 
 

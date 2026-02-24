@@ -58,32 +58,28 @@ class TestMtsAreaReport:
             tmp_path.unlink()
 
     def test_filename_regex_matching(self):
-        """Test FILENAME_RE regex pattern matching."""
-        # Test valid filenames
+        """Test FILENAME_RE regex pattern matching (mts_{trial_id}_{r|e}_{a|b}_{n_dots}[_version].png)."""
         valid_cases = [
-            ("img_2_3_0_s.png", {"n": "2", "m": "3", "tag": "0", "eq": None}),
-            ("img_4_5_10_equalized_s.png", {"n": "4", "m": "5", "tag": "10", "eq": "_equalized"}),
-            ("img_1_1_test_s.png", {"n": "1", "m": "1", "tag": "test", "eq": None}),
-            ("img_6_8_11_equalized_s.png", {"n": "6", "m": "8", "tag": "11", "eq": "_equalized"}),
+            ("mts_00000_r_b_2.png", {"trial_id": "00000", "eq_type": "r", "role": "b", "n_dots": "2"}),
+            ("mts_00001_e_a_5.png", {"trial_id": "00001", "eq_type": "e", "role": "a", "n_dots": "5"}),
+            ("mts_12345_r_a_3_v1.png", {"trial_id": "12345", "eq_type": "r", "role": "a", "n_dots": "3"}),
         ]
-        
         for filename, expected in valid_cases:
             match = FILENAME_RE.match(filename)
             assert match is not None, f"Should match {filename}"
-            assert match.group("n") == expected["n"]
-            assert match.group("m") == expected["m"]
-            assert match.group("tag") == expected["tag"]
-            assert match.group("eq") == expected["eq"]
+            assert match.group("trial_id") == expected["trial_id"]
+            assert match.group("eq_type") == expected["eq_type"]
+            assert match.group("role") == expected["role"]
+            assert match.group("n_dots") == expected["n_dots"]
 
     def test_filename_regex_non_matching(self):
         """Test FILENAME_RE regex pattern with non-matching filenames."""
         invalid_cases = [
-            "img_2_3_0_m.png",  # Ends with _m.png instead of _s.png
-            "img_2_3_s.png",    # Missing tag
-            "test.png",         # Doesn't follow pattern
-            "img_2_3_0_s.jpg",  # Wrong extension
+            "img_2_3_0_s.png",
+            "mts_00000_r_b_2.jpg",
+            "mts_0_r_b_2.png",   # trial_id must be 5 digits
+            "test.png",
         ]
-        
         for filename in invalid_cases:
             match = FILENAME_RE.match(filename)
             assert match is None, f"Should not match {filename}"
@@ -94,10 +90,9 @@ class TestMtsAreaReport:
             # Create test images
             img_dir = Path(tmpdir)
             
-            # Create sample and match images
-            for base_name in ["img_2_3_0_s", "img_2_3_0_m", "img_4_5_1_equalized_s", "img_4_5_1_equalized_m"]:
+            # Create sample (b) and match (a) images in new naming: mts_{trial_id}_{r|e}_{a|b}_{n_dots}.png
+            for base_name in ["mts_00000_r_b_2", "mts_00000_r_a_3", "mts_00001_e_b_4", "mts_00001_e_a_5"]:
                 img = Image.new("RGB", (100, 100), color=(255, 255, 255))
-                # Add some black pixels to make it non-empty
                 img_array = np.array(img)
                 img_array[10:20, 10:20] = [0, 0, 0]
                 Image.fromarray(img_array).save(img_dir / f"{base_name}.png")
@@ -118,30 +113,28 @@ class TestMtsAreaReport:
                 rows = list(reader)
                 
                 assert len(rows) == 2  # Should have 2 pairs
-                
-                # Check first row
                 row1 = rows[0]
-                assert row1['n'] == '2'
-                assert row1['m'] == '3'
-                assert row1['tag'] == '0'
-                assert row1['equalized'] == '0'
-                assert int(row1['s_area_px']) > 0
-                assert int(row1['m_area_px']) > 0
-                
-                # Check second row
+                assert row1["base"] == "mts_00000_r"
+                assert row1["n"] == "2"
+                assert row1["m"] == "3"
+                assert row1["tag"] == "00000"
+                assert row1["equalized"] == "0"
+                assert int(row1["s_area_px"]) > 0
+                assert int(row1["m_area_px"]) > 0
                 row2 = rows[1]
-                assert row2['n'] == '4'
-                assert row2['m'] == '5'
-                assert row2['tag'] == '1'
-                assert row2['equalized'] == '1'
+                assert row2["base"] == "mts_00001_e"
+                assert row2["n"] == "4"
+                assert row2["m"] == "5"
+                assert row2["tag"] == "00001"
+                assert row2["equalized"] == "1"
 
     def test_main_function_with_incomplete_pairs(self):
         """Test main function with incomplete pairs (missing match files)."""
         with tempfile.TemporaryDirectory() as tmpdir:
             img_dir = Path(tmpdir)
             
-            # Create only sample files (no match files)
-            for base_name in ["img_2_3_0_s", "img_4_5_1_equalized_s"]:
+            # Create only sample (b) files, no match (a) files for those trials
+            for base_name in ["mts_00000_r_b_2", "mts_00001_e_b_4"]:
                 img = Image.new("RGB", (100, 100), color=(255, 255, 255))
                 img_array = np.array(img)
                 img_array[10:20, 10:20] = [0, 0, 0]

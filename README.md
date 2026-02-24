@@ -134,11 +134,11 @@ cogstim match-to-sample \
   --dot-colour yellow
 ```
 
-- Generates pairs of images per trial: `*_s.png` (sample) and `*_m.png` (match).
+- Generates pairs of images per trial: match (`*_a_*.png`) and sample (`*_b_*.png`).
 - For half of the trials, total dot surface is equalized between sample and match; for the other half, dot sizes are random.
 - The target total surface for the match is derived from the sample image of the same trial.
 - Unequal pairs are built from the same ratio set used by ANS, with both orders (n→m and m→n) included, and equal (n=m) trials added to balance labels.
-- Output layout: `images/match_to_sample/{train|test}/img_{n}_{m}_{k}[...]_s.png` and corresponding `img_{n}_{m}_{k}[...]_m.png`.
+- Output layout: `images/match_to_sample/{train|test}/mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png` (each image self-described; pairs share trial_id).
 
 This task is based on Sella et al. (2013).
 

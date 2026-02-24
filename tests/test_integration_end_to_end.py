@@ -215,10 +215,10 @@ class TestMatchToSampleImageGeneration:
         assert test_dir.exists(), "test directory not created"
         
         # Look for sample and match images in both train and test directories
-        train_sample_images = list(train_dir.glob("*_s.png"))
-        train_match_images = list(train_dir.glob("*_m.png"))
-        test_sample_images = list(test_dir.glob("*_s.png"))
-        test_match_images = list(test_dir.glob("*_m.png"))
+        train_sample_images = list(train_dir.glob("*_b_*.png"))
+        train_match_images = list(train_dir.glob("*_a_*.png"))
+        test_sample_images = list(test_dir.glob("*_b_*.png"))
+        test_match_images = list(test_dir.glob("*_a_*.png"))
         
         assert len(train_sample_images) > 0, "No sample images in train"
         assert len(train_match_images) > 0, "No match images in train"
@@ -270,10 +270,10 @@ class TestMatchToSampleImageGeneration:
         assert train_dir.exists(), "train directory not created"
         assert test_dir.exists(), "test directory not created"
         
-        train_sample_images = list(train_dir.glob("*_s.png"))
-        train_match_images = list(train_dir.glob("*_m.png"))
-        test_sample_images = list(test_dir.glob("*_s.png"))
-        test_match_images = list(test_dir.glob("*_m.png"))
+        train_sample_images = list(train_dir.glob("*_b_*.png"))
+        train_match_images = list(train_dir.glob("*_a_*.png"))
+        test_sample_images = list(test_dir.glob("*_b_*.png"))
+        test_match_images = list(test_dir.glob("*_a_*.png"))
         
         assert len(train_sample_images) > 0, "No sample images in train"
         assert len(train_match_images) > 0, "No match images in train"
@@ -315,10 +315,10 @@ class TestMatchToSampleImageGeneration:
         assert test_dir.exists(), "test directory not created"
         
         # Look for equalized pairs in both train and test directories
-        train_equalized_samples = list(train_dir.glob("*_equalized_s.png"))
-        train_equalized_matches = list(train_dir.glob("*_equalized_m.png"))
-        test_equalized_samples = list(test_dir.glob("*_equalized_s.png"))
-        test_equalized_matches = list(test_dir.glob("*_equalized_m.png"))
+        train_equalized_samples = list(train_dir.glob("*_e_b_*.png"))
+        train_equalized_matches = list(train_dir.glob("*_e_a_*.png"))
+        test_equalized_samples = list(test_dir.glob("*_e_b_*.png"))
+        test_equalized_matches = list(test_dir.glob("*_e_a_*.png"))
         
         assert len(train_equalized_samples) > 0, "No equalized sample images in train"
         assert len(train_equalized_matches) > 0, "No equalized match images in train"
@@ -540,8 +540,8 @@ class TestCLIIntegration:
         assert test_dir.exists()
         
         # Check that sample and match images were generated
-        train_samples = list(train_dir.glob("*_s.png"))
-        train_matches = list(train_dir.glob("*_m.png"))
+        train_samples = list(train_dir.glob("*_b_*.png"))
+        train_matches = list(train_dir.glob("*_a_*.png"))
         
         assert len(train_samples) > 0
         assert len(train_matches) > 0

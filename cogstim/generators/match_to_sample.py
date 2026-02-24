@@ -16,46 +16,46 @@ GENERAL_CONFIG = {
 }
 
 
-def save_image_pair(generator, s_np, s_points, m_np, m_points, base_name, *subdirs):
+MTS_TRIAL_ID_PADDING = 5
+
+
+def build_basename(trial_id: int, role: str, n_dots: int, equalized: bool, version_tag: str | None = None) -> str:
+    """
+    Build a basename for a single MTS image (sample or match).
+    Each file is self-described: trial id, random/equalized, role (a=match, b=sample), dot count.
+    Pairs are linked by trial_id; sorting by filename orders by trial then role (a before b).
+    Format: mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png
+
+    Args:
+        trial_id: Zero-based trial index (pairs share this id).
+        role: "a" (match) or "b" (sample).
+        n_dots: Number of dots in this image.
+        equalized: Whether this pair used area equalization ("e"); otherwise "r" (random).
+        version_tag: Optional version tag to append.
+
+    Returns:
+        Basename string like "mts_00000_r_a_5" or "mts_00000_e_b_3_v1".
+    """
+    eq_char = "e" if equalized else "r"
+    v_tag = f"_{version_tag}" if version_tag else ""
+    return f"mts_{trial_id:0{MTS_TRIAL_ID_PADDING}d}_{eq_char}_{role}_{n_dots}{v_tag}"
+
+
+def save_image_pair(generator, s_np, s_points, m_np, m_points, trial_id, n1, n2, equalized, *subdirs, version_tag=None):
     """
     Save a pair of images (sample and match) using a generator's save method.
-    
-    Args:
-        generator: BaseGenerator instance with save_image method
-        s_np: DotsCore instance for sample image
-        s_points: Point array for sample image
-        m_np: DotsCore instance for match image
-        m_points: Point array for match image
-        base_name: Base filename without extension
-        *subdirs: Subdirectories under output_dir to save to
+    Sample is role "b", match is role "a" so filenames sort with match then sample per trial.
     """
     s_np.draw_points(s_points)
     m_np.draw_points(m_points)
-    
-    s_filename = f"{base_name}_s"
-    m_filename = f"{base_name}_m"
-    
-    generator.save_image(s_np, s_filename, *subdirs)
-    generator.save_image(m_np, m_filename, *subdirs)
+
+    s_basename = build_basename(trial_id, "b", n1, equalized, version_tag)
+    m_basename = build_basename(trial_id, "a", n2, equalized, version_tag)
+
+    generator.save_image(s_np, s_basename, *subdirs)
+    generator.save_image(m_np, m_basename, *subdirs)
 
 
-def build_basename(n1: int, n2: int, rep: int, equalized: bool, version_tag: str | None = None) -> str:
-    """
-    Build a standard basename for image pairs.
-    
-    Args:
-        n1: Number of dots in first array
-        n2: Number of dots in second array
-        rep: Repetition/iteration number
-        equalized: Whether areas are equalized
-        version_tag: Optional version tag to append
-    
-    Returns:
-        Basename string like "img_5_3_0_equalized_v1"
-    """
-    eq = "_equalized" if equalized else ""
-    v_tag = f"_{version_tag}" if version_tag else ""
-    return f"img_{n1}_{n2}_{rep}{eq}{v_tag}"
 
 
 class MatchToSampleGenerator(BaseGenerator):
@@ -111,18 +111,20 @@ class MatchToSampleGenerator(BaseGenerator):
         
         return (s_np, s_points, m_np, m_points)
     
-    def save_image_pair(self, pair, base_name, phase="train"):
-        """Save a pair of images."""
+    def save_image_pair(self, pair, trial_id, n1, n2, equalized, phase="train"):
+        """Save a pair of images with trial-scoped basenames."""
         s_np, s_points, m_np, m_points = pair
-        save_image_pair(self, s_np, s_points, m_np, m_points, base_name, phase)
-    
-    def create_and_save(self, n1, n2, equalize, tag, phase="train"):
+        save_image_pair(
+            self, s_np, s_points, m_np, m_points,
+            trial_id, n1, n2, equalized, phase,
+            version_tag=self.config.get("version_tag"),
+        )
+
+    def create_and_save(self, trial_id, n1, n2, equalize, phase="train"):
         """Create and save a pair of images."""
-        base_name = build_basename(n1, n2, tag, equalize, self.config.get("version_tag"))
-        
         pair = self.create_image_pair(n1, n2, equalize)
         if pair is not None:
-            self.save_image_pair(pair, base_name, phase)
+            self.save_image_pair(pair, trial_id, n1, n2, equalize, phase)
     
     def get_subdirectories(self):
         return [("train",), ("test",)]
@@ -152,12 +154,11 @@ class MatchToSampleGenerator(BaseGenerator):
             self.log_generation_info(f"Generating {len(plan)} image pairs for {phase}...")
             total_pairs += len(plan)
 
-            for task in tqdm(plan.tasks, desc=f"{phase}"):
+            for trial_id, task in enumerate(tqdm(plan.tasks, desc=f"{phase}")):
                 n = task.params.get("n1")
                 m = task.params.get("n2")
                 equalize = task.params.get("equalize", False)
-                rep = task.rep
-                self.create_and_save(n, m, equalize, rep, phase)
+                self.create_and_save(trial_id, n, m, equalize, phase)
 
             self.write_summary_if_enabled(plan, phase)
 

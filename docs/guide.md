@@ -280,7 +280,7 @@ This generates red dot arrays numbered 1–5 with constant total surface area.
 
 ## Match-to-Sample – Dot Array Pairs
 
-Generate sample/match image pairs for match-to-sample tasks. Each trial produces two images: a sample (`*_s.png`) and a match (`*_m.png`). For half the trials, total dot surface is equalized between sample and match; for the other half, dot sizes are random. Based on Sella et al. (2013).
+Generate sample/match image pairs for match-to-sample tasks. Each trial produces two images: a sample (role `b`) and a match (role `a`). For half the trials, total dot surface is equalized between sample and match; for the other half, dot sizes are random. Based on Sella et al. (2013).
 
 ### Minimal Command
 
@@ -288,7 +288,7 @@ Generate sample/match image pairs for match-to-sample tasks. Each trial produces
 cogstim match-to-sample --train-num 10 --test-num 5
 ```
 
-**What it produces:** 15 image pairs (10 training, 5 test) in the flat directory structure: `images/match_to_sample/train/` and `images/match_to_sample/test/`. Each pair consists of `img_n_m_k_[...]_s.png` (sample) and `img_n_m_k_[...]_m.png` (match).
+**What it produces:** 15 image pairs (10 training, 5 test) in the flat directory structure: `images/match_to_sample/train/` and `images/match_to_sample/test/`. Each pair consists of `mts_{trial_id}_{r|e}_b_{n_dots}.png` (sample) and `mts_{trial_id}_{r|e}_a_{n_dots}.png` (match).
 
 ### Relevant Options
 
@@ -303,14 +303,12 @@ cogstim match-to-sample --train-num 10 --test-num 5
 
 ### File Naming
 
-Filenames encode the trial structure: `img_{n}_{m}_{k}[...]_s.png` and `img_{n}_{m}_{k}[...]_m.png`, where:
-- `n` = number of dots in the sample
-- `m` = number of dots in the match
-- `k` = trial index for this (n, m) pair
-- `_s` = sample image
-- `_m` = match image
-
-Filenames also include `_equalized` when surface area is controlled.
+Filenames are self-described and sort by trial then role: `mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png`, where:
+- `trial_id` = zero-padded trial index (pairs share this id)
+- `r` = random dot sizes, `e` = equalized surface area
+- `a` = match image, `b` = sample image (alphabetical order: match then sample)
+- `n_dots` = number of dots in that image
+- Optional `_version` tag may follow.
 
 ### Advanced Tweak: Tighter Equalization Tolerance
 

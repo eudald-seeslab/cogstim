@@ -8,7 +8,10 @@ from PIL import Image
 import numpy as np
 
 
-FILENAME_RE = re.compile(r"^(img_(?P<n>\d+)_(?P<m>\d+)_(?P<tag>[^_]*)?(?P<eq>_equalized)?(?:_[^_]*)?)_s\.png$")
+# One image per file: mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png
+FILENAME_RE = re.compile(
+    r"^mts_(?P<trial_id>\d{5})_(?P<eq_type>r|e)_(?P<role>a|b)_(?P<n_dots>\d+)(?:_[^_]+)?\.png$"
+)
 
 
 def compute_foreground_area(image_path: Path) -> int:
@@ -30,32 +33,36 @@ def main() -> None:
     if not base_dir.exists():
         raise FileNotFoundError(f"Directory not found: {base_dir}")
 
-    rows = []
-    for s_path in sorted(base_dir.glob("*_s.png")):
-        match = FILENAME_RE.match(s_path.name)
+    # Group parsed files by (trial_id, eq_type); each pair has role "a" (match) and "b" (sample).
+    by_pair: dict[tuple[str, str], dict[str, Path]] = {}
+    for path in base_dir.glob("mts_*.png"):
+        match = FILENAME_RE.match(path.name)
         if not match:
-            # Skip files not following naming convention
             continue
-        base = match.group(1)
-        n = match.group("n")
-        m = match.group("m")
-        tag = match.group("tag") or ""
-        equalized = bool(match.group("eq"))
+        trial_id = match.group("trial_id")
+        eq_type = match.group("eq_type")
+        role = match.group("role")
+        n_dots = match.group("n_dots")
+        key = (trial_id, eq_type)
+        if key not in by_pair:
+            by_pair[key] = {}
+        by_pair[key][role] = (path, int(n_dots))
 
-        m_path = s_path.with_name(f"{base}_m.png")
-        if not m_path.exists():
-            # Incomplete pair; skip
+    rows = []
+    for (trial_id, eq_type), files in sorted(by_pair.items()):
+        if "a" not in files or "b" not in files:
             continue
-
+        (m_path, n_match) = files["a"]
+        (s_path, n_sample) = files["b"]
         s_area = compute_foreground_area(s_path)
         m_area = compute_foreground_area(m_path)
-
+        base = f"mts_{trial_id}_{eq_type}"
         rows.append({
             "base": base,
-            "n": int(n),
-            "m": int(m),
-            "tag": tag,
-            "equalized": int(equalized),
+            "n": n_sample,
+            "m": n_match,
+            "tag": trial_id,
+            "equalized": 1 if eq_type == "e" else 0,
             "s_area_px": s_area,
             "m_area_px": m_area,
             "s_file": str(s_path),

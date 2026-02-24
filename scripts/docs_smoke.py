@@ -204,10 +204,10 @@ def test_match_to_sample(temp_dir: Path) -> bool:
         print(f"✗ train or test directory missing in {output_dir}")
         return False
     
-    train_samples = list(train_dir.glob("*_s.png"))
-    train_matches = list(train_dir.glob("*_m.png"))
-    test_samples = list(test_dir.glob("*_s.png"))
-    test_matches = list(test_dir.glob("*_m.png"))
+    train_samples = list(train_dir.glob("*_b_*.png"))
+    train_matches = list(train_dir.glob("*_a_*.png"))
+    test_samples = list(test_dir.glob("*_b_*.png"))
+    test_matches = list(test_dir.glob("*_a_*.png"))
     
     print(f"\nVerifying match-to-sample output:")
     print(f"✓ train/ contains {len(train_samples)} sample images")

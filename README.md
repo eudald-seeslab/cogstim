@@ -9,7 +9,7 @@ CogStim is a small Python toolkit that produces **synthetic image datasets** com
 
 * Shape discrimination (e.g. *circle vs star*).
 * Colour discrimination (e.g. *yellow vs blue* circles).
-* Approximate Number System (ANS) dot arrays with two colours.
+* Approximate Number System (Panamath) dot arrays with two colours.
 * Single-colour dot arrays for number-discrimination tasks.
 * Custom combinations of geometrical *shapes × colours*.
 * Rotated stripe patterns ("lines" dataset) for orientation discrimination.
@@ -82,6 +82,8 @@ For now, this is supported only for the following tasks, with the CSV specificat
 | Task             | CSV columns                 |
 |------------------|-----------------------------|
 | Match to sample  | sample, match, equalized    |
+| Panamath              | n1, n2, equalized           |
+
 
 
 ## Examples

@@ -147,6 +147,8 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
             "seed": args.seed,
             "img_format": args.img_format,
             "version_tag": args.version_tag,
+            "layout": args.layout,
+            "gap": args.gap,
         },
     }
 
@@ -155,6 +157,10 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
         cfg["colour_1"] = args.dot_colour1
     if hasattr(args, 'dot_colour2'):
         cfg["colour_2"] = args.dot_colour2
+
+    if getattr(args, 'tasks_csv', None):
+        cfg["tasks_csv"] = args.tasks_csv
+        cfg["tasks_copies"] = getattr(args, 'tasks_copies', 1)
     
     return cfg
 
@@ -647,6 +653,33 @@ def setup_ans_subcommand(subparsers) -> None:
         default="blue",
         help="Second dot colour"
     )
+    parser.add_argument(
+        "--layout",
+        type=str,
+        choices=["mixed", "separated"],
+        default=DOT_DEFAULTS["layout"],
+        help="Dot placement layout: 'mixed' (all dots share the canvas) or 'separated' (colour_1 left, colour_2 right)"
+    )
+    parser.add_argument(
+        "--gap",
+        type=int,
+        default=DOT_DEFAULTS["gap"],
+        help=f"Pixel gap between left and right halves in separated layout (default: {DOT_DEFAULTS['gap']})"
+    )
+    parser.add_argument(
+        "--tasks-csv",
+        type=str,
+        default=None,
+        metavar="PATH",
+        help="Path to CSV file specifying tasks (columns: n1, n2, equalized). When set, ratios and min/max-point-num are ignored."
+    )
+    parser.add_argument(
+        "--tasks-copies",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Number of copies of the tasks distribution (default: 1). Applies when --tasks-csv is used."
+    )
     
     parser.set_defaults(func=run_ans)
 
@@ -913,7 +946,7 @@ For help on a specific task:
     parser.add_argument(
         "--version",
         action="version",
-        version="cogstim 0.4.1"
+        version="cogstim 0.8.0"
     )
     
     subparsers = parser.add_subparsers(

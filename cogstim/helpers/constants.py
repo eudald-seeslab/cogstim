@@ -90,6 +90,8 @@ DOT_DEFAULTS = {
     "max_point_radius": 30,
     "attempts_limit": 10000,
     "dot_colour": "yellow",
+    "layout": "mixed",
+    "gap": 40,
 }
 
 # Shape generation defaults

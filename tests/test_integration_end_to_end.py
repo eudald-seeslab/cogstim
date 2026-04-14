@@ -177,6 +177,78 @@ class TestANSImageGeneration:
             assert img.mode == "RGB"
 
 
+    def test_ans_separated_layout_generation(self, tmp_path):
+        """Test ANS generation with separated layout produces valid images."""
+        test_images_dir = get_test_images_dir()
+        config = {
+            **ANS_GENERAL_CONFIG,
+            "train_num": 1,
+            "test_num": 0,
+            "output_dir": str(test_images_dir / "ans_separated"),
+            "ratios": "easy",
+            "ONE_COLOUR": False,
+            "min_point_num": 2,
+            "max_point_num": 5,
+            "background_colour": "white",
+            "min_point_radius": 6,
+            "max_point_radius": 10,
+            "version_tag": "",
+            "img_format": "png",
+            "layout": "separated",
+            "gap": 40,
+        }
+
+        generator = DotsANSGenerator(config)
+        generator.generate_images()
+
+        output_dir = Path(config["output_dir"])
+        assert output_dir.exists()
+
+        train_yellow = output_dir / "train" / "yellow"
+        train_blue = output_dir / "train" / "blue"
+        assert train_yellow.exists()
+        assert train_blue.exists()
+
+        yellow_images = list(train_yellow.glob("*.png"))
+        blue_images = list(train_blue.glob("*.png"))
+        assert len(yellow_images) > 0, "No yellow images in separated layout"
+        assert len(blue_images) > 0, "No blue images in separated layout"
+
+        for img_path in yellow_images[:2] + blue_images[:2]:
+            with Image.open(img_path) as img:
+                assert img.size == (512, 512)
+                assert img.mode == "RGB"
+                assert "_separated" in img_path.stem
+
+    def test_ans_separated_equalized_generation(self, tmp_path):
+        """Test that separated + equalized images are generated correctly."""
+        test_images_dir = get_test_images_dir()
+        config = {
+            **ANS_GENERAL_CONFIG,
+            "train_num": 1,
+            "test_num": 0,
+            "output_dir": str(test_images_dir / "ans_separated_eq"),
+            "ratios": "easy",
+            "ONE_COLOUR": False,
+            "min_point_num": 2,
+            "max_point_num": 4,
+            "background_colour": "white",
+            "min_point_radius": 5,
+            "max_point_radius": 8,
+            "version_tag": "",
+            "img_format": "png",
+            "layout": "separated",
+            "gap": 40,
+        }
+
+        generator = DotsANSGenerator(config)
+        generator.generate_images()
+
+        output_dir = Path(config["output_dir"])
+        equalized_images = list(output_dir.rglob("*_equalized_separated*.png"))
+        assert len(equalized_images) > 0, "No equalized separated images found"
+
+
 class TestMatchToSampleImageGeneration:
     """Test match-to-sample image generation end-to-end."""
 

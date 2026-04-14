@@ -125,6 +125,19 @@ cogstim ans --ratios easy --train-num 100 --test-num 40
 
 This is based on Halberda et al. (2008).
 
+#### Separated layout
+
+By default, dots of both colours are interleaved across the full canvas (`--layout mixed`). Use `--layout separated` to place colour 1 on the left half and colour 2 on the right half, with a configurable gap between them:
+
+```bash
+cogstim ans --ratios easy --train-num 100 --test-num 40 --layout separated --gap 40
+```
+
+- `--layout separated` constrains each colour to its own half of the image.
+- `--gap N` controls the pixel-wide empty strip between the two halves (default: 40).
+- Area equalization still works: the `_equalized` variants are generated as usual.
+- One-colour mode (`cogstim one-colour`) ignores `--layout separated` since there is only one colour.
+
 ### Match-to-sample (MTS) – dot arrays (sample/match) with controlled total surface
 ```bash
 cogstim match-to-sample \

@@ -304,6 +304,54 @@ class GenerationPlan:
                 )
                 task_id += 1
         return self
+
+    def build_from_ans_csv(
+        self, csv_path: str | Path, num_copies: int = 1
+    ) -> "GenerationPlan":
+        """
+        Build ANS task list from a CSV file.
+
+        CSV must have columns: n1, n2, equalized.
+        Each row defines one (n1, n2, equalize) task.
+        num_copies repeats the entire distribution that many times.
+
+        Args:
+            csv_path: Path to CSV file
+            num_copies: Number of copies of the task distribution (default 1)
+
+        Returns:
+            self (for method chaining)
+        """
+        if self.task_type not in ("ans", "one_colour"):
+            raise ValueError("build_from_ans_csv only applies to task_type 'ans' or 'one_colour'")
+        tasks_spec = load_ans_tasks_from_csv(csv_path)
+        self.tasks = []
+        task_id = 0
+        for copy_idx in range(num_copies):
+            for n1, n2, equalize in tasks_spec:
+                task_type = self.task_type
+                if task_type == "one_colour":
+                    self.tasks.append(
+                        GenerationTask(
+                            "one_colour",
+                            task_id,
+                            n=n1,
+                            copy_idx=copy_idx,
+                        )
+                    )
+                else:
+                    self.tasks.append(
+                        GenerationTask(
+                            "ans",
+                            task_id,
+                            n1=n1,
+                            n2=n2,
+                            equalize=equalize,
+                            copy_idx=copy_idx,
+                        )
+                    )
+                task_id += 1
+        return self
     
     def __len__(self):
         """Return the number of tasks in the plan."""
@@ -382,6 +430,34 @@ def load_mts_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, bool]]
             eq_val = str(row.get("equalized", "FALSE")).strip().upper()
             equalize = eq_val in ("TRUE", "1", "YES")
             tasks.append((sample, match, equalize))
+    return tasks
+
+
+def load_ans_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, bool]]:
+    """
+    Load ANS task specifications from a CSV file.
+
+    Expected columns: n1, n2, equalized
+    - n1: number of dots for colour_1
+    - n2: number of dots for colour_2 (ignored for one_colour tasks)
+    - equalized: TRUE/FALSE (case-insensitive)
+
+    Returns:
+        List of (n1, n2, equalize) tuples.
+    """
+    path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Tasks CSV not found: {path}")
+
+    tasks = []
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            n1 = int(row["n1"])
+            n2 = int(row["n2"])
+            eq_val = str(row.get("equalized", "FALSE")).strip().upper()
+            equalize = eq_val in ("TRUE", "1", "YES")
+            tasks.append((n1, n2, equalize))
     return tasks
 
 

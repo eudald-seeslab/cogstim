@@ -86,6 +86,24 @@ def test_cli_ans_subcommand(tmp_path):
     assert len(images) >= 1, "Should generate at least one image"
 
 
+def test_cli_ans_with_tasks_csv(tmp_path):
+    """Test ANS subcommand with --tasks-csv and --tasks-copies."""
+    csv_path = tmp_path / "tasks.csv"
+    csv_path.write_text("n1,n2,equalized\n3,5,TRUE\n2,4,FALSE\n")
+    cli_args = [
+        "ans",
+        "--tasks-csv", str(csv_path),
+        "--tasks-copies", 2,
+        "--train-num", 1,
+        "--test-num", 0,
+        "--output-dir", str(tmp_path),
+        "--version-tag", "",
+    ]
+    _run_cli_with_args(cli_args)
+    images = list(Path(tmp_path).rglob("*.png"))
+    assert len(images) == 4, f"Expected 4 images (2 CSV rows * 2 copies), got {len(images)}"
+
+
 def test_cli_one_colour_subcommand(tmp_path):
     """Test one-colour subcommand."""
     cli_args = [

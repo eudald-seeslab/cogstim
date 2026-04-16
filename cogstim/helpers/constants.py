@@ -121,6 +121,16 @@ FIXATION_DEFAULTS = {
     "symbol_colour": "white",
 }
 
+# Mask defaults (dense dot patterns for visual masking)
+MASK_DEFAULTS = {
+    "num_masks": 5,
+    "num_dots": 300,
+    "min_dot_radius": 3,
+    "max_dot_radius": 25,
+    "dot_colour": "black",
+    "background_colour": "white",
+}
+
 # Match-to-sample defaults
 MTS_DEFAULTS = {
     "min_point_radius": 5,

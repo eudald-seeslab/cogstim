@@ -7,6 +7,7 @@ from cogstim.generators.dots_one_colour import DotsOneColourGenerator
 from cogstim.generators.lines import LinesGenerator
 from cogstim.generators.match_to_sample import MatchToSampleGenerator
 from cogstim.generators.fixation import FixationGenerator
+from cogstim.generators.mask import MaskGenerator
 
 # Import base classes and utilities
 from cogstim.helpers.base_generator import BaseGenerator
@@ -19,6 +20,7 @@ from cogstim.helpers.constants import (
     LINE_DEFAULTS,
     FIXATION_DEFAULTS,
     MTS_DEFAULTS,
+    MASK_DEFAULTS,
 )
 
 __all__ = [
@@ -29,6 +31,7 @@ __all__ = [
     "LinesGenerator",
     "MatchToSampleGenerator",
     "FixationGenerator",
+    "MaskGenerator",
     # Base classes
     "BaseGenerator",
     "DotsCore",
@@ -41,4 +44,5 @@ __all__ = [
     "LINE_DEFAULTS",
     "FIXATION_DEFAULTS",
     "MTS_DEFAULTS",
+    "MASK_DEFAULTS",
 ]

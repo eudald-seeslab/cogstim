@@ -13,6 +13,7 @@ authors         = [{name = "Eudald Correig-Fraga", email = "eudald.correig@urv.c
 classifiers     = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3 :: Only",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]

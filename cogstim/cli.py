@@ -33,33 +33,13 @@ from cogstim.helpers.constants import (
     MASK_DEFAULTS,
     CLI_DEFAULTS,
 )
+from cogstim.helpers import cli_options as opts
+from cogstim.helpers.cli_options import add_options, parse_ratios
 
 
 # =============================================================================
 # Helper Functions
 # =============================================================================
-
-
-def parse_ratios(value):
-    """Parse ratios argument - either a preset string or comma-separated fractions."""
-    if value in ["easy", "hard", "all"]:
-        return value
-    # Try to parse as comma-separated fractions (e.g., "1/2,2/3,3/4")
-    try:
-        ratios = []
-        for fraction_str in value.split(","):
-            fraction_str = fraction_str.strip()
-            if "/" in fraction_str:
-                numerator, denominator = fraction_str.split("/")
-                ratios.append(float(numerator) / float(denominator))
-            else:
-                # Also accept plain decimals for backwards compatibility
-                ratios.append(float(fraction_str))
-        return ratios
-    except (ValueError, ZeroDivisionError):
-        raise argparse.ArgumentTypeError(
-            f"Invalid ratios: '{value}'. Must be 'easy', 'hard', 'all', or comma-separated fractions (e.g., '1/2,2/3,3/4')"
-        )
 
 
 # =============================================================================
@@ -466,601 +446,141 @@ def run_custom(args: argparse.Namespace) -> None:
 
 
 # =============================================================================
-# Argument Parsing - Common Options
-# =============================================================================
-
-
-def add_common_options(parser: argparse.ArgumentParser) -> None:
-    """Add common options available to all subcommands."""
-    parser.add_argument(
-        "--output-dir",
-        type=str,
-        default=None,
-        help="Root output directory (default varies by task)"
-    )
-    parser.add_argument(
-        "--img-size",
-        type=int,
-        default=IMAGE_DEFAULTS["init_size"],
-        help=f"Image size in pixels (default: {IMAGE_DEFAULTS['init_size']})"
-    )
-    parser.add_argument(
-        "--img-format",
-        type=str,
-        default=IMAGE_DEFAULTS["img_format"],
-        choices=["png", "jpg", "jpeg", "bmp", "tiff"],
-        help=f"Image format (default: {IMAGE_DEFAULTS['img_format']})"
-    )
-    parser.add_argument(
-        "--background-colour",
-        type=str,
-        default=IMAGE_DEFAULTS["background_colour"],
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        help=f"Background colour (default: {IMAGE_DEFAULTS['background_colour']})"
-    )
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=None,
-        help="Random seed for reproducible generation"
-    )
-    parser.add_argument(
-        "--version-tag",
-        type=str,
-        default="",
-        help="Optional version tag appended to filenames"
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Enable verbose output"
-    )
-    parser.add_argument(
-        "--quiet",
-        action="store_true",
-        help="Suppress all non-error output"
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Report how many images would be generated, and why, without writing any"
-    )
-
-
-def add_train_test_options(parser: argparse.ArgumentParser) -> None:
-    """Add train/test count options.
-
-    These count *sets*, not images. A set is one sweep of every condition the
-    paradigm defines, so a set is many images -- 200 for shapes, 112 for ANS.
-    Use --dry-run to see the exact figure for a given set of arguments.
-    """
-    parser.add_argument(
-        "--train-num",
-        type=int,
-        default=CLI_DEFAULTS["train_num"],
-        help=(
-            "Number of training SETS to generate, not images. One set covers "
-            "every condition of the paradigm once, so it yields many images; "
-            f"use --dry-run to see how many (default: {CLI_DEFAULTS['train_num']})"
-        )
-    )
-    parser.add_argument(
-        "--test-num",
-        type=int,
-        default=CLI_DEFAULTS["test_num"],
-        help=(
-            "Number of test SETS to generate, not images "
-            f"(default: {CLI_DEFAULTS['test_num']})"
-        )
-    )
-    parser.add_argument(
-        "--demo",
-        action="store_true",
-        help="Generate a small demo dataset (8 training sets)"
-    )
-
-
-def add_dot_options(parser: argparse.ArgumentParser, include_ratios: bool = True) -> None:
-    """Add dot-array-specific options."""
-    if include_ratios:
-        parser.add_argument(
-            "--ratios",
-            type=parse_ratios,
-            default="all",
-            help="Ratio set: 'easy', 'hard', 'all', or comma-separated fractions (e.g., '1/2,2/3,3/4') (default: all)"
-        )
-    
-    parser.add_argument(
-        "--min-point-num",
-        type=int,
-        default=1,
-        help="Minimum number of points per colour (default: 1)"
-    )
-    parser.add_argument(
-        "--max-point-num",
-        type=int,
-        default=10,
-        help="Maximum number of points per colour (default: 10)"
-    )
-    parser.add_argument(
-        "--min-point-radius",
-        type=int,
-        default=DOT_DEFAULTS["min_point_radius"],
-        help=f"Minimum dot radius in pixels (default: {DOT_DEFAULTS['min_point_radius']})"
-    )
-    parser.add_argument(
-        "--max-point-radius",
-        type=int,
-        default=DOT_DEFAULTS["max_point_radius"],
-        help=f"Maximum dot radius in pixels (default: {DOT_DEFAULTS['max_point_radius']})"
-    )
-    parser.add_argument(
-        "--attempts-limit",
-        type=int,
-        default=DOT_DEFAULTS["attempts_limit"],
-        help=f"Maximum attempts for dot placement (default: {DOT_DEFAULTS['attempts_limit']})"
-    )
-
-
-def add_shape_options(parser: argparse.ArgumentParser) -> None:
-    """Add shape-specific options."""
-    parser.add_argument(
-        "--min-surface",
-        type=int,
-        default=SHAPE_DEFAULTS["min_surface"],
-        help=f"Minimum shape surface area (default: {SHAPE_DEFAULTS['min_surface']})"
-    )
-    parser.add_argument(
-        "--max-surface",
-        type=int,
-        default=SHAPE_DEFAULTS["max_surface"],
-        help=f"Maximum shape surface area (default: {SHAPE_DEFAULTS['max_surface']})"
-    )
-    parser.add_argument(
-        "--no-jitter",
-        action="store_true",
-        help="Disable positional jitter"
-    )
-    parser.add_argument(
-        "--random-rotation",
-        action="store_true",
-        help="Enable random rotation of shapes"
-    )
-    parser.add_argument(
-        "--min-rotation",
-        type=int,
-        default=SHAPE_DEFAULTS["min_rotation"],
-        help=f"Minimum rotation angle in degrees (default: {SHAPE_DEFAULTS['min_rotation']})"
-    )
-    parser.add_argument(
-        "--max-rotation",
-        type=int,
-        default=SHAPE_DEFAULTS["max_rotation"],
-        help=f"Maximum rotation angle in degrees (default: {SHAPE_DEFAULTS['max_rotation']})"
-    )
-
-
-# =============================================================================
 # Subcommand Definitions
 # =============================================================================
+#
+# Every option comes from the registry in cogstim/helpers/cli_options.py. A
+# subcommand states which groups of options it consumes; it never defines one
+# itself. tests/test_cli_options.py enforces that.
+
+
+def _add_subcommand(subparsers, name, *groups, help, description, epilog, func):
+    """Create a subcommand from option groups in the registry."""
+    parser = subparsers.add_parser(
+        name,
+        help=help,
+        description=description,
+        epilog=epilog,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    add_options(parser, *groups)
+    parser.set_defaults(func=func)
+    return parser
 
 
 def setup_shapes_subcommand(subparsers) -> None:
     """Setup 'shapes' subcommand for shape discrimination."""
-    parser = subparsers.add_parser(
-        "shapes",
+    _add_subcommand(
+        subparsers, "shapes",
+        opts.COMMON, opts.TRAIN_TEST, opts.SHAPE_GEOMETRY, opts.SHAPES_SPECIFIC,
         help="Generate shape discrimination dataset (e.g., circles vs stars)",
         description="Generate images of different shapes in the same colour for shape recognition tasks.",
         epilog="Example: cogstim shapes --train-num 100 --test-num 40",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        func=run_shapes,
     )
-    
-    add_common_options(parser)
-    add_train_test_options(parser)
-    add_shape_options(parser)
-    
-    parser.add_argument(
-        "--shapes",
-        nargs=2,
-        choices=["circle", "star", "triangle", "square"],
-        default=["circle", "star"],
-        help="Two shapes for discrimination"
-    )
-    parser.add_argument(
-        "--colours",
-        nargs=1,
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        default=["yellow"],
-        help="Colour for both shapes"
-    )
-    
-    parser.set_defaults(func=run_shapes)
 
 
 def setup_colours_subcommand(subparsers) -> None:
     """Setup 'colours' subcommand for colour discrimination."""
-    parser = subparsers.add_parser(
-        "colours",
+    _add_subcommand(
+        subparsers, "colours",
+        opts.COMMON, opts.TRAIN_TEST, opts.SHAPE_GEOMETRY, opts.COLOURS_SPECIFIC,
         help="Generate colour discrimination dataset (same shape, different colours)",
         description="Generate images of the same shape in different colours for colour recognition tasks.",
         epilog="Example: cogstim colours --train-num 100 --test-num 40 --colours yellow blue",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        func=run_colours,
     )
-    
-    add_common_options(parser)
-    add_train_test_options(parser)
-    add_shape_options(parser)
-    
-    parser.add_argument(
-        "--shape",
-        type=str,
-        choices=["circle", "star", "triangle", "square"],
-        default="circle",
-        help="Shape to use for both classes"
-    )
-    parser.add_argument(
-        "--colours",
-        nargs=2,
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        default=["yellow", "blue"],
-        help="Two colours for discrimination"
-    )
-    
-    parser.set_defaults(func=run_colours)
 
 
 def setup_ans_subcommand(subparsers) -> None:
     """Setup 'ans' subcommand for two-colour dot arrays."""
-    parser = subparsers.add_parser(
-        "ans",
+    _add_subcommand(
+        subparsers, "ans",
+        opts.COMMON, opts.TRAIN_TEST, opts.RATIOS, opts.DOT_LAYOUT,
+        opts.ANS_SPECIFIC, opts.SEPARATED_LAYOUT, opts.TASKS_CSV,
         help="Generate ANS (Approximate Number System) dot arrays with two colours",
         description="Generate two-colour dot array images for approximate number system tasks. Classes are based on dominant colour.",
         epilog="Example: cogstim ans --ratios easy --train-num 100 --test-num 40",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        func=run_ans,
     )
-    
-    add_common_options(parser)
-    add_train_test_options(parser)
-    add_dot_options(parser, include_ratios=True)
-    
-    parser.add_argument(
-        "--dot-colour1",
-        type=str,
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        default="yellow",
-        help="First dot colour"
-    )
-    parser.add_argument(
-        "--dot-colour2",
-        type=str,
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        default="blue",
-        help="Second dot colour"
-    )
-    parser.add_argument(
-        "--layout",
-        type=str,
-        choices=["mixed", "separated"],
-        default=DOT_DEFAULTS["layout"],
-        help="Dot placement layout: 'mixed' (all dots share the canvas) or 'separated' (colour_1 left, colour_2 right)"
-    )
-    parser.add_argument(
-        "--gap",
-        type=int,
-        default=DOT_DEFAULTS["gap"],
-        help=f"Pixel gap between left and right halves in separated layout (default: {DOT_DEFAULTS['gap']})"
-    )
-    parser.add_argument(
-        "--tasks-csv",
-        type=str,
-        default=None,
-        metavar="PATH",
-        help="Path to CSV file specifying tasks (columns: n1, n2, equalized). When set, ratios and min/max-point-num are ignored."
-    )
-    parser.add_argument(
-        "--tasks-copies",
-        type=int,
-        default=1,
-        metavar="N",
-        help="Number of copies of the tasks distribution (default: 1). Applies when --tasks-csv is used."
-    )
-    
-    parser.set_defaults(func=run_ans)
 
 
 def setup_one_colour_subcommand(subparsers) -> None:
     """Setup 'one-colour' subcommand for single-colour dot arrays."""
-    parser = subparsers.add_parser(
-        "one-colour",
+    _add_subcommand(
+        subparsers, "one-colour",
+        opts.COMMON, opts.TRAIN_TEST, opts.DOT_LAYOUT, opts.ONE_COLOUR_SPECIFIC,
         help="Generate single-colour dot arrays (quantity discrimination)",
         description="Generate single-colour dot array images. Classes are based on quantity without colour cues.",
         epilog="Example: cogstim one-colour --train-num 80 --test-num 20 --dot-colour yellow",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        func=run_one_colour,
     )
-    
-    add_common_options(parser)
-    add_train_test_options(parser)
-    add_dot_options(parser, include_ratios=False)
-    
-    parser.add_argument(
-        "--dot-colour",
-        type=str,
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        default=DOT_DEFAULTS["dot_colour"],
-        help=f"Dot colour (default: {DOT_DEFAULTS['dot_colour']})"
-    )
-    
-    parser.set_defaults(func=run_one_colour)
 
 
 def setup_mts_subcommand(subparsers) -> None:
     """Setup 'match-to-sample' subcommand."""
-    parser = subparsers.add_parser(
-        "match-to-sample",
+    _add_subcommand(
+        subparsers, "match-to-sample",
+        opts.COMMON, opts.TRAIN_TEST, opts.RATIOS, opts.DOT_LAYOUT,
+        opts.MTS_SPECIFIC, opts.TASKS_CSV,
         help="Generate match-to-sample dot array pairs",
         description="Generate sample/match image pairs for match-to-sample tasks with area equalization.",
         epilog="Example: cogstim match-to-sample --ratios easy --train-num 50 --test-num 20",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        func=run_mts,
     )
-    
-    add_common_options(parser)
-    add_train_test_options(parser)
-    add_dot_options(parser, include_ratios=True)
-    
-    parser.add_argument(
-        "--dot-colour",
-        type=str,
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        default=MTS_DEFAULTS["dot_colour"],
-        help=f"Dot colour (default: {MTS_DEFAULTS['dot_colour']})"
-    )
-    parser.add_argument(
-        "--tolerance",
-        type=float,
-        default=None,
-        help=f"Relative tolerance for area equalization (default: {MTS_DEFAULTS['tolerance']})"
-    )
-    parser.add_argument(
-        "--abs-tolerance",
-        type=int,
-        default=None,
-        help=f"Absolute area tolerance in pixels (default: {MTS_DEFAULTS['abs_tolerance']})"
-    )
-    parser.add_argument(
-        "--tasks-csv",
-        type=str,
-        default=None,
-        metavar="PATH",
-        help="Path to CSV file specifying tasks (columns: sample, match, equalized). When set, ratios and min/max-point-num are ignored."
-    )
-    parser.add_argument(
-        "--tasks-copies",
-        type=int,
-        default=1,
-        metavar="N",
-        help="Number of copies of the tasks distribution (default: 1). Applies when --tasks-csv is used."
-    )
-    
-    parser.set_defaults(func=run_mts)
 
 
 def setup_mask_subcommand(subparsers) -> None:
     """Setup 'mask' subcommand for visual mask generation."""
-    parser = subparsers.add_parser(
-        "mask",
+    _add_subcommand(
+        subparsers, "mask",
+        opts.COMMON, opts.MASK_SPECIFIC, opts.MASK_LAYOUT,
         help="Generate visual mask images (dense overlapping dot patterns)",
         description="Generate N mask images filled with overlapping dots of varying sizes. "
                     "Useful as backward/forward masks in match-to-sample or ANS paradigms.",
         epilog="Example: cogstim mask --num-masks 10 --num-dots 400 --img-size 512",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        func=run_mask,
     )
-
-    add_common_options(parser)
-
-    parser.add_argument(
-        "--num-masks",
-        type=int,
-        default=MASK_DEFAULTS["num_masks"],
-        help=f"Number of mask variants to generate (default: {MASK_DEFAULTS['num_masks']})",
-    )
-    parser.add_argument(
-        "--num-dots",
-        type=int,
-        default=MASK_DEFAULTS["num_dots"],
-        help=f"Number of dots per mask (default: {MASK_DEFAULTS['num_dots']})",
-    )
-    parser.add_argument(
-        "--min-dot-radius",
-        type=int,
-        default=MASK_DEFAULTS["min_dot_radius"],
-        help=f"Minimum dot radius in pixels (default: {MASK_DEFAULTS['min_dot_radius']})",
-    )
-    parser.add_argument(
-        "--max-dot-radius",
-        type=int,
-        default=MASK_DEFAULTS["max_dot_radius"],
-        help=f"Maximum dot radius in pixels (default: {MASK_DEFAULTS['max_dot_radius']})",
-    )
-    parser.add_argument(
-        "--dot-colour",
-        type=str,
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        default=MASK_DEFAULTS["dot_colour"],
-        help=f"Dot colour (default: {MASK_DEFAULTS['dot_colour']})",
-    )
-    parser.add_argument(
-        "--dot-colour-2",
-        type=str,
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        default=None,
-        help="Optional second dot colour. When set, each dot is randomly assigned one of the two colours (e.g. for ANS masks).",
-    )
-    parser.add_argument(
-        "--layout",
-        type=str,
-        choices=["full", "separated"],
-        default="full",
-        help="'full' fills the entire canvas; 'separated' splits into two halves with a gap (default: full)",
-    )
-    parser.add_argument(
-        "--gap",
-        type=int,
-        default=DOT_DEFAULTS["gap"],
-        help=f"Pixel gap between left and right halves in separated layout (default: {DOT_DEFAULTS['gap']})",
-    )
-
-    parser.set_defaults(func=run_mask)
 
 
 def setup_lines_subcommand(subparsers) -> None:
     """Setup 'lines' subcommand for stripe patterns."""
-    parser = subparsers.add_parser(
-        "lines",
+    _add_subcommand(
+        subparsers, "lines",
+        opts.COMMON, opts.TRAIN_TEST, opts.LINES_SPECIFIC,
         help="Generate rotated stripe/line pattern images",
         description="Generate images with rotated stripe patterns at different angles.",
         epilog="Example: cogstim lines --train-num 50 --test-num 20 --angles 0 45 90 135",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        func=run_lines,
     )
-    
-    add_common_options(parser)
-    add_train_test_options(parser)
-    
-    parser.add_argument(
-        "--angles",
-        type=int,
-        nargs="+",
-        default=[0, 45, 90, 135],
-        help="Rotation angles for stripe patterns"
-    )
-    parser.add_argument(
-        "--min-stripes",
-        type=int,
-        default=2,
-        help="Minimum number of stripes per image"
-    )
-    parser.add_argument(
-        "--max-stripes",
-        type=int,
-        default=10,
-        help="Maximum number of stripes per image"
-    )
-    parser.add_argument(
-        "--min-thickness",
-        type=int,
-        default=LINE_DEFAULTS["min_thickness"],
-        help=f"Minimum stripe thickness (default: {LINE_DEFAULTS['min_thickness']})"
-    )
-    parser.add_argument(
-        "--max-thickness",
-        type=int,
-        default=LINE_DEFAULTS["max_thickness"],
-        help=f"Maximum stripe thickness (default: {LINE_DEFAULTS['max_thickness']})"
-    )
-    parser.add_argument(
-        "--min-spacing",
-        type=int,
-        default=LINE_DEFAULTS["min_spacing"],
-        help=f"Minimum spacing between stripes (default: {LINE_DEFAULTS['min_spacing']})"
-    )
-    
-    parser.set_defaults(func=run_lines)
 
 
 def setup_fixation_subcommand(subparsers) -> None:
     """Setup 'fixation' subcommand for fixation targets."""
-    parser = subparsers.add_parser(
-        "fixation",
+    _add_subcommand(
+        subparsers, "fixation",
+        opts.COMMON, opts.FIXATION_SPECIFIC,
         help="Generate fixation target images (A, B, C, AB, AC, BC, ABC)",
         description="Generate fixation target images with different element combinations.",
         epilog="Example: cogstim fixation --all-types --background-colour black",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        func=run_fixation,
     )
-    
-    add_common_options(parser)
-    
-    parser.add_argument(
-        "--types",
-        nargs="+",
-        choices=["A", "B", "C", "AB", "AC", "BC", "ABC"],
-        default=["A", "B", "C", "AB", "AC", "BC", "ABC"],
-        help="Fixation target types to generate"
-    )
-    parser.add_argument(
-        "--all-types",
-        action="store_true",
-        help="Generate all fixation types"
-    )
-    parser.add_argument(
-        "--symbol-colour",
-        type=str,
-        default=FIXATION_DEFAULTS["symbol_colour"],
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        help=f"Fixation symbol colour (default: {FIXATION_DEFAULTS['symbol_colour']})"
-    )
-    parser.add_argument(
-        "--dot-radius-px",
-        type=int,
-        default=FIXATION_DEFAULTS["dot_radius_px"],
-        help=f"Radius of the central dot in pixels (default: {FIXATION_DEFAULTS['dot_radius_px']})"
-    )
-    parser.add_argument(
-        "--disk-radius-px",
-        type=int,
-        default=FIXATION_DEFAULTS["disk_radius_px"],
-        help=f"Radius of the filled disk in pixels (default: {FIXATION_DEFAULTS['disk_radius_px']})"
-    )
-    parser.add_argument(
-        "--cross-thickness-px",
-        type=int,
-        default=FIXATION_DEFAULTS["cross_thickness_px"],
-        help=f"Bar thickness for the cross in pixels (default: {FIXATION_DEFAULTS['cross_thickness_px']})"
-    )
-    parser.add_argument(
-        "--cross-arm-px",
-        type=int,
-        default=FIXATION_DEFAULTS["cross_arm_px"],
-        help=f"Half-length of each cross arm in pixels (default: {FIXATION_DEFAULTS['cross_arm_px']})"
-    )
-    parser.add_argument(
-        "--jitter-px",
-        type=int,
-        default=FIXATION_DEFAULTS["jitter_px"],
-        help=f"Maximum positional jitter in pixels (default: {FIXATION_DEFAULTS['jitter_px']})"
-    )
-    
-    parser.set_defaults(func=run_fixation)
 
 
 def setup_custom_subcommand(subparsers) -> None:
     """Setup 'custom' subcommand for arbitrary shape/colour combinations."""
-    parser = subparsers.add_parser(
-        "custom",
+    parser = _add_subcommand(
+        subparsers, "custom",
+        opts.COMMON, opts.TRAIN_TEST, opts.SHAPE_GEOMETRY, opts.CUSTOM_SPECIFIC,
         help="Generate custom shape/colour combinations",
         description="Generate images with custom combinations of shapes and colours.",
         epilog="Example: cogstim custom --shapes triangle square --colours red green --train-num 50",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        func=run_custom,
     )
-    
-    add_common_options(parser)
-    add_train_test_options(parser)
-    add_shape_options(parser)
-    
-    parser.add_argument(
-        "--shapes",
-        nargs="+",
-        choices=["circle", "star", "triangle", "square"],
-        required=True,
-        help="Shapes to include (required)"
-    )
-    parser.add_argument(
-        "--colours",
-        nargs="+",
-        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
-        required=True,
-        help="Colours to include (required)"
-    )
-    
-    parser.set_defaults(func=run_custom)
+    # Unlike the other tasks, custom has no sensible default set of stimuli.
+    for action in parser._actions:
+        if action.dest in ("shapes", "colours"):
+            action.required = True
 
 
 # =============================================================================

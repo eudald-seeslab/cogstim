@@ -10,6 +10,16 @@ from cogstim.generators.mask import MaskGenerator
 from cogstim.helpers.constants import MASK_DEFAULTS, IMAGE_DEFAULTS, DOT_DEFAULTS
 
 
+def _load_image(path):
+    """Load an image and release the file handle immediately.
+
+    PIL's Image.open is lazy and keeps the file open until the image is loaded,
+    which prevents the temporary directory from being removed on Windows.
+    """
+    with Image.open(path) as img:
+        return img.copy()
+
+
 def _base_config(tmpdir, **overrides):
     cfg = {
         "output_dir": tmpdir,
@@ -112,15 +122,15 @@ class TestMaskGeneration:
             gen = MaskGenerator(_base_config(str(d), num_masks=1, num_dots=30, seed=99))
             gen.generate_images()
 
-        img_a = Image.open(dir_a / "mask_0000.png")
-        img_b = Image.open(dir_b / "mask_0000.png")
+        img_a = _load_image(dir_a / "mask_0000.png")
+        img_b = _load_image(dir_b / "mask_0000.png")
         assert list(img_a.tobytes()) == list(img_b.tobytes())
 
     def test_images_are_not_blank(self, tmp_path):
         """Mask images should contain visible dots (not a blank canvas)."""
         gen = MaskGenerator(_base_config(str(tmp_path), num_masks=1, num_dots=100))
         gen.generate_images()
-        img = Image.open(os.path.join(str(tmp_path), "mask_0000.png"))
+        img = _load_image(os.path.join(str(tmp_path), "mask_0000.png"))
         blank = Image.new("RGB", img.size, (255, 255, 255))
         assert img.tobytes() != blank.tobytes(), "Mask image appears completely blank"
 
@@ -168,7 +178,7 @@ class TestSeparatedLayout:
                               min_dot_radius=3, max_dot_radius=5, seed=17)
         gen = MaskGenerator(config)
         gen.generate_images()
-        img = Image.open(os.path.join(str(tmp_path), "mask_0000_separated.png"))
+        img = _load_image(os.path.join(str(tmp_path), "mask_0000_separated.png"))
         half = size // 2
         gap_start = half - gap // 2
         gap_end = half + gap // 2
@@ -184,7 +194,7 @@ class TestSeparatedLayout:
         config = _base_config(str(tmp_path), num_masks=1, num_dots=100, layout="separated")
         gen = MaskGenerator(config)
         gen.generate_images()
-        img = Image.open(os.path.join(str(tmp_path), "mask_0000_separated.png"))
+        img = _load_image(os.path.join(str(tmp_path), "mask_0000_separated.png"))
         blank = Image.new("RGB", img.size, (255, 255, 255))
         assert img.tobytes() != blank.tobytes()
 
@@ -197,8 +207,8 @@ class TestSeparatedLayout:
             gen = MaskGenerator(_base_config(str(d), num_masks=1, num_dots=50,
                                              layout="separated", seed=77))
             gen.generate_images()
-        img_a = Image.open(dir_a / "mask_0000_separated.png")
-        img_b = Image.open(dir_b / "mask_0000_separated.png")
+        img_a = _load_image(dir_a / "mask_0000_separated.png")
+        img_b = _load_image(dir_b / "mask_0000_separated.png")
         assert img_a.tobytes() == img_b.tobytes()
 
     def test_custom_gap(self, tmp_path):
@@ -226,7 +236,7 @@ class TestTwoColourMasks:
         )
         gen = MaskGenerator(config)
         gen.generate_images()
-        img = Image.open(os.path.join(str(tmp_path), "mask_0000.png"))
+        img = _load_image(os.path.join(str(tmp_path), "mask_0000.png"))
         colours_found = set()
         for x in range(img.size[0]):
             for y in range(img.size[1]):
@@ -250,7 +260,7 @@ class TestTwoColourMasks:
         )
         gen = MaskGenerator(config)
         gen.generate_images()
-        img = Image.open(os.path.join(str(tmp_path), "mask_0000_separated.png"))
+        img = _load_image(os.path.join(str(tmp_path), "mask_0000_separated.png"))
 
         half = size // 2
         gap_half = gap // 2
@@ -285,8 +295,8 @@ class TestTwoColourMasks:
                 dot_colour="yellow", dot_colour_2="blue",
             ))
             gen.generate_images()
-        img_a = Image.open(dir_a / "mask_0000.png")
-        img_b = Image.open(dir_b / "mask_0000.png")
+        img_a = _load_image(dir_a / "mask_0000.png")
+        img_b = _load_image(dir_b / "mask_0000.png")
         assert img_a.tobytes() == img_b.tobytes()
 
     def test_single_colour_has_no_second_colour_pixels(self, tmp_path):
@@ -297,7 +307,7 @@ class TestTwoColourMasks:
         )
         gen = MaskGenerator(config)
         gen.generate_images()
-        img = Image.open(os.path.join(str(tmp_path), "mask_0000.png"))
+        img = _load_image(os.path.join(str(tmp_path), "mask_0000.png"))
         for x in range(img.size[0]):
             for y in range(img.size[1]):
                 px = img.getpixel((x, y))

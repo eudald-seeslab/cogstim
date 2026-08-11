@@ -43,6 +43,11 @@ class BaseGenerator(ABC):
         """
         self.config = config
         self._logger = logging.getLogger(self.__class__.__name__)
+
+        # Number of files actually written, so summaries can report what landed
+        # on disk rather than what was planned. Every generator saves through
+        # save_image(), which makes this the single authoritative count.
+        self.images_written = 0
         
         if 'output_dir' not in config:
             raise ValueError(
@@ -191,3 +196,5 @@ class BaseGenerator(ABC):
             pil_img.save(path, format="JPEG", quality=95)
         else:
             pil_img.save(path, format=img_format.upper())
+
+        self.images_written += 1

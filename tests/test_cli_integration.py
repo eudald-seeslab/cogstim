@@ -1,3 +1,4 @@
+import re
 import os
 import sys
 from pathlib import Path
@@ -383,3 +384,49 @@ def test_cli_survives_ascii_only_stdout(tmp_path):
     )
     assert "Configuration error" not in proc.stderr
     assert list(Path(tmp_path).rglob("*.png")), "Should still generate images"
+
+
+# ---------------------------------------------------------------------------
+# Reported counts must match what is on disk
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "subcommand, extra_args",
+    [
+        ("shapes", ["--min-surface", 10000, "--max-surface", 12000]),
+        ("colours", ["--min-surface", 10000, "--max-surface", 12000]),
+        ("ans", ["--min-point-num", 1, "--max-point-num", 3]),
+        ("one-colour", ["--min-point-num", 1, "--max-point-num", 3]),
+        ("match-to-sample", ["--min-point-num", 1, "--max-point-num", 3]),
+        ("lines", ["--angles", 0, 90]),
+    ],
+)
+def test_reported_count_matches_files_written(tmp_path, capsys, subcommand, extra_args):
+    """The summary line must state the number of files actually created.
+
+    Regression test for openjournals/joss-reviews#10532. --train-num and
+    --test-num count sets, not images, but the summary printed their sum as an
+    image count: `shapes --train-num 10 --test-num 5` announced "15 images"
+    while writing 3000 files. Both reviewers were misled by this.
+    """
+    _run_cli_with_args([
+        subcommand,
+        "--train-num", 2,
+        "--test-num", 1,
+        "--seed", 4321,
+        *extra_args,
+        "--output-dir", str(tmp_path),
+    ])
+
+    output = capsys.readouterr().out
+    on_disk = len([p for p in Path(tmp_path).rglob("*") if p.is_file()])
+
+    match = re.search(r"Generated (\d+) images", output)
+    assert match, f"No image count in summary: {output!r}"
+    reported = int(match.group(1))
+
+    assert reported == on_disk, (
+        f"{subcommand} reported {reported} images but wrote {on_disk} files"
+    )
+    # The set count must still be visible, and must not be confused with images.
+    assert "3 sets" in output, f"Set count missing from summary: {output!r}"

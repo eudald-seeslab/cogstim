@@ -334,15 +334,47 @@ def build_custom_config(args: argparse.Namespace) -> Dict[str, Any]:
 # =============================================================================
 
 
+def report_generation(args, config, generator, note: str = "") -> None:
+    """Print an accurate summary of what was written to disk.
+
+    ``--train-num`` and ``--test-num`` count *sets*, not images: one set is a
+    full sweep of the condition combinations a paradigm defines, so a single set
+    produces many images. Reporting the set count as an image count made
+    ``shapes --train-num 10 --test-num 5`` announce "15 images" while writing
+    3000 files. The count comes from the generator, which tracks every file it
+    actually saved, so the number is measured rather than predicted.
+
+    Args:
+        args: Parsed CLI arguments.
+        config: Generator configuration (used for the output directory).
+        generator: The generator that ran; supplies ``images_written``.
+        note: Optional clarification appended to the set count, e.g. "image pairs".
+    """
+    if args.quiet:
+        return
+
+    written = generator.images_written
+    sets = getattr(args, "train_num", 0) + getattr(args, "test_num", 0)
+
+    if sets > 0:
+        detail = f" ({note})" if note else ""
+        per_set = written // sets if sets else 0
+        summary = (
+            f"{written} images from {sets} sets{detail}, "
+            f"{per_set} images per set"
+        )
+    else:
+        summary = f"{written} images"
+
+    print(f"\n✓ Generated {summary}. Output: {config['output_dir']}")
+
+
 def run_shapes(args: argparse.Namespace) -> None:
     """Execute shapes generation."""
     config = build_shapes_config(args)
     generator = ShapesGenerator(**config)
     generator.generate_images()
-    
-    if not args.quiet:
-        total = args.train_num + args.test_num
-        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+    report_generation(args, config, generator)
 
 
 def run_colours(args: argparse.Namespace) -> None:
@@ -350,10 +382,7 @@ def run_colours(args: argparse.Namespace) -> None:
     config = build_colours_config(args)
     generator = ShapesGenerator(**config)
     generator.generate_images()
-    
-    if not args.quiet:
-        total = args.train_num + args.test_num
-        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+    report_generation(args, config, generator)
 
 
 def run_ans(args: argparse.Namespace) -> None:
@@ -361,10 +390,7 @@ def run_ans(args: argparse.Namespace) -> None:
     config = build_ans_config(args)
     generator = DotsANSGenerator(config)
     generator.generate_images()
-    
-    if not args.quiet:
-        total = args.train_num + args.test_num
-        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+    report_generation(args, config, generator)
 
 
 def run_one_colour(args: argparse.Namespace) -> None:
@@ -372,30 +398,23 @@ def run_one_colour(args: argparse.Namespace) -> None:
     config = build_one_colour_config(args)
     generator = DotsANSGenerator(config)
     generator.generate_images()
-    
-    if not args.quiet:
-        total = args.train_num + args.test_num
-        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+    report_generation(args, config, generator)
 
 
 def run_mts(args: argparse.Namespace) -> None:
     """Execute match-to-sample generation."""
     config = build_mts_config(args)
     generator = MatchToSampleGenerator(config)
-    total = generator.generate_images()
-    
-    if not args.quiet:
-        print(f"\n✓ Generated {total} sets (image pairs). Output: {config['output_dir']}")
+    generator.generate_images()
+    report_generation(args, config, generator, note="image pairs")
 
 
 def run_mask(args: argparse.Namespace) -> None:
     """Execute mask generation."""
     config = build_mask_config(args)
     generator = MaskGenerator(config)
-    total = generator.generate_images()
-
-    if not args.quiet:
-        print(f"\n✓ Generated {total} mask images. Output: {config['output_dir']}")
+    generator.generate_images()
+    report_generation(args, config, generator)
 
 
 def run_lines(args: argparse.Namespace) -> None:
@@ -403,10 +422,7 @@ def run_lines(args: argparse.Namespace) -> None:
     config = build_lines_config(args)
     generator = LinesGenerator(config)
     generator.generate_images()
-    
-    if not args.quiet:
-        total = args.train_num + args.test_num
-        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+    report_generation(args, config, generator)
 
 
 def run_fixation(args: argparse.Namespace) -> None:
@@ -414,10 +430,7 @@ def run_fixation(args: argparse.Namespace) -> None:
     config = build_fixation_config(args)
     generator = FixationGenerator(config)
     generator.generate_images()
-
-    if not args.quiet:
-        num_types = len(config['types'])
-        print(f"\n✓ Generated {num_types} fixation images. Output: {config['output_dir']}")
+    report_generation(args, config, generator)
 
 
 def run_custom(args: argparse.Namespace) -> None:
@@ -425,10 +438,7 @@ def run_custom(args: argparse.Namespace) -> None:
     config = build_custom_config(args)
     generator = ShapesGenerator(**config)
     generator.generate_images()
-
-    if not args.quiet:
-        total = args.train_num + args.test_num
-        print(f"\n✓ Generated {total} images. Output: {config['output_dir']}")
+    report_generation(args, config, generator)
 
 
 # =============================================================================

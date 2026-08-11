@@ -292,3 +292,58 @@ def test_default_options_produce_a_visible_stimulus(tmp_path, subcommand, backgr
             f"{subcommand} on a {background} background produced a blank "
             f"single-colour image: {path.name}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Deprecations
+# ---------------------------------------------------------------------------
+
+def test_every_deprecated_alias_still_parses():
+    """Renaming must not break existing scripts, including the reviewers' own."""
+    import warnings
+
+    parser = create_parser()
+    aliased = [
+        option
+        for value in vars(opts).values()
+        for option in (value if isinstance(value, list) else [value])
+        if isinstance(option, Option) and option.aliases
+    ]
+    assert aliased, "Expected some options to carry deprecated aliases"
+
+    for option in aliased:
+        for alias in option.aliases:
+            # Find a task that offers this option, and a value it accepts.
+            for name, sub in stimulus_parsers().items():
+                action = next(
+                    (a for a in actions_of(sub) if alias in a.option_strings), None
+                )
+                if action is None:
+                    continue
+                value = str(action.choices[0]) if action.choices else "1"
+                argv = [name, alias] + ([] if action.nargs == 0 else [value])
+                with warnings.catch_warnings(record=True) as caught:
+                    warnings.simplefilter("always")
+                    parsed = parser.parse_args(argv)
+                assert getattr(parsed, action.dest) is not None
+                assert any(
+                    issubclass(w.category, DeprecationWarning) for w in caught
+                ), f"{alias} should warn that it is deprecated"
+                break
+
+
+def test_legacy_python_entry_points_warn():
+    """Legacy API kept for compatibility must announce that it is going away."""
+    import warnings
+
+    from cogstim.generators.dots_one_colour import DotsOneColourGenerator
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        try:
+            DotsOneColourGenerator({"output_dir": ".", "img_format": "png"})
+        except Exception:
+            pass
+    assert any(issubclass(w.category, DeprecationWarning) for w in caught), (
+        "DotsOneColourGenerator should warn that it is deprecated"
+    )

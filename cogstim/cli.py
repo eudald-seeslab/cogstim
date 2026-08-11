@@ -11,6 +11,7 @@ Examples:
 
 import sys
 import argparse
+import warnings
 from pathlib import Path
 from typing import Any, Dict
 
@@ -770,6 +771,11 @@ def validate_and_adjust_args(args: argparse.Namespace) -> None:
     # 'mixed' was the ans spelling of what mask called 'full'. Both are accepted;
     # normalise so logs and filenames use one word for one thing.
     if getattr(args, "layout", None) == "mixed":
+        warnings.warn(
+            "--layout mixed is deprecated; use --layout full instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         args.layout = "full"
 
     # Handle demo mode

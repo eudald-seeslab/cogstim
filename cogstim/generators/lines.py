@@ -3,6 +3,7 @@
 import os
 import argparse
 import logging
+import warnings
 import numpy as np
 from tqdm import tqdm
 from cogstim.helpers.base_generator import BaseGenerator
@@ -165,7 +166,17 @@ class LinesGenerator(BaseGenerator):
 
 
 def parse_args():
-    """Parse command line arguments."""
+    """DEPRECATED standalone argument parser. Use the `cogstim` CLI.
+
+    Predates the unified CLI and still uses the old option names, so it misses
+    every option added since. Scheduled for removal -- see DEPRECATIONS.md.
+    """
+    warnings.warn(
+        "Running cogstim.generators.lines directly is deprecated; "
+        "use 'cogstim lines' instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     parser = argparse.ArgumentParser(
         description="Generate images with rotated stripe patterns."
     )

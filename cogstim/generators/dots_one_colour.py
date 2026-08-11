@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import warnings
 import argparse
 import random
 import logging
@@ -21,9 +22,23 @@ class TerminalPointLayoutError(ValueError):
 
 
 class DotsOneColourGenerator(BaseGenerator):
+    """DEPRECATED. Use DotsANSGenerator with ``ONE_COLOUR=True`` instead.
+
+    The ``one-colour`` task has been served by DotsANSGenerator for some time;
+    this parallel implementation is no longer reached by the CLI and receives
+    none of the fixes made there. Scheduled for removal -- see DEPRECATIONS.md.
+    """
+
     """Generates images with configurable colored points."""
 
     def __init__(self, config):
+        warnings.warn(
+            "DotsOneColourGenerator is deprecated and will be removed; use "
+            "DotsANSGenerator with ONE_COLOUR=True, which is what the "
+            "'cogstim one-colour' task uses.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(config)
         self.nmin = self.config["min_point_num"]
         self.nmax = self.config["max_point_num"]
@@ -116,6 +131,13 @@ class DotsOneColourGenerator(BaseGenerator):
 
 
 def parse_args():
+    """DEPRECATED standalone argument parser. Use the `cogstim` CLI."""
+    warnings.warn(
+        "Running cogstim.generators.dots_one_colour directly is deprecated; "
+        "use 'cogstim one-colour' instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Generate images with configurable colored points."

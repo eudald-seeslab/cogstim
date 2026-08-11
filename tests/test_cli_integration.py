@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 import importlib
@@ -339,3 +340,46 @@ def test_cli_version_tag(tmp_path):
     assert len(images) >= 1, "Should generate images"
     # Check that version tag appears in filenames
     assert any("v2" in img.name for img in images), "Version tag should appear in filenames"
+
+
+# ---------------------------------------------------------------------------
+# Output encoding
+# ---------------------------------------------------------------------------
+
+def test_cli_survives_ascii_only_stdout(tmp_path):
+    """A successful run must not fail when stdout cannot encode non-ASCII.
+
+    Regression test: the summary messages contain a check mark. On Windows a
+    redirected stream defaults to cp1252, so piping the output raised
+    UnicodeEncodeError after every image had already been written. Because
+    UnicodeEncodeError subclasses ValueError, the CLI reported it as a
+    "Configuration error" and exited 2, turning a successful run into a failure.
+    """
+    import subprocess
+
+    env = dict(os.environ)
+    env["PYTHONIOENCODING"] = "ascii"
+
+    proc = subprocess.run(
+        [
+            sys.executable, "-m", "cogstim.cli", "one-colour",
+            "--train-num", "1",
+            "--test-num", "0",
+            "--min-point-num", "1",
+            "--max-point-num", "2",
+            "--seed", "1",
+            "--output-dir", str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+        encoding="ascii",
+        errors="replace",
+        env=env,
+    )
+
+    assert proc.returncode == 0, (
+        f"CLI exited {proc.returncode} with ASCII-only stdout.\n"
+        f"stdout: {proc.stdout}\nstderr: {proc.stderr}"
+    )
+    assert "Configuration error" not in proc.stderr
+    assert list(Path(tmp_path).rglob("*.png")), "Should still generate images"

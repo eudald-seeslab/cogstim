@@ -1096,8 +1096,29 @@ def validate_and_adjust_args(args: argparse.Namespace) -> None:
 # =============================================================================
 
 
+def configure_output_encoding() -> None:
+    """Make stdout/stderr tolerant of the non-ASCII glyphs we print.
+
+    On Windows a redirected stream defaults to the locale codepage (cp1252),
+    which cannot encode characters such as the check mark used in the summary
+    messages. Without this, a run that generated every image correctly still
+    fails as soon as its output is piped to a file, a CI log, or another process.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):
+            # Detached or already-wrapped stream; printing still works, and the
+            # errors="replace" fallback below keeps a failure from being fatal.
+            pass
+
+
 def main() -> None:
     """Main CLI entry point."""
+    configure_output_encoding()
     try:
         parser = create_parser()
         args = parser.parse_args()
@@ -1116,6 +1137,11 @@ def main() -> None:
     except KeyboardInterrupt:
         print("\n\nInterrupted by user")
         sys.exit(130)
+    except UnicodeEncodeError as e:
+        # Subclass of ValueError, so it must be caught first or it gets reported
+        # as a configuration error, which sends users looking in the wrong place.
+        print(f"\nOutput encoding error: {e}", file=sys.stderr)
+        sys.exit(1)
     except ValueError as e:
         print(f"\nConfiguration error: {e}", file=sys.stderr)
         sys.exit(2)

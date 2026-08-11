@@ -1,6 +1,8 @@
 """Tests for cogstim.generators.match_to_sample module."""
 
+import csv
 import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from cogstim.generators.match_to_sample import (
@@ -306,3 +308,88 @@ class TestMatchToSampleIntegration:
                     # Should have called create_image_pair and save_image_pair
                     assert mock_create.call_count > 0
                     assert mock_save.call_count > 0
+
+
+class TestMissingPairsAreReported:
+    """Pairs that cannot be generated must never disappear silently.
+
+    Regression tests for openjournals/joss-reviews#10532. @srvanderplas found
+    that `cogstim match-to-sample --train-num 10 --test-num 5` reported
+    "Generated 1440 sets" but wrote only 2658 of the expected 2880 images, with
+    no warning and exit code 0. create_and_save discarded a pair whenever
+    equalization failed for that particular random layout, and generate_images
+    returned the planned count rather than the achieved one.
+    """
+
+    def _config(self, output_dir):
+        return {
+            **MTS_GENERAL_CONFIG,
+            "train_num": 1,
+            "test_num": 0,
+            "output_dir": output_dir,
+            "min_point_num": 1,
+            "max_point_num": 3,
+            "ratios": "easy",
+            "version_tag": "",
+            "img_format": "png",
+        }
+
+    def test_every_planned_pair_is_written(self, tmp_path):
+        """The files on disk match the number of pairs reported."""
+        gen = MatchToSampleGenerator(self._config(str(tmp_path)))
+        total = gen.generate_images()
+
+        images = list(Path(tmp_path).rglob("*.png"))
+        assert total > 0
+        assert len(images) == total * 2, (
+            f"Reported {total} pairs ({total * 2} images) but wrote {len(images)}"
+        )
+        assert gen.failed_pairs == []
+
+    def test_unfixable_pairs_are_counted_and_recorded(self, tmp_path):
+        """When a pair truly cannot be made, it is excluded from the count and logged."""
+        gen = MatchToSampleGenerator(self._config(str(tmp_path)))
+
+        # Every attempt fails, so no pair can be produced at all.
+        with patch.object(gen, "create_image_pair", return_value=None):
+            total = gen.generate_images()
+
+        assert total == 0, "Failed pairs must not be counted as generated"
+        assert gen.failed_pairs, "Failed pairs must be recorded"
+
+        report = Path(tmp_path) / "failed_pairs.csv"
+        assert report.exists(), "A failure report must be written"
+
+        rows = list(csv.DictReader(report.open(encoding="utf-8")))
+        assert len(rows) == len(gen.failed_pairs)
+        # Written in the --tasks-csv format so the pairs can be regenerated directly.
+        assert set(rows[0]) >= {"sample", "match", "equalized"}
+
+    def test_failure_report_is_accepted_by_tasks_csv(self, tmp_path):
+        """The failure report can be fed straight back in to regenerate the gaps."""
+        gen = MatchToSampleGenerator(self._config(str(tmp_path)))
+        with patch.object(gen, "create_image_pair", return_value=None):
+            gen.generate_images()
+
+        report = Path(tmp_path) / "failed_pairs.csv"
+        tasks = load_mts_tasks_from_csv(report)
+        assert len(tasks) == len(gen.failed_pairs)
+        for n1, n2, equalize in tasks:
+            assert isinstance(n1, int) and isinstance(n2, int)
+            assert isinstance(equalize, bool)
+
+    def test_retries_before_giving_up(self, tmp_path):
+        """An unlucky layout is retried rather than dropped."""
+        gen = MatchToSampleGenerator(self._config(str(tmp_path)))
+        real = gen.create_image_pair
+        calls = {"n": 0}
+
+        def fail_once_then_succeed(*args, **kwargs):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return None
+            return real(*args, **kwargs)
+
+        with patch.object(gen, "create_image_pair", side_effect=fail_once_then_succeed):
+            assert gen.create_and_save(0, 2, 3, True, "train") is True
+        assert calls["n"] == 2, "Should have retried exactly once after the failure"

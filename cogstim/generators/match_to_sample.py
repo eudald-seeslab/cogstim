@@ -1,7 +1,8 @@
+import csv
 import os
 from tqdm import tqdm
 
-from cogstim.helpers.dots_core import DotsCore
+from cogstim.helpers.dots_core import DotsCore, PointLayoutError
 from cogstim.helpers.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS, MTS_DEFAULTS, IMAGE_DEFAULTS
 from cogstim.helpers.mts_geometry import equalize_pair as _equalize_geom
 from cogstim.helpers.planner import GenerationPlan, resolve_ratios
@@ -121,19 +122,59 @@ class MatchToSampleGenerator(BaseGenerator):
         )
 
     def create_and_save(self, trial_id, n1, n2, equalize, phase="train"):
-        """Create and save a pair of images."""
-        pair = self.create_image_pair(n1, n2, equalize)
-        if pair is not None:
-            self.save_image_pair(pair, trial_id, n1, n2, equalize, phase)
-    
+        """Create and save a pair of images, retrying unlucky layouts.
+
+        Equalizing a pair can fail for a particular random draw: growing the
+        smaller set's radii may push a dot off the canvas or into a neighbour.
+        That is a property of the layout, not of the requested dot counts, so a
+        fresh layout usually succeeds. Previously a single failure silently
+        dropped the pair.
+
+        Returns:
+            bool: True if the pair was written to disk.
+        """
+        for _ in range(self.config["attempts_limit"]):
+            try:
+                pair = self.create_image_pair(n1, n2, equalize)
+            except PointLayoutError:
+                # Could not even place the dots; a new draw may do better.
+                continue
+            if pair is not None:
+                self.save_image_pair(pair, trial_id, n1, n2, equalize, phase)
+                return True
+        return False
+
     def get_subdirectories(self):
         return [("train",), ("test",)]
+
+    def write_failed_pairs(self, failures):
+        """Record pairs that could not be generated, for inspection and retry.
+
+        The file is written with the same columns that ``--tasks-csv`` reads, so
+        the missing pairs can be regenerated directly with:
+
+            cogstim match-to-sample --tasks-csv <output_dir>/failed_pairs.csv
+
+        Args:
+            failures: list of (phase, trial_id, n1, n2, equalized) tuples.
+
+        Returns:
+            str: path to the file written.
+        """
+        path = os.path.join(self.output_dir, "failed_pairs.csv")
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["sample", "match", "equalized", "phase", "trial_id"])
+            for phase, trial_id, n1, n2, equalized in failures:
+                writer.writerow([n1, n2, str(bool(equalized)).upper(), phase, trial_id])
+        return path
     
     def generate_images(self):
         """Generate all image pairs for train and test using unified planner or CSV."""
         tasks_csv = self.config.get("tasks_csv")
         tasks_copies = self.config.get("tasks_copies", 1)
         total_pairs = 0
+        failures = []
 
         for phase, num_images in self.iter_phases():
             if num_images <= 0:
@@ -152,14 +193,26 @@ class MatchToSampleGenerator(BaseGenerator):
                 plan.build()
 
             self.log_generation_info(f"Generating {len(plan)} image pairs for {phase}...")
-            total_pairs += len(plan)
 
             for trial_id, task in enumerate(tqdm(plan.tasks, desc=f"{phase}")):
                 n = task.params.get("n1")
                 m = task.params.get("n2")
                 equalize = task.params.get("equalize", False)
-                self.create_and_save(trial_id, n, m, equalize, phase)
+                if self.create_and_save(trial_id, n, m, equalize, phase):
+                    total_pairs += 1
+                else:
+                    failures.append((phase, trial_id, n, m, equalize))
 
             self.write_summary_if_enabled(plan, phase)
 
+        if failures:
+            path = self.write_failed_pairs(failures)
+            self._logger.warning(
+                f"{len(failures)} of {total_pairs + len(failures)} pairs could not be "
+                f"generated and are missing from the output. Their parameters were "
+                f"written to '{path}'; regenerate them with "
+                f"--tasks-csv '{path}'."
+            )
+
+        self.failed_pairs = failures
         return total_pairs

@@ -1,4 +1,5 @@
 import itertools
+import math
 from random import randint
 import numpy as np
 
@@ -13,6 +14,8 @@ class DotsCore:
     point_sep = 10
     # We consider equal areas if their (r1 - r2) / r1 ratio differs by less than this number:
     area_tolerance = 0.001
+    # Maximum whole-pixel radius increments equalize_areas will apply before giving up
+    equalize_increment_limit = 1000
 
     def __init__(self, init_size, colour_1, colour_2=None, bg_colour=None, mode=None,
                  min_point_radius=None, max_point_radius=None, attempts_limit=None):
@@ -160,7 +163,13 @@ class DotsCore:
         return (point[0][0], point[0][1], new_radius), point[1]
 
     def equalize_areas(self, point_array):
+        """Grow the dots of the smaller-area colour until both colours match in area.
 
+        Raises:
+            PointLayoutError: if equalizing would push a dot past the edge of the
+                canvas, make two dots overlap, or fail to converge. Callers catch
+                this and retry with a fresh layout.
+        """
         # Who is big and who is small
         small, big_area, small_area = self._get_areas(point_array)
 
@@ -168,8 +177,26 @@ class DotsCore:
         # This brings us to this problem: solve a = sum_i^n (x_i^2 + 2r_i*x_i),
         # which is not solvable analytically. Therefore, what we'll do is add
         # pixel after pixel to all points until we are close to the target value
+        increments = 0
         while not self._check_areas_equal(big_area, small_area):
+            # Each pass grows every dot of the smaller colour by a whole pixel, so
+            # the areas can leapfrog past the tolerance and oscillate instead of
+            # converging. Bound the loop rather than hanging the whole run.
+            if increments >= self.equalize_increment_limit:
+                raise PointLayoutError(
+                    f"Areas did not converge within {self.equalize_increment_limit} "
+                    "radius increments"
+                )
             point_array = [self._increase_radius(a) if a[1] == small else a for a in point_array]
+            increments += 1
+
+            # Growing a radius can push a dot past the edge of the canvas. The other
+            # area-adjusting methods all check this; without it here the dot is
+            # silently drawn clipped.
+            for point in point_array:
+                if not self._check_within_boundaries(point[0]):
+                    raise PointLayoutError("Equalized point is outside boundaries")
+
             # Recompute areas after adjustment
             small, big_area, small_area = self._get_areas(point_array)
 
@@ -182,8 +209,23 @@ class DotsCore:
 
     
     def _check_within_boundaries(self, point):
-        return (all([point[i] - point[2] > 0 for i in range(2)]) and 
-                all([point[i] + point[2] < self.init_size for i in range(2)]))
+        """True if the dot's rasterised extent fits inside the canvas.
+
+        The ellipse covers whole pixels from floor(centre - radius) to
+        ceil(centre + radius), so the bounds have to be compared after rounding
+        outwards: a dot at ``centre - radius == 0.5`` satisfies a plain ``> 0``
+        test yet still paints pixel column 0.
+
+        The outermost pixel ring is excluded as well, so that a dot never merely
+        touches the border. A dot painting the edge row is visually
+        indistinguishable from one the canvas has cut off.
+        """
+        radius = point[2]
+        return all(
+            math.floor(centre - radius) >= 1
+            and math.ceil(centre + radius) <= self.init_size - 2
+            for centre in (point[0], point[1])
+        )
 
     
     def fix_total_area(self, point_array, target_area):

@@ -98,6 +98,10 @@ DOT_DEFAULTS = {
 SHAPE_DEFAULTS = {
     "min_surface": 10000,
     "max_surface": 20000,
+    # Governs how many images a shapes set contains. Kept at the historical
+    # value; note that the drawn radius is rounded to whole pixels, so steps
+    # much smaller than this yield visually identical images.
+    "surface_step": 100,
     "random_rotation": False,
     "min_rotation": 0,
     "max_rotation": 360,

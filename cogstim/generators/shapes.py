@@ -24,10 +24,6 @@ class ShapesGenerator(BaseGenerator):
     colour_task_base_shape = "circle"
     boundary_width = 5
     img_paths = {}
-    # Surface areas are swept in steps of this size between min_surface and
-    # max_surface. With the defaults this is the largest per-set multiplier in
-    # the package, so it is named rather than inlined.
-    SURFACE_STEP = 100
 
     def __init__(
         self,
@@ -47,6 +43,7 @@ class ShapesGenerator(BaseGenerator):
         random_rotation,
         min_rotation=None,
         max_rotation=None,
+        surface_step=SHAPE_DEFAULTS["surface_step"],
     ):
 
         # If random_rotation is True, min_rotation and max_rotation must be provided
@@ -76,6 +73,7 @@ class ShapesGenerator(BaseGenerator):
             'jitter': jitter,
             'min_surface': min_surface,
             'max_surface': max_surface,
+            'surface_step': surface_step,
             'background_colour': background_colour,
             'seed': seed,
             'random_rotation': random_rotation,
@@ -96,6 +94,7 @@ class ShapesGenerator(BaseGenerator):
         self.test_num = test_num
         self.min_surface = min_surface
         self.max_surface = max_surface
+        self.surface_step = surface_step
         self.jitter = jitter
         self.random_rotation = random_rotation
         self.min_rotation = min_rotation
@@ -302,13 +301,13 @@ class ShapesGenerator(BaseGenerator):
             colors=list(self.colors.keys()),
             min_surface=self.min_surface,
             max_surface=self.max_surface,
-            surface_step=self.SURFACE_STEP
+            surface_step=self.surface_step
         ).build(task_subtype=self.task_type)
 
     def count_distinct_renderings(self):
         """How many visually distinct images the surface sweep can actually yield.
 
-        Surfaces are swept in steps of SURFACE_STEP, but the radius they imply is
+        Surfaces are swept in steps of surface_step, but the radius they imply is
         rounded to whole pixels when drawn, so many neighbouring surfaces render
         identically. Over the default 10000-20000 range, 100 surface steps
         collapse to about 24 distinct circle radii.
@@ -318,7 +317,7 @@ class ShapesGenerator(BaseGenerator):
         """
         distinct = set()
         for shape in self.shapes:
-            for surface in range(self.min_surface, self.max_surface, self.SURFACE_STEP):
+            for surface in range(self.min_surface, self.max_surface, self.surface_step):
                 distinct.add((shape, round(self.get_radius_from_surface(shape, surface))))
         return len(distinct) * len(self.colors)
 

@@ -236,6 +236,11 @@ SHAPE_GEOMETRY = [
            help=f"Minimum shape surface area in px² (default: {SHAPE_DEFAULTS['min_surface']})"),
     Option("--max-surface", type=int, default=SHAPE_DEFAULTS["max_surface"],
            help=f"Maximum shape surface area in px² (default: {SHAPE_DEFAULTS['max_surface']})"),
+    Option("--surface-step-px", type=int, default=SHAPE_DEFAULTS["surface_step"],
+           help=("Gap between consecutive shape surface areas. This sets how many "
+                 "images a set contains: (max - min) / step per shape. Note that "
+                 "the radius is rounded to whole pixels, so a step much below "
+                 f"~400 produces duplicates (default: {SHAPE_DEFAULTS['surface_step']})")),
     Option("--no-jitter", store_true=True, help="Disable positional jitter"),
     Option("--random-rotation", store_true=True,
            help="Enable random rotation of shapes"),

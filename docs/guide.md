@@ -236,6 +236,17 @@ This generates red and green stars in fixed positions with reproducible randomne
 
 Generate two-colour dot arrays for approximate number system tasks. Use this for paradigms investigating numerical cognition where participants discriminate quantities by dominant colour. Based on Halberda et al. (2008).
 
+**Relation to Panamath.** This task implements the stimulus side of the two-colour dot
+comparison used by Panamath (Halberda et al., 2008): intermixed yellow and blue dots at
+controlled numerical ratios, with total dot surface optionally equalized between the
+colours so that cumulative area cannot substitute for numerosity. If you have seen this
+paradigm referred to as a Panamath task, this is the subcommand you want.
+
+What it is not: CogStim generates stimuli, it does not administer the test, collect
+responses or estimate a Weber fraction, and it is not affiliated with or validated
+against the Panamath software. Use it to produce the image set, then present it with
+your own experiment software.
+
 ### Minimal Command
 
 ```bash
@@ -259,7 +270,55 @@ cogstim ans --train-num 10 --test-num 5
 
 ### Note on Equalization
 
-For each trial, half the images equalize total surface area between the two colours, controlling for cumulative surface as a cue. The other half use random dot sizes. This is detailed in the file-naming convention: filenames include `_equalized` or no suffix.
+By default, half the images equalize total surface area between the two colours,
+controlling for cumulative surface as a cue; the other half use random dot sizes.
+Filenames carry `_equalized` or no suffix accordingly.
+
+To choose a different proportion, or to generate only one kind, specify the stimuli
+directly with `--tasks-csv` — see below.
+
+Each image is generated from an independent random layout, including the equalized and
+non-equalized versions of the same dot counts. This is deliberate: reusing a spatial
+configuration across conditions would let participants learn the arrangement rather than
+judge numerosity, which is what per-trial randomization exists to prevent.
+
+### Choosing exactly which stimuli to generate
+
+`--tasks-csv` replaces the ratio sweep with an explicit list, one row per image. This is
+how you control which stimuli are equalized and in what proportion.
+
+```csv
+n1,n2,equalized
+3,2,TRUE
+3,2,FALSE
+3,2,FALSE
+5,4,FALSE
+```
+
+```bash
+cogstim ans --tasks-csv tasks.csv --train-num 1
+```
+
+Produces four images — one equalized, three not:
+
+```
+train/yellow/img_3_2_0_equalized.png
+train/yellow/img_3_2_1.png
+train/yellow/img_3_2_2.png
+train/yellow/img_5_4_3.png
+```
+
+| Column | Meaning |
+|---|---|
+| `n1` | Dots of the first colour |
+| `n2` | Dots of the second colour |
+| `equalized` | `TRUE` or `FALSE`: whether total dot surface is matched between colours |
+
+`--tasks-copies N` repeats the whole distribution N times. When `--tasks-csv` is set,
+`--ratios`, `--min-dot-num` and `--max-dot-num` are ignored, since the file already says
+exactly what to generate.
+
+Match-to-sample takes the same approach with columns `sample,match,equalized`.
 
 ### Advanced Tweak: Controlling Difficulty with Ratios
 

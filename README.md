@@ -9,7 +9,8 @@ CogStim is a small Python toolkit that produces **synthetic image datasets** com
 
 * Shape discrimination (e.g. *circle vs star*).
 * Colour discrimination (e.g. *yellow vs blue* circles).
-* Approximate Number System (Panamath) dot arrays with two colours.
+* Approximate Number System two-colour dot arrays, as used in the Panamath paradigm
+  ([details](docs/guide.md#ans--approximate-number-system)).
 * Single-colour dot arrays for number-discrimination tasks.
 * Custom combinations of geometrical *shapes × colours*.
 * Rotated stripe patterns ("lines" dataset) for orientation discrimination.
@@ -87,10 +88,15 @@ For some tasks, you can specify exactly which stimuli to generate via a CSV file
 
 For now, this is supported only for the following tasks, with the CSV specifications
 
-| Task             | CSV columns                 |
-|------------------|-----------------------------|
-| Match to sample  | sample, match, equalized    |
-| Panamath              | n1, n2, equalized           |
+| Task              | Subcommand        | CSV columns              |
+|-------------------|-------------------|--------------------------|
+| Match to sample   | `match-to-sample` | sample, match, equalized |
+| ANS dot arrays    | `ans`             | n1, n2, equalized        |
+
+The `equalized` column is per row, so it also controls **which** stimuli have their
+total dot surface equalized and **in what proportion**. A CSV of four rows with one
+`TRUE` produces three non-equalized images and one equalized one. See
+[the guide](docs/guide.md#choosing-exactly-which-stimuli-to-generate).
 
 
 

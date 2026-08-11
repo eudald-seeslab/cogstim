@@ -132,28 +132,39 @@ class DotsANSGenerator(BaseGenerator):
         )
         return plan.compute_positions()
 
-    def generate_images(self):
-        """Generate images using unified planning mechanism or CSV."""
+    def build_plan(self, phase, num_sets):
+        """Four tasks per (n1, n2) pair: both colour orders, equalized and not.
+
+        With --tasks-csv the pairs come from the file instead of from the ratio
+        sweep, and each set is one copy of that distribution.
+        """
         task_type = "one_colour" if self.config["ONE_COLOUR"] else "ans"
         tasks_csv = self.config.get("tasks_csv")
         tasks_copies = self.config.get("tasks_copies", 1)
 
+        plan = GenerationPlan(
+            task_type=task_type,
+            min_point_num=self.config["min_point_num"],
+            max_point_num=self.config["max_point_num"],
+            num_repeats=num_sets,
+            ratios=self.ratios
+        )
+        if tasks_csv:
+            copies = max(1, num_sets) * tasks_copies
+            plan.build_from_ans_csv(tasks_csv, num_copies=copies)
+        else:
+            plan.build()
+        return plan
+
+    def generate_images(self):
+        """Generate images using unified planning mechanism or CSV."""
+        tasks_csv = self.config.get("tasks_csv")
+
         for phase, num_images in self.iter_phases():
             if tasks_csv and num_images <= 0:
                 continue
-            plan = GenerationPlan(
-                task_type=task_type,
-                min_point_num=self.config["min_point_num"],
-                max_point_num=self.config["max_point_num"],
-                num_repeats=num_images,
-                ratios=self.ratios
-            )
-            if tasks_csv:
-                copies = max(1, num_images) * tasks_copies
-                plan.build_from_ans_csv(tasks_csv, num_copies=copies)
-            else:
-                plan.build()
-            
+            plan = self.build_plan(phase, num_images)
+
             self.log_generation_info(
                 f"Generating {len(plan)} images for {phase} in '{self.output_dir}/{phase}'."
             )

@@ -115,6 +115,43 @@ class BaseGenerator(ABC):
         """
         return [("train", self.train_num), ("test", self.test_num)]
     
+    # Number of image files each planned task produces. Match-to-sample writes a
+    # sample and a match per task, so it overrides this with 2.
+    images_per_task = 1
+
+    def build_plan(self, phase: str, num_sets: int):
+        """Build the GenerationPlan for one phase.
+
+        Generators that plan their work up front implement this, and both
+        generate_images() and plan_summary() go through it, so a dry run can
+        never disagree with a real run about what would be produced.
+
+        Args:
+            phase: "train" or "test".
+            num_sets: Number of sets requested for this phase.
+
+        Returns:
+            GenerationPlan for the phase.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not build a generation plan; "
+            "override plan_summary() instead."
+        )
+
+    def plan_summary(self):
+        """Report what a real run would produce, without writing anything.
+
+        Returns:
+            list: (phase, num_sets, num_images) tuples, one per non-empty phase.
+        """
+        summary = []
+        for phase, num_sets in self.iter_phases():
+            if num_sets <= 0:
+                continue
+            plan = self.build_plan(phase, num_sets)
+            summary.append((phase, num_sets, len(plan) * self.images_per_task))
+        return summary
+
     def write_summary_if_enabled(self, plan, phase: str):
         """
         Write summary CSV for the given phase if summary is enabled in config.

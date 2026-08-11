@@ -24,6 +24,10 @@ class ShapesGenerator(BaseGenerator):
     colour_task_base_shape = "circle"
     boundary_width = 5
     img_paths = {}
+    # Surface areas are swept in steps of this size between min_surface and
+    # max_surface. With the defaults this is the largest per-set multiplier in
+    # the package, so it is named rather than inlined.
+    SURFACE_STEP = 100
 
     def __init__(
         self,
@@ -285,22 +289,29 @@ class ShapesGenerator(BaseGenerator):
         filename = f"{shape}_{surface}_{dist_from_center}_{angle}_{rotation}_{it}"
         self.save_image(image, filename, *subdirs)
 
+    def build_plan(self, phase, num_sets):
+        """One task per (surface, shape/colour) combination, repeated once per set.
+
+        Surfaces are swept from min_surface to max_surface in steps of
+        SURFACE_STEP, which is the largest hidden multiplier in the package.
+        """
+        return GenerationPlan(
+            task_type="shapes",
+            num_repeats=num_sets,
+            shapes=self.shapes,
+            colors=list(self.colors.keys()),
+            min_surface=self.min_surface,
+            max_surface=self.max_surface,
+            surface_step=self.SURFACE_STEP
+        ).build(task_subtype=self.task_type)
+
     def generate_images(self):
         """Generate all images for training and testing using unified planner."""
         self.setup_directories()
 
         for phase, num_images in self.iter_phases():
-            # Build generation plan
-            plan = GenerationPlan(
-                task_type="shapes",
-                num_repeats=num_images,
-                shapes=self.shapes,
-                colors=list(self.colors.keys()),
-                min_surface=self.min_surface,
-                max_surface=self.max_surface,
-                surface_step=100
-            ).build(task_subtype=self.task_type)
-            
+            plan = self.build_plan(phase, num_images)
+
             self.log_generation_info(
                 f"Generating {len(plan)} images for {phase} in '{self.output_dir}/{phase}'."
             )

@@ -35,20 +35,23 @@ class LinesGenerator(BaseGenerator):
         # Calculate circumscribed size for rotation
         self.c_size = int(self.size / 2 * np.sqrt(2)) * 2
 
+    def build_plan(self, phase, num_sets):
+        """One task per (angle, stripe count) combination, repeated once per set."""
+        return GenerationPlan(
+            task_type="lines",
+            num_repeats=num_sets,
+            angles=self.angles,
+            min_stripes=self.min_stripe_num,
+            max_stripes=self.max_stripe_num
+        ).build()
+
     def generate_images(self):
         """Generate the complete set of images with different angles and stripe counts using unified planner."""
         self.setup_directories()
 
         for phase, num_images in self.iter_phases():
-            # Build generation plan
-            plan = GenerationPlan(
-                task_type="lines",
-                num_repeats=num_images,
-                angles=self.angles,
-                min_stripes=self.min_stripe_num,
-                max_stripes=self.max_stripe_num
-            ).build()
-            
+            plan = self.build_plan(phase, num_images)
+
             self.log_generation_info(f"Generating {len(plan)} images for {phase}...")
 
             # Execute plan

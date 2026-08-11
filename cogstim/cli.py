@@ -334,6 +334,39 @@ def build_custom_config(args: argparse.Namespace) -> Dict[str, Any]:
 # =============================================================================
 
 
+def execute(args, config, generator, note: str = "") -> None:
+    """Run the generator, or under --dry-run report what it would produce."""
+    if args.dry_run:
+        report_dry_run(args, config, generator, note)
+        return
+    generator.generate_images()
+    report_generation(args, config, generator, note)
+
+
+def report_dry_run(args, config, generator, note: str = "") -> None:
+    """Print what a real run would produce, without writing anything.
+
+    The set-to-image multiplier is large and paradigm-specific -- a single
+    `shapes` set is 200 images -- so users need to see the breakdown before
+    committing the disk space. The counts come from the same build_plan() the
+    real run uses, so the two cannot disagree.
+    """
+    summary = generator.plan_summary()
+    total = sum(images for _phase, _sets, images in summary)
+    detail = f" ({note})" if note else ""
+
+    # The output directory tree is still created, since generators set it up on
+    # construction; no image is written.
+    print(f"\nDry run: no images written{detail}.")
+    for phase, sets, images in summary:
+        if sets:
+            per_set = images // sets if sets else 0
+            print(f"  {phase}: {sets} sets x {per_set} images = {images} images")
+        else:
+            print(f"  {phase}: {images} images")
+    print(f"  total: {total} images in '{config['output_dir']}'")
+
+
 def report_generation(args, config, generator, note: str = "") -> None:
     """Print an accurate summary of what was written to disk.
 
@@ -373,72 +406,63 @@ def run_shapes(args: argparse.Namespace) -> None:
     """Execute shapes generation."""
     config = build_shapes_config(args)
     generator = ShapesGenerator(**config)
-    generator.generate_images()
-    report_generation(args, config, generator)
+    execute(args, config, generator)
 
 
 def run_colours(args: argparse.Namespace) -> None:
     """Execute colour discrimination generation."""
     config = build_colours_config(args)
     generator = ShapesGenerator(**config)
-    generator.generate_images()
-    report_generation(args, config, generator)
+    execute(args, config, generator)
 
 
 def run_ans(args: argparse.Namespace) -> None:
     """Execute ANS dot array generation."""
     config = build_ans_config(args)
     generator = DotsANSGenerator(config)
-    generator.generate_images()
-    report_generation(args, config, generator)
+    execute(args, config, generator)
 
 
 def run_one_colour(args: argparse.Namespace) -> None:
     """Execute one-colour dot array generation."""
     config = build_one_colour_config(args)
     generator = DotsANSGenerator(config)
-    generator.generate_images()
-    report_generation(args, config, generator)
+    execute(args, config, generator)
 
 
 def run_mts(args: argparse.Namespace) -> None:
     """Execute match-to-sample generation."""
     config = build_mts_config(args)
     generator = MatchToSampleGenerator(config)
-    generator.generate_images()
-    report_generation(args, config, generator, note="image pairs")
+    execute(args, config, generator, note="image pairs")
 
 
 def run_mask(args: argparse.Namespace) -> None:
     """Execute mask generation."""
     config = build_mask_config(args)
     generator = MaskGenerator(config)
-    generator.generate_images()
-    report_generation(args, config, generator)
+    execute(args, config, generator)
 
 
 def run_lines(args: argparse.Namespace) -> None:
     """Execute lines/stripes generation."""
     config = build_lines_config(args)
     generator = LinesGenerator(config)
-    generator.generate_images()
-    report_generation(args, config, generator)
+    execute(args, config, generator)
 
 
 def run_fixation(args: argparse.Namespace) -> None:
     """Execute fixation target generation."""
     config = build_fixation_config(args)
     generator = FixationGenerator(config)
-    generator.generate_images()
-    report_generation(args, config, generator)
+    execute(args, config, generator)
 
 
 def run_custom(args: argparse.Namespace) -> None:
     """Execute custom shapes/colours generation."""
     config = build_custom_config(args)
     generator = ShapesGenerator(**config)
-    generator.generate_images()
-    report_generation(args, config, generator)
+    execute(args, config, generator)
 
 
 # =============================================================================
@@ -495,6 +519,11 @@ def add_common_options(parser: argparse.ArgumentParser) -> None:
         "--quiet",
         action="store_true",
         help="Suppress all non-error output"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Report how many images would be generated, and why, without writing any"
     )
 
 

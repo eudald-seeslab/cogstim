@@ -430,3 +430,44 @@ def test_reported_count_matches_files_written(tmp_path, capsys, subcommand, extr
     )
     # The set count must still be visible, and must not be confused with images.
     assert "3 sets" in output, f"Set count missing from summary: {output!r}"
+
+
+@pytest.mark.parametrize(
+    "subcommand, extra_args",
+    [
+        ("shapes", ["--min-surface", 10000, "--max-surface", 12000]),
+        ("ans", ["--min-point-num", 1, "--max-point-num", 3]),
+        ("one-colour", ["--min-point-num", 1, "--max-point-num", 3]),
+        ("match-to-sample", ["--min-point-num", 1, "--max-point-num", 3]),
+        ("lines", ["--angles", 0, 90]),
+    ],
+)
+def test_dry_run_predicts_actual_output(tmp_path, capsys, subcommand, extra_args):
+    """--dry-run must predict exactly what a real run writes.
+
+    Both come from the same build_plan(), so a divergence here means the
+    prediction and the generation have drifted apart -- the class of problem
+    that produced the misleading counts reported in the JOSS review.
+    """
+    common = ["--train-num", 2, "--test-num", 1, "--seed", 4321, *extra_args]
+
+    dry_dir = tmp_path / "dry"
+    _run_cli_with_args([subcommand, *common, "--dry-run", "--output-dir", str(dry_dir)])
+    dry_output = capsys.readouterr().out
+
+    assert not [p for p in dry_dir.rglob("*") if p.is_file()], (
+        "--dry-run must not write any images"
+    )
+
+    predicted = re.search(r"total: (\d+) images", dry_output)
+    assert predicted, f"No total in dry-run output: {dry_output!r}"
+
+    real_dir = tmp_path / "real"
+    _run_cli_with_args([subcommand, *common, "--output-dir", str(real_dir)])
+    capsys.readouterr()
+
+    on_disk = len([p for p in real_dir.rglob("*") if p.is_file()])
+    assert int(predicted.group(1)) == on_disk, (
+        f"{subcommand}: dry run predicted {predicted.group(1)} images, "
+        f"real run wrote {on_disk}"
+    )

@@ -43,6 +43,10 @@ class FixationGenerator(BaseGenerator):
         self.symbol_colour: str = COLOUR_MAP.get(symbol_colour_name, symbol_colour_name)
         self.tag: str = config.get("tag", "")
         
+    def plan_summary(self):
+        """One image per requested fixation type; no train/test split."""
+        return [("all", 0, len(self.types))]
+
     def generate_images(self) -> None:
         self.setup_directories()
         for t in self.types:

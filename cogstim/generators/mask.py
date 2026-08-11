@@ -93,6 +93,10 @@ class MaskGenerator(BaseGenerator):
     def get_subdirectories(self):
         return []
 
+    def plan_summary(self):
+        """One image per requested mask; no train/test split."""
+        return [("all", 0, self.num_masks)]
+
     def generate_images(self):
         """Generate *num_masks* mask images and save them."""
         version_tag = self.config.get("version_tag", "")

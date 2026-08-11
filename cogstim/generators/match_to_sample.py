@@ -61,7 +61,11 @@ def save_image_pair(generator, s_np, s_points, m_np, m_points, trial_id, n1, n2,
 
 class MatchToSampleGenerator(BaseGenerator):
     """Generator for match-to-sample dot array pairs."""
-    
+
+    # Each planned task writes a sample and a match image.
+    images_per_task = 2
+
+
     def __init__(self, config):
         super().__init__(config)
         
@@ -169,28 +173,38 @@ class MatchToSampleGenerator(BaseGenerator):
                 writer.writerow([n1, n2, str(bool(equalized)).upper(), phase, trial_id])
         return path
     
-    def generate_images(self):
-        """Generate all image pairs for train and test using unified planner or CSV."""
+    def build_plan(self, phase, num_sets):
+        """Eight tasks per (n1, n2) pair, balanced 50/50 match against non-match.
+
+        Each task writes two images, a sample and a match, so images_per_task
+        is 2 for this generator.
+        """
         tasks_csv = self.config.get("tasks_csv")
         tasks_copies = self.config.get("tasks_copies", 1)
+
+        plan = GenerationPlan(
+            task_type="mts",
+            min_point_num=self.config["min_point_num"],
+            max_point_num=self.config["max_point_num"],
+            num_repeats=num_sets,
+            ratios=self.ratios
+        )
+        if tasks_csv:
+            copies = max(1, num_sets) * tasks_copies
+            plan.build_from_mts_csv(tasks_csv, num_copies=copies)
+        else:
+            plan.build()
+        return plan
+
+    def generate_images(self):
+        """Generate all image pairs for train and test using unified planner or CSV."""
         total_pairs = 0
         failures = []
 
         for phase, num_images in self.iter_phases():
             if num_images <= 0:
                 continue
-            plan = GenerationPlan(
-                task_type="mts",
-                min_point_num=self.config["min_point_num"],
-                max_point_num=self.config["max_point_num"],
-                num_repeats=num_images,
-                ratios=self.ratios
-            )
-            if tasks_csv:
-                copies = max(1, num_images) * tasks_copies
-                plan.build_from_mts_csv(tasks_csv, num_copies=copies)
-            else:
-                plan.build()
+            plan = self.build_plan(phase, num_images)
 
             self.log_generation_info(f"Generating {len(plan)} image pairs for {phase}...")
 

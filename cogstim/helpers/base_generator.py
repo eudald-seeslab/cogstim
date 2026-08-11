@@ -59,9 +59,10 @@ class BaseGenerator(ABC):
         self.train_num = config.get("train_num", 0)
         self.test_num = config.get("test_num", 0)
         
-        # Set seed for reproducibility if provided
-        seed = config.get("seed", None)
-        set_seed(seed)
+        # Always seed, drawing one when none was given, so the run can be
+        # reproduced afterwards from the recorded value.
+        self.seed = set_seed(config.get("seed", None))
+        self.config["seed"] = self.seed
     
     @property
     def output_dir(self) -> str:

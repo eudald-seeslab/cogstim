@@ -27,10 +27,24 @@ def subcommand_parsers():
 
 def actions_of(parser):
     """Return the real options of a parser, excluding argparse's own --help."""
-    return [a for a in parser._actions if a.dest != "help"]
+    return [a for a in parser._actions
+            if a.dest != "help" and a.option_strings]
 
 
-SUBCOMMANDS = sorted(subcommand_parsers())
+# 'run' replays a saved configuration instead of generating stimuli of its own,
+# so the naming rules for stimulus options do not apply to it.
+NON_STIMULUS_SUBCOMMANDS = {"run"}
+
+SUBCOMMANDS = sorted(set(subcommand_parsers()) - NON_STIMULUS_SUBCOMMANDS)
+
+
+def stimulus_parsers():
+    """Subcommand parsers that actually generate stimuli."""
+    return {
+        name: parser
+        for name, parser in subcommand_parsers().items()
+        if name not in NON_STIMULUS_SUBCOMMANDS
+    }
 
 # Options predating the naming rules whose spelling is fixed by other concerns.
 # Kept explicit so the exemption is a decision on the record, not an oversight.
@@ -115,7 +129,7 @@ def test_same_flag_means_the_same_thing_everywhere():
     """
     seen = {}
     problems = []
-    for name, parser in subcommand_parsers().items():
+    for name, parser in stimulus_parsers().items():
         for action in actions_of(parser):
             flag = action.option_strings[0]
             signature = (action.nargs, tuple(action.choices) if action.choices else None)
@@ -140,7 +154,7 @@ def test_every_stimulus_task_can_set_its_colour():
     white default background, producing blank images.
     """
     missing = []
-    for name, parser in subcommand_parsers().items():
+    for name, parser in stimulus_parsers().items():
         flags = [f for a in actions_of(parser) for f in a.option_strings]
         stimulus_colours = [
             f for f in flags if "colour" in f and f != "--background-colour"
@@ -186,7 +200,7 @@ UNPAIRED_MINIMUMS = {"--min-line-spacing-px"}
 def test_min_and_max_options_come_in_pairs():
     """A --min-X should have a --max-X, so ranges are always fully controllable."""
     problems = []
-    for name, parser in subcommand_parsers().items():
+    for name, parser in stimulus_parsers().items():
         flags = {a.option_strings[0] for a in actions_of(parser)}
         for flag in flags:
             if not flag.startswith("--min-") or flag in UNPAIRED_MINIMUMS:

@@ -419,7 +419,7 @@ def test_reported_count_matches_files_written(tmp_path, capsys, subcommand, extr
     ])
 
     output = capsys.readouterr().out
-    on_disk = len([p for p in Path(tmp_path).rglob("*") if p.is_file()])
+    on_disk = len(list(Path(tmp_path).rglob("*.png")))
 
     match = re.search(r"Generated (\d+) images", output)
     assert match, f"No image count in summary: {output!r}"
@@ -455,9 +455,7 @@ def test_dry_run_predicts_actual_output(tmp_path, capsys, subcommand, extra_args
     _run_cli_with_args([subcommand, *common, "--dry-run", "--output-dir", str(dry_dir)])
     dry_output = capsys.readouterr().out
 
-    assert not [p for p in dry_dir.rglob("*") if p.is_file()], (
-        "--dry-run must not write any images"
-    )
+    assert not list(dry_dir.rglob("*.png")), "--dry-run must not write any images"
 
     predicted = re.search(r"total: (\d+) images", dry_output)
     assert predicted, f"No total in dry-run output: {dry_output!r}"
@@ -466,7 +464,7 @@ def test_dry_run_predicts_actual_output(tmp_path, capsys, subcommand, extra_args
     _run_cli_with_args([subcommand, *common, "--output-dir", str(real_dir)])
     capsys.readouterr()
 
-    on_disk = len([p for p in real_dir.rglob("*") if p.is_file()])
+    on_disk = len(list(real_dir.rglob("*.png")))
     assert int(predicted.group(1)) == on_disk, (
         f"{subcommand}: dry run predicted {predicted.group(1)} images, "
         f"real run wrote {on_disk}"

@@ -35,6 +35,11 @@ from cogstim.helpers.constants import (
 )
 from cogstim.helpers import cli_options as opts
 from cogstim.helpers.cli_options import add_options, parse_ratios
+from cogstim.helpers.run_config import (
+    argv_from_config,
+    write_run_config,
+    _package_version,
+)
 
 
 # =============================================================================
@@ -325,8 +330,25 @@ def execute(args, config, generator, note: str = "") -> None:
     if args.dry_run:
         report_dry_run(args, config, generator, note)
         return
+
     generator.generate_images()
+
+    # Record what was run alongside what it produced. The seed comes from the
+    # generator because it may have been drawn rather than supplied, and without
+    # it a run started without --seed could never be reproduced.
+    config_path = None
+    if generator.images_written:
+        try:
+            config_path = write_run_config(config["output_dir"], args, generator.seed)
+        except (ImportError, OSError) as exc:
+            print(f"\nWarning: could not write the run configuration: {exc}",
+                  file=sys.stderr)
+
     report_generation(args, config, generator, note)
+
+    if config_path and not args.quiet:
+        print(f"  Options used were written to {config_path}")
+        print(f"  Reproduce this run with: cogstim run {config_path}")
 
 
 def report_dry_run(args, config, generator, note: str = "") -> None:
@@ -455,6 +477,23 @@ def run_fixation(args: argparse.Namespace) -> None:
     config = build_fixation_config(args)
     generator = FixationGenerator(config)
     execute(args, config, generator)
+
+
+def run_from_config(args: argparse.Namespace) -> None:
+    """Replay a saved configuration.
+
+    The configuration is turned back into command-line arguments and pushed
+    through the normal parser, so a config file is validated exactly like a
+    typed command rather than through a second, divergent code path.
+    """
+    argv = argv_from_config(args.config)
+    if args.output_dir:
+        argv += ["--output-dir", args.output_dir]
+
+    parser = create_parser()
+    replayed = parser.parse_args(argv)
+    validate_and_adjust_args(replayed)
+    replayed.func(replayed)
 
 
 def run_custom(args: argparse.Namespace) -> None:
@@ -638,7 +677,9 @@ For help on a specific task:
     parser.add_argument(
         "--version",
         action="version",
-        version="cogstim 0.8.0"
+        # Read from package metadata rather than hardcoded: the literal here had
+        # drifted to 0.8.0 while pyproject.toml said 0.8.1.
+        version=f"cogstim {_package_version()}",
     )
     
     subparsers = parser.add_subparsers(
@@ -657,7 +698,23 @@ For help on a specific task:
     setup_lines_subcommand(subparsers)
     setup_fixation_subcommand(subparsers)
     setup_custom_subcommand(subparsers)
-    
+
+    replay = subparsers.add_parser(
+        "run",
+        help="Generate from a saved configuration file",
+        description=(
+            "Re-run a generation from the cogstim_config.yaml written alongside "
+            "a previous run's output, reproducing it exactly."
+        ),
+        epilog="Example: cogstim run images/shapes/cogstim_config.yaml",
+    )
+    replay.add_argument("config", help="Path to a cogstim configuration file")
+    replay.add_argument(
+        "--output-dir", default=None,
+        help="Write to this directory instead of the one in the configuration",
+    )
+    replay.set_defaults(func=run_from_config)
+
     return parser
 
 

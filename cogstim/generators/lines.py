@@ -6,7 +6,7 @@ import logging
 import numpy as np
 from tqdm import tqdm
 from cogstim.helpers.base_generator import BaseGenerator
-from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.image_utils import ImageCanvas, resolve_stimulus_colour
 from cogstim.helpers.planner import GenerationPlan
 from cogstim.helpers.constants import IMAGE_DEFAULTS, LINE_DEFAULTS
 
@@ -32,6 +32,13 @@ class LinesGenerator(BaseGenerator):
         self.max_attempts = config["max_attempts"]
         self.tag = config["tag"]
         self.background_colour = config["background_colour"]
+        # Optional so the Python API keeps working with configs written before
+        # the stripe colour was configurable.
+        self.line_colour = resolve_stimulus_colour(
+            config.get("line_colour"),
+            self.background_colour,
+            LINE_DEFAULTS["line_colour"],
+        )
         # Calculate circumscribed size for rotation
         self.c_size = int(self.size / 2 * np.sqrt(2)) * 2
 
@@ -102,7 +109,7 @@ class LinesGenerator(BaseGenerator):
                 starting_positions[i] + stripe_thickness[i],
                 self.c_size,
             )
-            canvas.draw_rectangle([upper_left, lower_right], fill="white")
+            canvas.draw_rectangle([upper_left, lower_right], fill=self.line_colour)
 
         # Rotate and crop
         rotated_img = canvas.img.rotate(angle)

@@ -75,7 +75,7 @@ Most tasks accept these options:
 
 ### Task specification from CSV
 
-For some tasks, you can specify exactly which stimuli to generate via a CSV file instead of using ratios or parameter ranges. You can do this with the `--tasks-csv PATH` to point to a CSV (find below the format of the CSV depending on the task). This method allows to create "n" copies of the tasks in the CSV (`--tasks-copies N` (default: 1) to repeat the distribution N times). When `--tasks-csv` is set, `--ratios` and `--min-point-num` / `--max-point-num` are ignored.
+For some tasks, you can specify exactly which stimuli to generate via a CSV file instead of using ratios or parameter ranges. You can do this with the `--tasks-csv PATH` to point to a CSV (find below the format of the CSV depending on the task). This method allows to create "n" copies of the tasks in the CSV (`--tasks-copies N` (default: 1) to repeat the distribution N times). When `--tasks-csv` is set, `--ratios` and `--min-dot-num` / `--max-dot-num` are ignored.
 
 For now, this is supported only for the following tasks, with the CSV specifications
 
@@ -145,8 +145,8 @@ cogstim ans --ratios easy --train-num 100 --test-num 40 --layout separated --gap
 cogstim match-to-sample \
   --ratios easy \
   --train-num 50 --test-num 20 \
-  --min-point-num 1 --max-point-num 10 \
-  --dot-colour yellow
+  --min-dot-num 1 --max-dot-num 10 \
+  --dot-colour-1 yellow
 ```
 
 - Generates pairs of images per trial: match (`*_a_*.png`) and sample (`*_b_*.png`).
@@ -159,7 +159,7 @@ This task is based on Sella et al. (2013).
 
 ### Single-colour dot arrays numbered 1-5, total surface area held constant
 ```bash
-cogstim one-colour --train-num 50 --test-num 20 --min-point-num 1 --max-point-num 5
+cogstim one-colour --train-num 50 --test-num 20 --min-dot-num 1 --max-dot-num 5
 ```
 
 <table><tr>
@@ -169,7 +169,7 @@ cogstim one-colour --train-num 50 --test-num 20 --min-point-num 1 --max-point-nu
 
 ### Custom dataset – green/red triangles & squares
 ```bash
-cogstim custom --shapes triangle square --colours red green --train-num 50 --test-num 20
+cogstim custom --shapes triangle square --shape-colours red green --train-num 50 --test-num 20
 ```
 
 <table><tr>
@@ -179,7 +179,7 @@ cogstim custom --shapes triangle square --colours red green --train-num 50 --tes
 
 ### Lines dataset – rotated stripe patterns
 ```bash
-cogstim lines --train-num 50 --test-num 20 --angles 0 45 90 135 --min-stripes 3 --max-stripes 5
+cogstim lines --train-num 50 --test-num 20 --angles 0 45 90 135 --min-stripe-num 3 --max-stripe-num 5
 ```
 
 <table><tr>

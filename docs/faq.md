@@ -65,7 +65,7 @@ cogstim shapes --img-size 256 --min-surface 2500 --max-surface 5000
 
 For dots:
 ```bash
-cogstim ans --img-size 256 --min-point-radius 10 --max-point-radius 15
+cogstim ans --img-size 256 --min-dot-radius-px 10 --max-dot-radius-px 15
 ```
 
 
@@ -100,8 +100,8 @@ The default is 10,000 for ANS/one-colour and 5,000 for match-to-sample.
 
 ```bash
 cogstim ans \
-  --max-point-num 8 \
-  --max-point-radius 25 \
+  --max-dot-num 8 \
+  --max-dot-radius-px 25 \
   --train-num 10 --test-num 5
 ```
 
@@ -149,7 +149,7 @@ cogstim lines --angles 0 90 --train-num 10 --test-num 5
 ```bash
 cogstim custom \
   --shapes circle star triangle \
-  --colours red green blue \
+  --shape-colours red green blue \
   --train-num 10 --test-num 5
 ```
 
@@ -210,7 +210,7 @@ cogstim shapes --min-surface 15000 --max-surface 25000
 
 **For dots:**
 ```bash
-cogstim ans --min-point-radius 15 --max-point-radius 25
+cogstim ans --min-dot-radius-px 15 --max-dot-radius-px 25
 ```
 
 These control the size variation within your stimuli.

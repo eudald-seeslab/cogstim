@@ -165,8 +165,8 @@ def test_one_colour(temp_dir: Path) -> bool:
         *COGSTIM_CMD, "one-colour",
         "--train-num", "2",
         "--test-num", "1",
-        "--min-point-num", "1",
-        "--max-point-num", "5",
+        "--min-dot-num", "1",
+        "--max-dot-num", "5",
         "--output-dir", str(output_dir),
         "--seed", "1234"
     ]
@@ -189,8 +189,8 @@ def test_match_to_sample(temp_dir: Path) -> bool:
         "--ratios", "easy",
         "--train-num", "2",
         "--test-num", "1",
-        "--min-point-num", "2",
-        "--max-point-num", "4",
+        "--min-dot-num", "2",
+        "--max-dot-num", "4",
         "--output-dir", str(output_dir),
         "--seed", "1234"
     ]
@@ -281,14 +281,14 @@ def test_custom(temp_dir: Path) -> bool:
     cmd = [
         *COGSTIM_CMD, "custom",
         "--shapes", "triangle", "square",
-        "--colours", "red", "green",
+        "--shape-colours", "red", "green",
         "--train-num", "2",
         "--test-num", "1",
         "--output-dir", str(output_dir),
         "--seed", "1234"
     ]
     
-    if not run_command(cmd, "custom --shapes triangle square --colours red green"):
+    if not run_command(cmd, "custom --shapes triangle square --shape-colours red green"):
         return False
     
     return verify_output(

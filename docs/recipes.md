@@ -66,8 +66,8 @@ images/ans/
 ```bash
 cogstim one-colour \
   --train-num 50 --test-num 20 \
-  --min-point-num 1 --max-point-num 10 \
-  --dot-colour yellow \
+  --min-dot-num 1 --max-dot-num 10 \
+  --dot-colour-1 yellow \
   --seed 1234
 ```
 
@@ -92,8 +92,8 @@ images/one-colour/
 cogstim match-to-sample \
   --ratios easy \
   --train-num 50 --test-num 20 \
-  --min-point-num 1 --max-point-num 10 \
-  --dot-colour yellow \
+  --min-dot-num 1 --max-dot-num 10 \
+  --dot-colour-1 yellow \
   --seed 1234
 ```
 
@@ -122,7 +122,7 @@ images/match_to_sample/
 cogstim lines \
   --train-num 50 --test-num 20 \
   --angles 0 45 90 135 \
-  --min-stripes 3 --max-stripes 5 \
+  --min-stripe-num 3 --max-stripe-num 5 \
   --seed 1234
 ```
 
@@ -150,7 +150,7 @@ images/lines/
 ```bash
 cogstim custom \
   --shapes triangle square \
-  --colours red green \
+  --shape-colours red green \
   --train-num 50 --test-num 20 \
   --seed 1234
 ```

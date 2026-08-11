@@ -5,7 +5,69 @@ Image utility classes for the cogstim package.
 This module provides a wrapper over PIL Image operations to centralize
 all image creation and drawing functionality. 
 """
+import logging
+
 from PIL import Image, ImageDraw
+
+from cogstim.helpers.constants import COLOUR_MAP
+
+_logger = logging.getLogger(__name__)
+
+
+def to_hex(colour):
+    """Resolve a colour name to its hex code, passing hex codes through."""
+    return COLOUR_MAP.get(colour, colour)
+
+
+def _luminance(hex_colour):
+    """Perceived luminance of a #rrggbb colour, 0 (black) to 1 (white)."""
+    value = hex_colour.lstrip("#")
+    if len(value) != 6:
+        return 0.5
+    try:
+        r, g, b = (int(value[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    except ValueError:
+        return 0.5
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def resolve_stimulus_colour(requested, background, default):
+    """Pick a stimulus colour that is actually visible against the background.
+
+    Drawing a stimulus in the background colour yields a blank image. That is
+    not hypothetical: `cogstim lines` drew white stripes on the default white
+    background, and `cogstim fixation --all-types` drew white symbols on white,
+    so both produced entirely blank output out of the box.
+
+    An explicitly requested colour is always honoured -- silently substituting a
+    colour the caller asked for would be worse than a blank image -- but it warns.
+    A colour that merely came from a default is replaced by black or white,
+    whichever contrasts with the background.
+
+    Args:
+        requested: Colour the caller asked for, or None to use the default.
+        background: Background colour name or hex code.
+        default: Colour to use when nothing was requested.
+
+    Returns:
+        str: Hex colour code to draw with.
+    """
+    background_hex = to_hex(background)
+
+    if requested is not None:
+        colour_hex = to_hex(requested)
+        if colour_hex == background_hex:
+            _logger.warning(
+                f"Stimulus colour '{requested}' is the same as the background; "
+                "the generated images will be blank."
+            )
+        return colour_hex
+
+    default_hex = to_hex(default)
+    if default_hex != background_hex:
+        return default_hex
+
+    return "#000000" if _luminance(background_hex) > 0.5 else "#ffffff"
 
 
 class ImageCanvas:

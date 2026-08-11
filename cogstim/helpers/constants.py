@@ -108,6 +108,9 @@ LINE_DEFAULTS = {
     "min_thickness": 10,
     "max_thickness": 30,
     "min_spacing": 5,
+    # Must contrast with IMAGE_DEFAULTS["background_colour"]: the stripe colour
+    # used to be hardcoded white, so the default output was a blank white image.
+    "line_colour": "black",
 }
 
 # Fixation generation defaults
@@ -118,7 +121,9 @@ FIXATION_DEFAULTS = {
     "cross_thickness_px": 12,
     "cross_arm_px": 128,
     "jitter_px": 0,
-    "symbol_colour": "white",
+    # Must contrast with IMAGE_DEFAULTS["background_colour"]; this was white on
+    # white, so `cogstim fixation --all-types` produced blank images.
+    "symbol_colour": "black",
 }
 
 # Mask defaults (dense dot patterns for visual masking)

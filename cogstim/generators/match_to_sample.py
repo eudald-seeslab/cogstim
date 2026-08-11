@@ -7,6 +7,7 @@ from cogstim.helpers.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS, MTS_DEFA
 from cogstim.helpers.mts_geometry import equalize_pair as _equalize_geom
 from cogstim.helpers.planner import GenerationPlan, resolve_ratios
 from cogstim.helpers.base_generator import BaseGenerator
+from cogstim.helpers.image_utils import resolve_stimulus_colour
 
 
 # TODO: This should be moved elsewhere
@@ -80,11 +81,16 @@ class MatchToSampleGenerator(BaseGenerator):
     def create_image_pair(self, n1, n2, equalize=False):
         """Create a pair of images (sample and match)."""
         init_size = self.config["init_size"]
+        dot_colour = resolve_stimulus_colour(
+            self.config.get("dot_colour"),
+            self.config["background_colour"],
+            MTS_DEFAULTS["dot_colour"],
+        )
         
         # Create sample image
         s_np = DotsCore(
             init_size=init_size,
-            colour_1=self.config["dot_colour"],
+            colour_1=dot_colour,
             bg_colour=self.config["background_colour"],
             min_point_radius=self.config["min_point_radius"],
             max_point_radius=self.config["max_point_radius"],
@@ -95,7 +101,7 @@ class MatchToSampleGenerator(BaseGenerator):
         # Create match image
         m_np = DotsCore(
             init_size=init_size,
-            colour_1=self.config["dot_colour"],
+            colour_1=dot_colour,
             bg_colour=self.config["background_colour"],
             min_point_radius=self.config["min_point_radius"],
             max_point_radius=self.config["max_point_radius"],

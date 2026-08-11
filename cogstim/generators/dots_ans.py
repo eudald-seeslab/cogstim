@@ -5,6 +5,7 @@ import logging
 from cogstim.helpers.dots_core import DotsCore, PointLayoutError
 from cogstim.helpers.constants import COLOUR_MAP, ANS_EASY_RATIOS, ANS_HARD_RATIOS, DOT_DEFAULTS, IMAGE_DEFAULTS
 from cogstim.helpers.base_generator import BaseGenerator
+from cogstim.helpers.image_utils import resolve_stimulus_colour
 from cogstim.helpers.planner import GenerationPlan, resolve_ratios
 
 logging.basicConfig(level=logging.INFO)
@@ -59,11 +60,19 @@ class DotsANSGenerator(BaseGenerator):
         return left, right
 
     def create_image(self, n1, n2, equalized):
-        colour_2 = None if self.config["ONE_COLOUR"] else COLOUR_MAP[self.config["colour_2"]]
+        background = self.config["background_colour"]
+        colour_1 = resolve_stimulus_colour(
+            self.config.get("colour_1"), background, DOT_DEFAULTS["dot_colour"]
+        )
+        colour_2 = None
+        if not self.config["ONE_COLOUR"]:
+            colour_2 = resolve_stimulus_colour(
+                self.config.get("colour_2"), background, "blue"
+            )
 
         number_points = DotsCore(
             init_size=IMAGE_DEFAULTS["init_size"],
-            colour_1=COLOUR_MAP[self.config["colour_1"]],
+            colour_1=colour_1,
             colour_2=colour_2,
             bg_colour=self.config["background_colour"],
             mode=IMAGE_DEFAULTS["mode"],

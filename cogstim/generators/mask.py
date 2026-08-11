@@ -4,7 +4,7 @@ from random import randint, choice
 
 from tqdm import tqdm
 
-from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.image_utils import ImageCanvas, resolve_stimulus_colour
 from cogstim.helpers.constants import MASK_DEFAULTS, IMAGE_DEFAULTS, DOT_DEFAULTS, COLOUR_MAP
 from cogstim.helpers.base_generator import BaseGenerator
 
@@ -34,8 +34,10 @@ class MaskGenerator(BaseGenerator):
         self.img_size = config.get("init_size", IMAGE_DEFAULTS["init_size"])
         self.layout = config.get("layout", "full")
         self.gap = config.get("gap", DOT_DEFAULTS["gap"])
-        self.dot_colour = self._resolve_colour(
-            config.get("dot_colour", MASK_DEFAULTS["dot_colour"])
+        self.dot_colour = resolve_stimulus_colour(
+            config.get("dot_colour"),
+            config.get("background_colour", MASK_DEFAULTS["background_colour"]),
+            MASK_DEFAULTS["dot_colour"],
         )
         raw_colour_2 = config.get("dot_colour_2")
         self.dot_colour_2 = self._resolve_colour(raw_colour_2) if raw_colour_2 else None

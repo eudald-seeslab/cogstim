@@ -135,9 +135,11 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
     }
 
     # Allow custom colours for ANS
-    if hasattr(args, 'dot_colour1'):
+    # Class subdirectories are named after these colours, so they must stay
+    # concrete names; only override when the user actually chose one.
+    if getattr(args, 'dot_colour1', None) is not None:
         cfg["colour_1"] = args.dot_colour1
-    if hasattr(args, 'dot_colour2'):
+    if getattr(args, 'dot_colour2', None) is not None:
         cfg["colour_2"] = args.dot_colour2
 
     if getattr(args, 'tasks_csv', None):
@@ -165,7 +167,7 @@ def build_one_colour_config(args: argparse.Namespace) -> Dict[str, Any]:
             "max_point_radius": args.max_point_radius,
             "attempts_limit": args.attempts_limit,
             "seed": args.seed,
-            "colour_1": args.dot_colour,
+            "colour_1": args.dot_colour or DOT_DEFAULTS["dot_colour"],
             "colour_2": None,
             "img_format": args.img_format,
             "version_tag": args.version_tag,
@@ -247,6 +249,7 @@ def build_lines_config(args: argparse.Namespace) -> Dict[str, Any]:
         "min_thickness": args.min_thickness,
         "max_thickness": args.max_thickness,
         "min_spacing": args.min_spacing,
+        "line_colour": args.line_colour,
         "max_attempts": getattr(args, 'max_attempts', 10000),
         "background_colour": args.background_colour,
         "seed": args.seed,
@@ -363,10 +366,23 @@ def report_generation(args, config, generator, note: str = "") -> None:
         generator: The generator that ran; supplies ``images_written``.
         note: Optional clarification appended to the set count, e.g. "image pairs".
     """
+    written = generator.images_written
+
+    if written == 0:
+        # Exiting 0 having produced nothing looks like success. It usually means
+        # no condition survived the requested constraints -- for instance a dot
+        # count range too narrow to contain any pair matching the chosen ratios.
+        print(
+            "\nWarning: no images were generated. No condition matched the "
+            "options given; widen --min-dot-num/--max-dot-num, choose different "
+            "--ratios, or run with --dry-run to see what was planned.",
+            file=sys.stderr,
+        )
+        return
+
     if args.quiet:
         return
 
-    written = generator.images_written
     sets = getattr(args, "train_num", 0) + getattr(args, "test_num", 0)
 
     if sets > 0:
@@ -647,15 +663,48 @@ For help on a specific task:
 # =============================================================================
 
 
+# How many shapes and colours each task needs. --shapes and --shape-colours
+# accept any number of values so that the same flag means the same thing in
+# every subcommand; the per-task limits are checked here instead of through
+# differing nargs, which is what made --colours mean three different things.
+STIMULUS_ARITY = {
+    "shapes": {"shapes": 2, "colours": 1},
+    "colours": {"colours": 2},
+}
+
+
+def validate_stimulus_arity(args: argparse.Namespace) -> None:
+    """Check that a task was given as many shapes and colours as it needs."""
+    expected = STIMULUS_ARITY.get(getattr(args, "task", None))
+    if not expected:
+        return
+    for dest, count in expected.items():
+        values = getattr(args, dest, None)
+        if values is not None and len(values) != count:
+            flag = "--shapes" if dest == "shapes" else "--shape-colours"
+            raise ValueError(
+                f"'{args.task}' needs exactly {count} value(s) for {flag}, "
+                f"got {len(values)}: {' '.join(values)}. "
+                f"Use the 'custom' task for other combinations."
+            )
+
+
 def validate_and_adjust_args(args: argparse.Namespace) -> None:
     """Validate arguments and apply demo mode adjustments."""
+    validate_stimulus_arity(args)
+
+    # 'mixed' was the ans spelling of what mask called 'full'. Both are accepted;
+    # normalise so logs and filenames use one word for one thing.
+    if getattr(args, "layout", None) == "mixed":
+        args.layout = "full"
+
     # Handle demo mode
     if hasattr(args, 'demo') and args.demo:
         args.train_num = 8
         args.test_num = 0
         if not args.quiet:
-            print("Demo mode: generating 8 training images for quick preview.")
-    
+            print("Demo mode: generating 8 training sets for quick preview.")
+
     # Set default output directories if not specified
     if args.output_dir is None:
         task_name = args.task if hasattr(args, 'task') else 'output'

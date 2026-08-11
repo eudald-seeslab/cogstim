@@ -4,9 +4,9 @@ import os
 import random
 from typing import List, Tuple
 
-from cogstim.helpers.constants import COLOUR_MAP, IMAGE_DEFAULTS
+from cogstim.helpers.constants import COLOUR_MAP, IMAGE_DEFAULTS, FIXATION_DEFAULTS
 from cogstim.helpers.base_generator import BaseGenerator
-from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.image_utils import ImageCanvas, resolve_stimulus_colour
 
 
 class FixationGenerator(BaseGenerator):
@@ -39,8 +39,11 @@ class FixationGenerator(BaseGenerator):
         self.jitter_px: int = config.get("jitter_px", 0)
         self.background_colour: str = config["background_colour"]
         # Map user colour name to hex code where applicable
-        symbol_colour_name = config["symbol_colour"]
-        self.symbol_colour: str = COLOUR_MAP.get(symbol_colour_name, symbol_colour_name)
+        self.symbol_colour: str = resolve_stimulus_colour(
+            config.get("symbol_colour"),
+            self.background_colour,
+            FIXATION_DEFAULTS["symbol_colour"],
+        )
         self.tag: str = config.get("tag", "")
         
     def plan_summary(self):

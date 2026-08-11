@@ -215,13 +215,17 @@ RATIOS = [
 ]
 
 DOT_LAYOUT = [
-    Option("--min-point-num", type=int, default=1,
+    Option("--min-dot-num", dest="min_point_num", type=int, default=1,
+           aliases=("--min-point-num",),
            help="Minimum number of dots per colour (default: 1)"),
-    Option("--max-point-num", type=int, default=10,
+    Option("--max-dot-num", dest="max_point_num", type=int, default=10,
+           aliases=("--max-point-num",),
            help="Maximum number of dots per colour (default: 10)"),
-    Option("--min-point-radius", type=int, default=DOT_DEFAULTS["min_point_radius"],
+    Option("--min-dot-radius-px", dest="min_point_radius", type=int,
+           default=DOT_DEFAULTS["min_point_radius"], aliases=("--min-point-radius",),
            help=f"Minimum dot radius in pixels (default: {DOT_DEFAULTS['min_point_radius']})"),
-    Option("--max-point-radius", type=int, default=DOT_DEFAULTS["max_point_radius"],
+    Option("--max-dot-radius-px", dest="max_point_radius", type=int,
+           default=DOT_DEFAULTS["max_point_radius"], aliases=("--max-point-radius",),
            help=f"Maximum dot radius in pixels (default: {DOT_DEFAULTS['max_point_radius']})"),
     Option("--attempts-limit", type=int, default=DOT_DEFAULTS["attempts_limit"],
            help=f"Maximum attempts for dot placement (default: {DOT_DEFAULTS['attempts_limit']})"),
@@ -249,11 +253,16 @@ TASKS_CSV = [
            help="Number of copies of the task distribution (default: 1)"),
 ]
 
+# 'mixed' is the historical spelling of 'full' in the ans task, kept working so
+# existing commands do not break. Both tasks now offer the same vocabulary.
+LAYOUT_CHOICES = ["full", "mixed", "separated"]
+
 SEPARATED_LAYOUT = [
     Option("--layout", type=str, default=DOT_DEFAULTS["layout"],
-           choices=["mixed", "separated"],
-           help=("Dot placement: 'mixed' (all dots share the canvas) or "
-                 "'separated' (colour 1 left, colour 2 right)")),
+           choices=LAYOUT_CHOICES,
+           help=("Dot placement: 'full' (all dots share the canvas) or "
+                 "'separated' (colour 1 left, colour 2 right). "
+                 "'mixed' is a deprecated synonym for 'full'.")),
     Option("--gap", type=int, default=DOT_DEFAULTS["gap"],
            help=f"Pixel gap between halves in separated layout (default: {DOT_DEFAULTS['gap']})"),
 ]
@@ -262,43 +271,51 @@ SEPARATED_LAYOUT = [
 # --- Task-specific groups ----------------------------------------------------
 
 SHAPES_SPECIFIC = [
-    Option("--shapes", nargs=2, choices=SHAPE_CHOICES, default=["circle", "star"],
-           help="Two shapes for discrimination"),
-    Option("--colours", nargs=1, choices=COLOUR_CHOICES, default=["yellow"],
-           help="Colour for both shapes"),
+    Option("--shapes", nargs="+", choices=SHAPE_CHOICES, default=["circle", "star"],
+           help="The two shapes to discriminate between"),
+    Option("--shape-colours", dest="colours", nargs="+", choices=COLOUR_CHOICES,
+           default=["yellow"], aliases=("--colours",),
+           help="The single colour both shapes are drawn in"),
 ]
 
 COLOURS_SPECIFIC = [
     Option("--shape", type=str, choices=SHAPE_CHOICES, default="circle",
            help="Shape to use for both classes"),
-    Option("--colours", nargs=2, choices=COLOUR_CHOICES, default=["yellow", "blue"],
-           help="Two colours for discrimination"),
+    Option("--shape-colours", dest="colours", nargs="+", choices=COLOUR_CHOICES,
+           default=["yellow", "blue"], aliases=("--colours",),
+           help="The two colours to discriminate between"),
 ]
 
 CUSTOM_SPECIFIC = [
     Option("--shapes", nargs="+", choices=SHAPE_CHOICES,
            help="Shapes to include (required)"),
-    Option("--colours", nargs="+", choices=COLOUR_CHOICES,
-           help="Colours to include (required)"),
+    Option("--shape-colours", dest="colours", nargs="+", choices=COLOUR_CHOICES,
+           aliases=("--colours",), help="Colours to include (required)"),
 ]
 
 ANS_SPECIFIC = [
-    Option("--dot-colour1", type=str, choices=COLOUR_CHOICES, default="yellow",
-           help="First dot colour"),
-    Option("--dot-colour2", type=str, choices=COLOUR_CHOICES, default="blue",
-           help="Second dot colour"),
+    Option("--dot-colour-1", dest="dot_colour1", type=str, choices=COLOUR_CHOICES,
+           aliases=("--dot-colour1",),
+           help="First dot colour (default: yellow, or its inverse when that "
+                "matches the background)"),
+    Option("--dot-colour-2", dest="dot_colour2", type=str, choices=COLOUR_CHOICES,
+           aliases=("--dot-colour2",),
+           help="Second dot colour (default: blue, or its inverse when that "
+                "matches the background)"),
 ]
 
 ONE_COLOUR_SPECIFIC = [
-    Option("--dot-colour", type=str, choices=COLOUR_CHOICES,
-           default=DOT_DEFAULTS["dot_colour"],
-           help=f"Dot colour (default: {DOT_DEFAULTS['dot_colour']})"),
+    Option("--dot-colour-1", dest="dot_colour", type=str, choices=COLOUR_CHOICES,
+           aliases=("--dot-colour",),
+           help=(f"Dot colour (default: {DOT_DEFAULTS['dot_colour']}, or its "
+                 "inverse when that matches the background)")),
 ]
 
 MTS_SPECIFIC = [
-    Option("--dot-colour", type=str, choices=COLOUR_CHOICES,
-           default=MTS_DEFAULTS["dot_colour"],
-           help=f"Dot colour (default: {MTS_DEFAULTS['dot_colour']})"),
+    Option("--dot-colour-1", dest="dot_colour", type=str, choices=COLOUR_CHOICES,
+           aliases=("--dot-colour",),
+           help=(f"Dot colour (default: {MTS_DEFAULTS['dot_colour']}, or its "
+                 "inverse when that matches the background)")),
     Option("--tolerance", type=float,
            help=f"Relative tolerance for area equalization (default: {MTS_DEFAULTS['tolerance']})"),
     Option("--abs-tolerance", type=int,
@@ -306,24 +323,28 @@ MTS_SPECIFIC = [
 ]
 
 MASK_SPECIFIC = [
-    Option("--num-masks", type=int, default=MASK_DEFAULTS["num_masks"],
+    Option("--mask-num", dest="num_masks", aliases=("--num-masks",), type=int, default=MASK_DEFAULTS["num_masks"],
            help=f"Number of mask variants to generate (default: {MASK_DEFAULTS['num_masks']})"),
-    Option("--num-dots", type=int, default=MASK_DEFAULTS["num_dots"],
+    Option("--dot-num", dest="num_dots", aliases=("--num-dots",), type=int, default=MASK_DEFAULTS["num_dots"],
            help=f"Number of dots per mask (default: {MASK_DEFAULTS['num_dots']})"),
-    Option("--min-dot-radius", type=int, default=MASK_DEFAULTS["min_dot_radius"],
+    Option("--min-dot-radius-px", dest="min_dot_radius", type=int,
+           default=MASK_DEFAULTS["min_dot_radius"], aliases=("--min-dot-radius",),
            help=f"Minimum dot radius in pixels (default: {MASK_DEFAULTS['min_dot_radius']})"),
-    Option("--max-dot-radius", type=int, default=MASK_DEFAULTS["max_dot_radius"],
+    Option("--max-dot-radius-px", dest="max_dot_radius", type=int,
+           default=MASK_DEFAULTS["max_dot_radius"], aliases=("--max-dot-radius",),
            help=f"Maximum dot radius in pixels (default: {MASK_DEFAULTS['max_dot_radius']})"),
-    Option("--dot-colour", type=str, choices=COLOUR_CHOICES,
-           default=MASK_DEFAULTS["dot_colour"],
-           help=f"Dot colour (default: {MASK_DEFAULTS['dot_colour']})"),
+    Option("--dot-colour-1", dest="dot_colour", type=str, choices=COLOUR_CHOICES,
+           aliases=("--dot-colour",),
+           help=(f"Dot colour (default: {MASK_DEFAULTS['dot_colour']}, or its "
+                 "inverse when that matches the background)")),
     Option("--dot-colour-2", type=str, choices=COLOUR_CHOICES,
            help="Optional second dot colour; each dot is randomly assigned one of the two"),
 ]
 
 MASK_LAYOUT = [
-    Option("--layout", type=str, default="full", choices=["full", "separated"],
-           help="'full' fills the entire canvas; 'separated' splits into two halves with a gap"),
+    Option("--layout", type=str, default="full", choices=LAYOUT_CHOICES,
+           help=("'full' fills the entire canvas; 'separated' splits it into two "
+                 "halves with a gap. 'mixed' is a deprecated synonym for 'full'.")),
     Option("--gap", type=int, default=DOT_DEFAULTS["gap"],
            help=f"Pixel gap between halves in separated layout (default: {DOT_DEFAULTS['gap']})"),
 ]
@@ -331,16 +352,24 @@ MASK_LAYOUT = [
 LINES_SPECIFIC = [
     Option("--angles", type=int, nargs="+", default=[0, 45, 90, 135],
            help="Rotation angles for stripe patterns"),
-    Option("--min-stripes", type=int, default=2,
-           help="Minimum number of stripes per image"),
-    Option("--max-stripes", type=int, default=10,
-           help="Maximum number of stripes per image"),
-    Option("--min-thickness", type=int, default=LINE_DEFAULTS["min_thickness"],
+    # Left unset so the generator can fall back to a colour that contrasts with
+    # whatever background was chosen; an explicit value here is always honoured.
+    Option("--line-colour-1", dest="line_colour", type=str, choices=COLOUR_CHOICES,
+           help=(f"Stripe colour (default: {LINE_DEFAULTS['line_colour']}, or its "
+                 "inverse when that matches the background)")),
+    Option("--min-stripe-num", dest="min_stripes", type=int, default=2,
+           aliases=("--min-stripes",), help="Minimum number of stripes per image"),
+    Option("--max-stripe-num", dest="max_stripes", type=int, default=10,
+           aliases=("--max-stripes",), help="Maximum number of stripes per image"),
+    Option("--min-line-thickness-px", dest="min_thickness", type=int,
+           default=LINE_DEFAULTS["min_thickness"], aliases=("--min-thickness",),
            help=f"Minimum stripe thickness in pixels (default: {LINE_DEFAULTS['min_thickness']})"),
-    Option("--max-thickness", type=int, default=LINE_DEFAULTS["max_thickness"],
+    Option("--max-line-thickness-px", dest="max_thickness", type=int,
+           default=LINE_DEFAULTS["max_thickness"], aliases=("--max-thickness",),
            help=f"Maximum stripe thickness in pixels (default: {LINE_DEFAULTS['max_thickness']})"),
-    Option("--min-spacing", type=int, default=LINE_DEFAULTS["min_spacing"],
-           help=f"Minimum spacing between stripes in pixels (default: {LINE_DEFAULTS['min_spacing']})"),
+    Option("--min-line-spacing-px", dest="min_spacing", type=int,
+           default=LINE_DEFAULTS["min_spacing"], aliases=("--min-spacing",),
+           help=f"Minimum gap between stripes in pixels (default: {LINE_DEFAULTS['min_spacing']})"),
 ]
 
 FIXATION_SPECIFIC = [
@@ -348,9 +377,10 @@ FIXATION_SPECIFIC = [
            default=["A", "B", "C", "AB", "AC", "BC", "ABC"],
            help="Fixation target types to generate"),
     Option("--all-types", store_true=True, help="Generate all fixation types"),
+    # See the note on --line-colour-1.
     Option("--symbol-colour", type=str, choices=COLOUR_CHOICES,
-           default=FIXATION_DEFAULTS["symbol_colour"],
-           help=f"Fixation symbol colour (default: {FIXATION_DEFAULTS['symbol_colour']})"),
+           help=(f"Fixation symbol colour (default: {FIXATION_DEFAULTS['symbol_colour']}, "
+                 "or its inverse when that matches the background)")),
     Option("--dot-radius-px", type=int, default=FIXATION_DEFAULTS["dot_radius_px"],
            help=f"Radius of the central dot in pixels (default: {FIXATION_DEFAULTS['dot_radius_px']})"),
     Option("--disk-radius-px", type=int, default=FIXATION_DEFAULTS["disk_radius_px"],

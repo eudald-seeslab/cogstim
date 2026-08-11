@@ -41,7 +41,7 @@ Images per set for the default options of each task:
 | `one-colour` | 10 | one image per dot count |
 | `lines` | 36 | 4 angles × 9 stripe counts |
 | `fixation` | n/a | no train/test split; one image per requested type |
-| `mask` | n/a | no train/test split; `--num-masks` images |
+| `mask` | n/a | no train/test split; `--mask-num` images |
 
 These figures change with the options you pass — a wider `--min-surface`/
 `--max-surface` range or more `--angles` increases them. `--dry-run` always
@@ -75,7 +75,7 @@ cogstim shapes --train-num 10 --test-num 5
 ### Relevant Options
 
 - `--shapes` – Two shapes for discrimination (default: `circle star`)
-- `--colours` – Single colour for both shapes (default: `yellow`)
+- `--shape-colours` – Single colour for both shapes (default: `yellow`)
 - `--min-surface` / `--max-surface` – Shape surface area range in pixels² (defaults: 10000–20000)
 - `--no-jitter` – Disable positional jitter for fixed-position shapes
 - `--seed` – Random seed for reproducibility
@@ -107,7 +107,7 @@ cogstim shapes \
 cogstim shapes \
   --train-num 60 --test-num 20 \
   --shapes triangle square \
-  --colours red \
+  --shape-colours red \
   --seed 1234
 ```
 
@@ -118,7 +118,7 @@ This generates 80 sets of red triangles and squares with reproducible randomness
 | Flag | Meaning | Default | When to use |
 |------|---------|---------|-------------|
 | `--shapes` | Two shapes for discrimination | `circle star` | To choose different shape pairs |
-| `--colours` | Single colour for shapes | `yellow` | To change shape colour |
+| `--shape-colours` | Single colour for shapes | `yellow` | To change shape colour |
 | `--min-surface` | Minimum shape area (px²) | `10000` | To adjust shape sizes |
 | `--max-surface` | Maximum shape area (px²) | `20000` | To adjust shape sizes |
 | `--no-jitter` | Disable positional jitter | Off (jitter enabled) | For fixed-position shapes |
@@ -143,7 +143,7 @@ cogstim colours --train-num 10 --test-num 5
 ### Relevant Options
 
 - `--shape` – Shape to use for both classes (default: `circle`)
-- `--colours` – Two colours for discrimination (default: `yellow blue`)
+- `--shape-colours` – Two colours for discrimination (default: `yellow blue`)
   - **Note**: For more than two colours, use the [Custom task](#custom--custom-shapecolour-combinations)
 - `--min-surface` / `--max-surface` – Shape surface area range in pixels² (defaults: 10000–20000)
 - `--no-jitter` – Disable positional jitter for fixed-position stimuli
@@ -163,7 +163,7 @@ cogstim colours --train-num 10 --test-num 5 --no-jitter
 cogstim colours \
   --train-num 60 --test-num 20 \
   --shape star \
-  --colours red green \
+  --shape-colours red green \
   --no-jitter \
   --seed 1234
 ```
@@ -175,7 +175,7 @@ This generates red and green stars in fixed positions with reproducible randomne
 | Flag | Meaning | Default | When to use |
 |------|---------|---------|-------------|
 | `--shape` | Shape for both colour classes | `circle` | To change the base shape |
-| `--colours` | Two colours for discrimination | `yellow blue` | To use different colour pairs |
+| `--shape-colours` | Two colours for discrimination | `yellow blue` | To use different colour pairs |
 | `--min-surface` | Minimum shape area (px²) | `10000` | To adjust shape sizes |
 | `--max-surface` | Maximum shape area (px²) | `20000` | To adjust shape sizes |
 | `--no-jitter` | Disable positional jitter | Off (jitter enabled) | For fixed-position stimuli |
@@ -204,9 +204,9 @@ cogstim ans --train-num 10 --test-num 5
   - **hard**: 4:5, 5:6, 6:7, 7:8, 8:9, 9:10, 10:11, 11:12
   - **all**: Both easy and hard ratios combined
   - **Custom**: Comma-separated fractions, e.g., `--ratios 1/2,2/3,3/4` (see Advanced Tweak below)
-- `--min-point-num` / `--max-point-num` – Range of dots per colour (defaults: 1–10)
-- `--dot-colour1` / `--dot-colour2` – Dot colours (defaults: `yellow`, `blue`)
-- `--min-point-radius` / `--max-point-radius` – Dot radius range in pixels (defaults: 20–30)
+- `--min-dot-num` / `--max-dot-num` – Range of dots per colour (defaults: 1–10)
+- `--dot-colour-1` / `--dot-colour-2` – Dot colours (defaults: `yellow`, `blue`)
+- `--min-dot-radius-px` / `--max-dot-radius-px` – Dot radius range in pixels (defaults: 20–30)
 - `--attempts-limit` – Maximum placement attempts before giving up (default: 10000)
 - `--seed` – Random seed for reproducibility
 
@@ -245,7 +245,7 @@ This generates images with only the ratios 1:2, 2:3, 3:4, and 4:5.
 cogstim ans \
   --ratios easy \
   --train-num 100 --test-num 40 \
-  --min-point-num 5 --max-point-num 15 \
+  --min-dot-num 5 --max-dot-num 15 \
   --seed 1234
 ```
 
@@ -256,12 +256,12 @@ This generates a large dataset with only easy ratios and 5–15 dots per colour.
 | Flag | Meaning | Default | When to use |
 |------|---------|---------|-------------|
 | `--ratios` | Ratio difficulty set | `all` | Use `easy` for simpler tasks, `hard` for difficult discrimination |
-| `--min-point-num` | Min dots per colour | `1` | To set quantity range |
-| `--max-point-num` | Max dots per colour | `10` | To set quantity range |
-| `--dot-colour1` | First dot colour | `yellow` | To customize colours |
-| `--dot-colour2` | Second dot colour | `blue` | To customize colours |
-| `--min-point-radius` | Min dot radius (px) | `20` | To adjust dot sizes |
-| `--max-point-radius` | Max dot radius (px) | `30` | To adjust dot sizes |
+| `--min-dot-num` | Min dots per colour | `1` | To set quantity range |
+| `--max-dot-num` | Max dots per colour | `10` | To set quantity range |
+| `--dot-colour-1` | First dot colour | `yellow` | To customize colours |
+| `--dot-colour-2` | Second dot colour | `blue` | To customize colours |
+| `--min-dot-radius-px` | Min dot radius (px) | `20` | To adjust dot sizes |
+| `--max-dot-radius-px` | Max dot radius (px) | `30` | To adjust dot sizes |
 | `--attempts-limit` | Max placement attempts | `10000` | Increase if dots fail to place |
 | `--seed` | Random seed | None | For reproducibility |
 
@@ -281,9 +281,9 @@ cogstim one-colour --train-num 10 --test-num 5
 
 ### Relevant Options
 
-- `--min-point-num` / `--max-point-num` – Range of dot quantities (defaults: 1–10)
-- `--dot-colour` – Dot colour (default: `yellow`)
-- `--min-point-radius` / `--max-point-radius` – Dot radius range in pixels (defaults: 20–30)
+- `--min-dot-num` / `--max-dot-num` – Range of dot quantities (defaults: 1–10)
+- `--dot-colour-1` – Dot colour (default: `yellow`)
+- `--min-dot-radius-px` / `--max-dot-radius-px` – Dot radius range in pixels (defaults: 20–30)
 - `--attempts-limit` – Maximum placement attempts (default: 10000)
 - `--seed` – Random seed for reproducibility
 
@@ -293,7 +293,7 @@ Use a small quantity range (e.g., 1–5) with surface equalization to ensure sti
 
 ```bash
 cogstim one-colour \
-  --min-point-num 1 --max-point-num 5 \
+  --min-dot-num 1 --max-dot-num 5 \
   --train-num 50 --test-num 20
 ```
 
@@ -302,8 +302,8 @@ cogstim one-colour \
 ```bash
 cogstim one-colour \
   --train-num 50 --test-num 20 \
-  --min-point-num 1 --max-point-num 5 \
-  --dot-colour red \
+  --min-dot-num 1 --max-dot-num 5 \
+  --dot-colour-1 red \
   --seed 1234
 ```
 
@@ -313,11 +313,11 @@ This generates red dot arrays numbered 1–5 with constant total surface area.
 
 | Flag | Meaning | Default | When to use |
 |------|---------|---------|-------------|
-| `--min-point-num` | Min number of dots | `1` | To set quantity range |
-| `--max-point-num` | Max number of dots | `10` | To set quantity range |
-| `--dot-colour` | Dot colour | `yellow` | To customize colour |
-| `--min-point-radius` | Min dot radius (px) | `20` | To adjust dot sizes |
-| `--max-point-radius` | Max dot radius (px) | `30` | To adjust dot sizes |
+| `--min-dot-num` | Min number of dots | `1` | To set quantity range |
+| `--max-dot-num` | Max number of dots | `10` | To set quantity range |
+| `--dot-colour-1` | Dot colour | `yellow` | To customize colour |
+| `--min-dot-radius-px` | Min dot radius (px) | `20` | To adjust dot sizes |
+| `--max-dot-radius-px` | Max dot radius (px) | `30` | To adjust dot sizes |
 | `--attempts-limit` | Max placement attempts | `10000` | Increase if dots fail to place |
 | `--seed` | Random seed | None | For reproducibility |
 
@@ -338,9 +338,9 @@ cogstim match-to-sample --train-num 10 --test-num 5
 ### Relevant Options
 
 - `--ratios` – Ratio set: `easy`, `hard`, or `all` (default: `all`)
-- `--min-point-num` / `--max-point-num` – Range of dot quantities (defaults: 1–10)
-- `--dot-colour` – Dot colour (default: `black`)
-- `--min-point-radius` / `--max-point-radius` – Dot radius range (defaults: 5–15)
+- `--min-dot-num` / `--max-dot-num` – Range of dot quantities (defaults: 1–10)
+- `--dot-colour-1` – Dot colour (default: `black`)
+- `--min-dot-radius-px` / `--max-dot-radius-px` – Dot radius range (defaults: 5–15)
 - `--tolerance` – Relative tolerance for area equalization (default: 0.01, i.e., 1%)
 - `--abs-tolerance` – Absolute area tolerance in pixels (default: 2)
 - `--attempts-limit` – Maximum placement attempts (default: 5000)
@@ -373,8 +373,8 @@ This uses a 0.5% relative tolerance instead of the default 1%.
 cogstim match-to-sample \
   --ratios easy \
   --train-num 50 --test-num 20 \
-  --min-point-num 1 --max-point-num 10 \
-  --dot-colour yellow \
+  --min-dot-num 1 --max-dot-num 10 \
+  --dot-colour-1 yellow \
   --seed 1234
 ```
 
@@ -385,11 +385,11 @@ This generates yellow dot array pairs with easy ratios and controlled surface eq
 | Flag | Meaning | Default | When to use |
 |------|---------|---------|-------------|
 | `--ratios` | Ratio difficulty set | `all` | Use `easy` for simpler discrimination |
-| `--min-point-num` | Min number of dots | `1` | To set quantity range |
-| `--max-point-num` | Max number of dots | `10` | To set quantity range |
-| `--dot-colour` | Dot colour | `black` | To customize colour |
-| `--min-point-radius` | Min dot radius (px) | `5` | To adjust dot sizes |
-| `--max-point-radius` | Max dot radius (px) | `15` | To adjust dot sizes |
+| `--min-dot-num` | Min number of dots | `1` | To set quantity range |
+| `--max-dot-num` | Max number of dots | `10` | To set quantity range |
+| `--dot-colour-1` | Dot colour | `black` | To customize colour |
+| `--min-dot-radius-px` | Min dot radius (px) | `5` | To adjust dot sizes |
+| `--max-dot-radius-px` | Max dot radius (px) | `15` | To adjust dot sizes |
 | `--tolerance` | Relative area tolerance | `0.01` (1%) | Tighten for stricter equalization |
 | `--abs-tolerance` | Absolute area tolerance (px) | `2` | For fine-grained control |
 | `--attempts-limit` | Max placement attempts | `5000` | Increase if placement fails |
@@ -412,9 +412,9 @@ cogstim lines --train-num 10 --test-num 5
 ### Relevant Options
 
 - `--angles` – Rotation angles for stripes (default: `0 45 90 135`)
-- `--min-stripes` / `--max-stripes` – Number of stripes per image (defaults: 2–10)
-- `--min-thickness` / `--max-thickness` – Stripe thickness in pixels (defaults: 10–30)
-- `--min-spacing` – Minimum spacing between stripes in pixels (default: 5)
+- `--min-stripe-num` / `--max-stripe-num` – Number of stripes per image (defaults: 2–10)
+- `--min-line-thickness-px` / `--max-line-thickness-px` – Stripe thickness in pixels (defaults: 10–30)
+- `--min-line-spacing-px` – Minimum spacing between stripes in pixels (default: 5)
 - `--seed` – Random seed for reproducibility
 
 ### Advanced Tweak: Specific Angles
@@ -433,7 +433,7 @@ cogstim lines \
 cogstim lines \
   --train-num 50 --test-num 20 \
   --angles 0 45 90 135 \
-  --min-stripes 3 --max-stripes 5 \
+  --min-stripe-num 3 --max-stripe-num 5 \
   --seed 1234
 ```
 
@@ -444,11 +444,11 @@ This generates stripe patterns at four angles with 3–5 stripes per image.
 | Flag | Meaning | Default | When to use |
 |------|---------|---------|-------------|
 | `--angles` | Rotation angles (degrees) | `0 45 90 135` | To specify custom angles |
-| `--min-stripes` | Min stripes per image | `2` | To control stripe density |
-| `--max-stripes` | Max stripes per image | `10` | To control stripe density |
-| `--min-thickness` | Min stripe thickness (px) | `10` | To adjust stripe width |
-| `--max-thickness` | Max stripe thickness (px) | `30` | To adjust stripe width |
-| `--min-spacing` | Min spacing between stripes (px) | `5` | To control stripe separation |
+| `--min-stripe-num` | Min stripes per image | `2` | To control stripe density |
+| `--max-stripe-num` | Max stripes per image | `10` | To control stripe density |
+| `--min-line-thickness-px` | Min stripe thickness (px) | `10` | To adjust stripe width |
+| `--max-line-thickness-px` | Max stripe thickness (px) | `30` | To adjust stripe width |
+| `--min-line-spacing-px` | Min spacing between stripes (px) | `5` | To control stripe separation |
 | `--seed` | Random seed | None | For reproducibility |
 
 ---
@@ -537,7 +537,7 @@ Generate arbitrary combinations of shapes and colours. Use this for exploratory 
 ### Minimal Command
 
 ```bash
-cogstim custom --shapes circle star --colours red green --train-num 10 --test-num 5
+cogstim custom --shapes circle star --shape-colours red green --train-num 10 --test-num 5
 ```
 
 **What it produces:** 15 sets = **6000 images**, at 400 images per set (100 surface areas x 2 shapes x 2 colours). All combinations of the specified shapes and colours (red circles, red stars, green circles, green stars), organised by shape-colour class.
@@ -545,7 +545,7 @@ cogstim custom --shapes circle star --colours red green --train-num 10 --test-nu
 ### Relevant Options
 
 - `--shapes` – List of shapes (required; choices: `circle`, `star`, `triangle`, `square`)
-- `--colours` – List of colours (required; choices: `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray`)
+- `--shape-colours` – List of colours (required; choices: `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray`)
 - `--min-surface` / `--max-surface` – Shape surface area range (defaults: 10000–20000)
 - `--no-jitter` – Disable positional jitter
 - `--seed` – Random seed for reproducibility
@@ -557,7 +557,7 @@ Generate datasets with more than two classes for multi-class classification:
 ```bash
 cogstim custom \
   --shapes triangle square circle \
-  --colours red green blue \
+  --shape-colours red green blue \
   --train-num 50 --test-num 20
 ```
 
@@ -568,7 +568,7 @@ This produces 9 classes (3 shapes × 3 colours).
 ```bash
 cogstim custom \
   --shapes triangle square \
-  --colours red green \
+  --shape-colours red green \
   --train-num 50 --test-num 20 \
   --no-jitter \
   --seed 1234
@@ -581,7 +581,7 @@ This generates red and green triangles and squares in fixed positions.
 | Flag | Meaning | Default | When to use |
 |------|---------|---------|-------------|
 | `--shapes` | List of shapes | Required | To specify shape set |
-| `--colours` | List of colours | Required | To specify colour set |
+| `--shape-colours` | List of colours | Required | To specify colour set |
 | `--min-surface` | Min shape area (px²) | `10000` | To adjust shape sizes |
 | `--max-surface` | Max shape area (px²) | `20000` | To adjust shape sizes |
 | `--no-jitter` | Disable positional jitter | Off | For fixed positions |

@@ -58,7 +58,7 @@ def test_cli_colours_subcommand(tmp_path):
         "--train-num", 2,
         "--test-num", 1,
         "--shape", "circle",
-        "--colours", "yellow", "blue",
+        "--shape-colours", "yellow", "blue",
         "--output-dir", str(tmp_path),
         "--version-tag", "",
     ]
@@ -76,8 +76,8 @@ def test_cli_ans_subcommand(tmp_path):
         "--train-num", 2,
         "--test-num", 1,
         "--ratios", "easy",
-        "--min-point-num", 1,
-        "--max-point-num", 2,
+        "--min-dot-num", 1,
+        "--max-dot-num", 2,
         "--output-dir", str(tmp_path),
         "--version-tag", "",
     ]
@@ -112,9 +112,9 @@ def test_cli_one_colour_subcommand(tmp_path):
         "one-colour",
         "--train-num", 2,
         "--test-num", 1,
-        "--min-point-num", 1,
-        "--max-point-num", 2,
-        "--dot-colour", "yellow",
+        "--min-dot-num", 1,
+        "--max-dot-num", 2,
+        "--dot-colour-1", "yellow",
         "--output-dir", str(tmp_path),
         "--version-tag", "",
     ]
@@ -131,8 +131,8 @@ def test_cli_match_to_sample_subcommand(tmp_path):
         "match-to-sample",
         "--train-num", 1,
         "--test-num", 1,
-        "--min-point-num", 2,
-        "--max-point-num", 3,
+        "--min-dot-num", 2,
+        "--max-dot-num", 3,
         "--ratios", "easy",
         "--output-dir", str(tmp_path),
     ]
@@ -175,8 +175,8 @@ def test_cli_lines_subcommand(tmp_path):
         "--train-num", 1,
         "--test-num", 1,
         "--angles", 0, 90,
-        "--min-stripes", 2,
-        "--max-stripes", 2,
+        "--min-stripe-num", 2,
+        "--max-stripe-num", 2,
         "--img-size", 128,
         "--output-dir", str(tmp_path),
         "--version-tag", "",
@@ -230,7 +230,7 @@ def test_cli_custom_subcommand(tmp_path):
     cli_args = [
         "custom",
         "--shapes", "circle", "triangle",
-        "--colours", "red", "blue",
+        "--shape-colours", "red", "blue",
         "--train-num", 1,
         "--test-num", 1,
         "--min-surface", 1000,
@@ -269,7 +269,7 @@ def test_cli_custom_missing_required_args():
         "--train-num", 1,
     ]
     
-    # Missing --colours should raise an error during parsing
+    # Missing --shape-colours should raise an error during parsing
     with pytest.raises(SystemExit):
         _run_cli_with_args(cli_args)
 
@@ -330,8 +330,8 @@ def test_cli_version_tag(tmp_path):
         "--train-num", 1,
         "--test-num", 0,
         "--version-tag", "v2",
-        "--min-point-num", 1,
-        "--max-point-num", 2,
+        "--min-dot-num", 1,
+        "--max-dot-num", 2,
         "--output-dir", str(tmp_path),
     ]
     
@@ -366,8 +366,8 @@ def test_cli_survives_ascii_only_stdout(tmp_path):
             sys.executable, "-m", "cogstim.cli", "one-colour",
             "--train-num", "1",
             "--test-num", "0",
-            "--min-point-num", "1",
-            "--max-point-num", "2",
+            "--min-dot-num", "1",
+            "--max-dot-num", "2",
             "--seed", "1",
             "--output-dir", str(tmp_path),
         ],
@@ -395,9 +395,9 @@ def test_cli_survives_ascii_only_stdout(tmp_path):
     [
         ("shapes", ["--min-surface", 10000, "--max-surface", 12000]),
         ("colours", ["--min-surface", 10000, "--max-surface", 12000]),
-        ("ans", ["--min-point-num", 1, "--max-point-num", 3]),
-        ("one-colour", ["--min-point-num", 1, "--max-point-num", 3]),
-        ("match-to-sample", ["--min-point-num", 1, "--max-point-num", 3]),
+        ("ans", ["--min-dot-num", 1, "--max-dot-num", 3]),
+        ("one-colour", ["--min-dot-num", 1, "--max-dot-num", 3]),
+        ("match-to-sample", ["--min-dot-num", 1, "--max-dot-num", 3]),
         ("lines", ["--angles", 0, 90]),
     ],
 )
@@ -436,9 +436,9 @@ def test_reported_count_matches_files_written(tmp_path, capsys, subcommand, extr
     "subcommand, extra_args",
     [
         ("shapes", ["--min-surface", 10000, "--max-surface", 12000]),
-        ("ans", ["--min-point-num", 1, "--max-point-num", 3]),
-        ("one-colour", ["--min-point-num", 1, "--max-point-num", 3]),
-        ("match-to-sample", ["--min-point-num", 1, "--max-point-num", 3]),
+        ("ans", ["--min-dot-num", 1, "--max-dot-num", 3]),
+        ("one-colour", ["--min-dot-num", 1, "--max-dot-num", 3]),
+        ("match-to-sample", ["--min-dot-num", 1, "--max-dot-num", 3]),
         ("lines", ["--angles", 0, 90]),
     ],
 )

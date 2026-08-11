@@ -44,7 +44,7 @@ To ensure efficiency and maintainability, we minimized external dependencies, re
 
 CogStim has demonstrated its utility in diverse research contexts, bridging behavioral science and computational modeling. It has been used to generate stimuli for psychometric assessments in educational settings [@correig-fraga_development_2024; @correig-fraga_interplay_2025] and to create synthetic datasets for evaluating visual computation models in neuroscience (under review). These applications validate the library's capability to support both traditional psychological experiments and modern data-driven approaches.
 
-To facilitate broad community adoption and ensure long-term reliability, CogStim adheres to rigorous software engineering standards. It includes a comprehensive test suite, continuous integration (CI) pipelines, and is distributed via PyPI under a permissive MIT license. Recognizing the varying technical expertise in the field, the project features a novel documentation strategy: an LLM-optimized manual designed to help non-programmers generate complex CLI commands via natural language prompting. This combination of robust engineering and accessibility effectively democratizes access to rigorous stimulus generation, ensuring that high-quality, reproducible stimuli are available to the wider research community.
+To facilitate broad community adoption and ensure long-term reliability, CogStim adheres to rigorous software engineering standards. It includes a comprehensive test suite, continuous integration (CI) pipelines, and is distributed via PyPI under a permissive MIT license.
 
 # Software description
 

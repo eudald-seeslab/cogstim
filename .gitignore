@@ -210,4 +210,15 @@ __marimo__/
 images
 
 # Test images for manual inspection
+<<<<<<< Updated upstream
 test_images/
+=======
+test_images/
+
+# Code counter
+.VSCodeCounter/
+
+# JOSS review working notes (not part of the package)
+REVIEW_TODO.md
+response_outline.md
+>>>>>>> Stashed changes

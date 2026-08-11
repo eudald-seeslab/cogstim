@@ -2,6 +2,51 @@
 
 This guide provides detailed documentation for each CogStim task, including relevant options, examples, and usage patterns.
 
+## Sets and images
+
+`--train-num` and `--test-num` count **sets, not images**.
+
+A set is one sweep of every condition the paradigm defines. For `shapes`, that
+means every shape at every surface area in the configured range; for `ans`, every
+valid (n1, n2) dot-count pair in both colour orders, equalized and not. So a
+single set is many images, and asking for 10 training sets produces far more than
+10 files.
+
+This is deliberate: what an experimenter controls is the number of replications
+per condition, and the conditions themselves follow from the paradigm. But it
+does mean the file count is not something you can read off the command line.
+
+**Use `--dry-run` to see exactly what you will get before generating anything:**
+
+```bash
+cogstim shapes --train-num 10 --test-num 5 --dry-run
+```
+
+```
+Dry run: no images written.
+  train: 10 sets x 200 images = 2000 images
+  test: 5 sets x 200 images = 1000 images
+  total: 3000 images in 'images/shapes'
+```
+
+Images per set for the default options of each task:
+
+| Task | Images per set | What varies within a set |
+|---|---|---|
+| `shapes` | 200 | 100 surface areas × 2 shapes |
+| `colours` | 200 | 100 surface areas × 2 colours |
+| `custom` | 100 per shape-colour pair | 100 surface areas × every shape × every colour |
+| `ans` | 112 | 28 dot-count pairs × 2 colour orders × {equalized, not} |
+| `match-to-sample` | 192 | 12 dot-count pairs × 8 variants × 2 images per pair |
+| `one-colour` | 10 | one image per dot count |
+| `lines` | 36 | 4 angles × 9 stripe counts |
+| `fixation` | n/a | no train/test split; one image per requested type |
+| `mask` | n/a | no train/test split; `--num-masks` images |
+
+These figures change with the options you pass — a wider `--min-surface`/
+`--max-surface` range or more `--angles` increases them. `--dry-run` always
+reports the figure for the arguments you actually gave.
+
 ## Table of Contents
 
 - [Shapes – Shape Discrimination](#shapes--shape-discrimination)
@@ -25,7 +70,7 @@ Generate images of different shapes in the same colour for shape recognition tas
 cogstim shapes --train-num 10 --test-num 5
 ```
 
-**What it produces:** 15 image sets (10 training, 5 test) containing circles and stars in yellow, organised into `train/circle/`, `train/star/`, `test/circle/`, and `test/star/` subdirectories.
+**What it produces:** 15 sets (10 training, 5 test) = **3000 images**, at 200 images per set (100 surface areas x 2 shapes). Circles and stars in yellow, organised into `train/circle/`, `train/star/`, `test/circle/`, and `test/star/` subdirectories.
 
 ### Relevant Options
 
@@ -66,7 +111,7 @@ cogstim shapes \
   --seed 1234
 ```
 
-This generates 80 image sets of red triangles and squares with reproducible randomness.
+This generates 80 sets of red triangles and squares with reproducible randomness.
 
 ### Shapes Options Reference
 
@@ -78,8 +123,8 @@ This generates 80 image sets of red triangles and squares with reproducible rand
 | `--max-surface` | Maximum shape area (px²) | `20000` | To adjust shape sizes |
 | `--no-jitter` | Disable positional jitter | Off (jitter enabled) | For fixed-position shapes |
 | `--seed` | Random seed | None (random) | For reproducible generation |
-| `--train-num` | Number of training image sets | `10` | To generate training data |
-| `--test-num` | Number of test image sets | `0` | To generate test data |
+| `--train-num` | Number of training sets | `10` | To generate training data |
+| `--test-num` | Number of test sets | `0` | To generate test data |
 
 ---
 
@@ -93,7 +138,7 @@ Generate images of the same shape in different colours for colour recognition ta
 cogstim colours --train-num 10 --test-num 5
 ```
 
-**What it produces:** 15 image sets (10 training, 5 test) containing circles in yellow and blue, organised by colour class.
+**What it produces:** 15 sets (10 training, 5 test) = **3000 images**, at 200 images per set (100 surface areas x 2 colours). Circles in yellow and blue, organised by colour class.
 
 ### Relevant Options
 
@@ -135,8 +180,8 @@ This generates red and green stars in fixed positions with reproducible randomne
 | `--max-surface` | Maximum shape area (px²) | `20000` | To adjust shape sizes |
 | `--no-jitter` | Disable positional jitter | Off (jitter enabled) | For fixed-position stimuli |
 | `--seed` | Random seed | None (random) | For reproducible generation |
-| `--train-num` | Number of training image sets | `10` | To generate training data |
-| `--test-num` | Number of test image sets | `0` | To generate test data |
+| `--train-num` | Number of training sets | `10` | To generate training data |
+| `--test-num` | Number of test sets | `0` | To generate test data |
 
 ---
 
@@ -150,7 +195,7 @@ Generate two-colour dot arrays for approximate number system tasks. Use this for
 cogstim ans --train-num 10 --test-num 5
 ```
 
-**What it produces:** 15 image sets with yellow and blue dots, organised by dominant colour. Half have equalized total dot surface; half have random dot sizes.
+**What it produces:** 15 sets = **1680 images**, at 112 images per set (28 dot-count pairs x 2 colour orders x {equalized, not}). Yellow and blue dots, organised by dominant colour. Half have equalized total dot surface; half have random dot sizes.
 
 ### Relevant Options
 
@@ -232,7 +277,7 @@ Generate single-colour dot arrays where the class is the quantity of dots. Use t
 cogstim one-colour --train-num 10 --test-num 5
 ```
 
-**What it produces:** 15 image sets with yellow dots, organised by quantity (1, 2, 3, ... up to `max-point-num`).
+**What it produces:** 15 sets = **150 images**, at 10 images per set (one per dot count). Yellow dots, organised by quantity (1, 2, 3, ... up to `max-point-num`).
 
 ### Relevant Options
 
@@ -288,7 +333,7 @@ Generate sample/match image pairs for match-to-sample tasks. Each trial produces
 cogstim match-to-sample --train-num 10 --test-num 5
 ```
 
-**What it produces:** 15 image pairs (10 training, 5 test) in the flat directory structure: `images/match_to_sample/train/` and `images/match_to_sample/test/`. Each pair consists of `mts_{trial_id}_{r|e}_b_{n_dots}.png` (sample) and `mts_{trial_id}_{r|e}_a_{n_dots}.png` (match).
+**What it produces:** 15 sets = 1440 image pairs = **2880 images**, at 192 images per set (12 dot-count pairs x 8 variants x 2 images per pair). Written flat into `images/match_to_sample/train/` and `images/match_to_sample/test/`. Each pair consists of `mts_{trial_id}_{r|e}_b_{n_dots}.png` (sample) and `mts_{trial_id}_{r|e}_a_{n_dots}.png` (match).
 
 ### Relevant Options
 
@@ -362,7 +407,7 @@ Generate images with rotated stripe patterns at different angles for orientation
 cogstim lines --train-num 10 --test-num 5
 ```
 
-**What it produces:** 15 image sets with stripe patterns at angles 0°, 45°, 90°, and 135°, organised by angle class.
+**What it produces:** 15 sets = **540 images**, at 36 images per set (4 angles x 9 stripe counts). Stripe patterns at angles 0°, 45°, 90°, and 135°, organised by angle class.
 
 ### Relevant Options
 
@@ -495,7 +540,7 @@ Generate arbitrary combinations of shapes and colours. Use this for exploratory 
 cogstim custom --shapes circle star --colours red green --train-num 10 --test-num 5
 ```
 
-**What it produces:** 15 image sets containing all combinations of the specified shapes and colours (red circles, red stars, green circles, green stars), organised by shape-colour class.
+**What it produces:** 15 sets = **6000 images**, at 400 images per set (100 surface areas x 2 shapes x 2 colours). All combinations of the specified shapes and colours (red circles, red stars, green circles, green stars), organised by shape-colour class.
 
 ### Relevant Options
 
@@ -552,7 +597,7 @@ These options are available across all tasks:
 - `--img-size SIZE` – Image size in pixels (default: 512)
 - `--background-colour COLOUR` – Background colour (default: `white`)
 - `--seed SEED` – Random seed for reproducible generation
-- `--demo` – Generate a small preview with 8 training image sets
+- `--demo` – Generate a small preview with 8 training sets
 - `--quiet` – Suppress all non-error output
 
 For any task-specific help, use:

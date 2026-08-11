@@ -528,23 +528,35 @@ def add_common_options(parser: argparse.ArgumentParser) -> None:
 
 
 def add_train_test_options(parser: argparse.ArgumentParser) -> None:
-    """Add train/test count options."""
+    """Add train/test count options.
+
+    These count *sets*, not images. A set is one sweep of every condition the
+    paradigm defines, so a set is many images -- 200 for shapes, 112 for ANS.
+    Use --dry-run to see the exact figure for a given set of arguments.
+    """
     parser.add_argument(
         "--train-num",
         type=int,
         default=CLI_DEFAULTS["train_num"],
-        help=f"Number of training images to generate (default: {CLI_DEFAULTS['train_num']})"
+        help=(
+            "Number of training SETS to generate, not images. One set covers "
+            "every condition of the paradigm once, so it yields many images; "
+            f"use --dry-run to see how many (default: {CLI_DEFAULTS['train_num']})"
+        )
     )
     parser.add_argument(
         "--test-num",
         type=int,
         default=CLI_DEFAULTS["test_num"],
-        help=f"Number of test images to generate (default: {CLI_DEFAULTS['test_num']})"
+        help=(
+            "Number of test SETS to generate, not images "
+            f"(default: {CLI_DEFAULTS['test_num']})"
+        )
     )
     parser.add_argument(
         "--demo",
         action="store_true",
-        help="Generate a small demo dataset (8 training images)"
+        help="Generate a small demo dataset (8 training sets)"
     )
 
 

@@ -1,3 +1,4 @@
+import logging
 from cogstim.generators.shapes import ShapesGenerator
 from cogstim.helpers.constants import COLOUR_MAP
 import tempfile
@@ -258,3 +259,69 @@ def test_generate_images_two_colors():
                 args = call[0]
                 shape_arg = args[1]  # shape parameter
                 assert shape_arg == "circle"  # Should always be the base shape
+
+
+class TestDuplicateImageWarning:
+    """Warn when the requested options cannot produce distinct images.
+
+    Reviewer @et22 ran `cogstim shapes --train-num 50 --test-num 20 --no-jitter
+    --seed 1234` and got 1000 identical circles and 1000 identical stars where
+    recipes.md promised "~100 variations each"
+    (openjournals/joss-reviews#10532). With jitter and rotation both off, shape
+    size is the only source of variation, and the surface sweep collapses:
+    neighbouring surface steps round to the same whole-pixel radius, leaving
+    about 24 distinct circles across the default 10000-20000 range.
+    """
+
+    def _generator(self, output_dir, **overrides):
+        kwargs = dict(
+            shapes=["circle", "star"],
+            colours=["yellow"],
+            task_type="two_shapes",
+            output_dir=str(output_dir),
+            train_num=2,
+            test_num=0,
+            jitter=False,
+            min_surface=10000,
+            max_surface=20000,
+            background_colour="black",
+            seed=1234,
+            img_format="png",
+            version_tag="",
+            random_rotation=False,
+        )
+        kwargs.update(overrides)
+        return ShapesGenerator(**kwargs)
+
+    def test_surface_sweep_collapses_to_far_fewer_distinct_sizes(self, tmp_path):
+        """The distinct-rendering count is much smaller than the planned count."""
+        gen = self._generator(tmp_path)
+        plan = gen.build_plan("train", 2)
+        assert gen.count_distinct_renderings() < len(plan), (
+            "This paradigm is expected to plan more images than it can render distinctly"
+        )
+
+    def test_warns_when_nothing_varies(self, tmp_path, caplog):
+        """--no-jitter with no rotation must warn about duplicates."""
+        gen = self._generator(tmp_path)
+        with caplog.at_level(logging.WARNING):
+            gen.warn_if_images_will_repeat(gen.build_plan("train", 2))
+        assert any("distinct images are possible" in r.message for r in caplog.records), (
+            f"Expected a duplication warning, got: {[r.message for r in caplog.records]}"
+        )
+
+    def test_silent_when_jitter_enabled(self, tmp_path, caplog):
+        """Jitter makes every image differ, so there is nothing to warn about."""
+        gen = self._generator(tmp_path, jitter=True)
+        with caplog.at_level(logging.WARNING):
+            gen.warn_if_images_will_repeat(gen.build_plan("train", 2))
+        assert not caplog.records
+
+    def test_silent_when_rotation_enabled(self, tmp_path, caplog):
+        """Random rotation is also enough to make images differ."""
+        gen = self._generator(
+            tmp_path, random_rotation=True, min_rotation=0, max_rotation=360
+        )
+        with caplog.at_level(logging.WARNING):
+            gen.warn_if_images_will_repeat(gen.build_plan("train", 2))
+        assert not caplog.records

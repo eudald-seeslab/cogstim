@@ -15,6 +15,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from cogstim.cli import configure_output_encoding
+
 
 def get_cogstim_command() -> list[str]:
     """Get the command to run cogstim (either installed or development mode)."""
@@ -303,6 +305,11 @@ def test_custom(temp_dir: Path) -> bool:
 
 def main():
     """Run all smoke tests."""
+    # The pass/fail glyphs below are non-ASCII; without this the script dies with
+    # UnicodeEncodeError on Windows the moment its output is redirected, hiding
+    # whatever it was trying to report.
+    configure_output_encoding()
+
     print("=" * 60)
     print("CogStim Documentation Smoke Tests")
     print("=" * 60)

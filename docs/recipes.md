@@ -10,16 +10,27 @@ Quick copy-paste commands for common research goals. Each recipe includes contex
 cogstim shapes --train-num 50 --test-num 20 --no-jitter --seed 1234
 ```
 
-**Expected output:**
+**Expected output:** 70 sets = **14 000 images**, at 200 images per set.
 ```
 images/shapes/
   ├── train/
-  │   ├── circle/  (50 image sets × ~100 variations each)
-  │   └── star/    (50 image sets × ~100 variations each)
+  │   ├── circle/  (5000 images)
+  │   └── star/    (5000 images)
   └── test/
-      ├── circle/  (20 image sets × ~100 variations each)
-      └── star/    (20 image sets × ~100 variations each)
+      ├── circle/  (2000 images)
+      └── star/    (2000 images)
 ```
+
+> **Warning:** `--no-jitter` fixes the position, and rotation is off by default,
+> so shape size is the only thing that varies. Surface areas are swept in steps
+> of 100, but the radius they imply is rounded to whole pixels, so neighbouring
+> steps render identically: only about **24 of those 5000 circles are distinct**,
+> each repeated roughly 200 times. CogStim warns you when this happens.
+>
+> Use `--no-jitter` only when you genuinely want repeated identical stimuli. For
+> varied fixed-position stimuli, add `--random-rotation`, or widen
+> `--min-surface`/`--max-surface`. Leaving jitter on (the default) gives 4994
+> distinct images out of 5000.
 
 ---
 

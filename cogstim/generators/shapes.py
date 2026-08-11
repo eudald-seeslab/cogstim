@@ -305,12 +305,57 @@ class ShapesGenerator(BaseGenerator):
             surface_step=self.SURFACE_STEP
         ).build(task_subtype=self.task_type)
 
+    def count_distinct_renderings(self):
+        """How many visually distinct images the surface sweep can actually yield.
+
+        Surfaces are swept in steps of SURFACE_STEP, but the radius they imply is
+        rounded to whole pixels when drawn, so many neighbouring surfaces render
+        identically. Over the default 10000-20000 range, 100 surface steps
+        collapse to about 24 distinct circle radii.
+
+        This only matters when nothing else varies: with jitter or random
+        rotation enabled every image differs anyway.
+        """
+        distinct = set()
+        for shape in self.shapes:
+            for surface in range(self.min_surface, self.max_surface, self.SURFACE_STEP):
+                distinct.add((shape, round(self.get_radius_from_surface(shape, surface))))
+        return len(distinct) * len(self.colors)
+
+    def warn_if_images_will_repeat(self, plan):
+        """Warn when the requested run can only produce duplicate images.
+
+        Reviewer @et22 ran `shapes --no-jitter` and received 1000 identical
+        circles and 1000 identical stars where the documentation promised
+        variation (openjournals/joss-reviews#10532). With jitter and rotation
+        both off, the surface sweep is the only source of variation, and it
+        yields far fewer distinct images than the plan has tasks.
+        """
+        if self.jitter or self.random_rotation:
+            return
+
+        distinct = self.count_distinct_renderings()
+        planned = len(plan)
+        if planned <= distinct:
+            return
+
+        self._logger.warning(
+            f"Only {distinct} distinct images are possible with these options, "
+            f"but {planned} will be written, so each appears about "
+            f"{planned // distinct} times. Positional jitter and rotation are "
+            f"both disabled, leaving shape size as the only source of variation, "
+            f"and neighbouring surface steps round to the same pixel radius. "
+            f"Drop --no-jitter, add --random-rotation, or widen "
+            f"--min-surface/--max-surface to get distinct stimuli."
+        )
+
     def generate_images(self):
         """Generate all images for training and testing using unified planner."""
         self.setup_directories()
 
         for phase, num_images in self.iter_phases():
             plan = self.build_plan(phase, num_images)
+            self.warn_if_images_will_repeat(plan)
 
             self.log_generation_info(
                 f"Generating {len(plan)} images for {phase} in '{self.output_dir}/{phase}'."

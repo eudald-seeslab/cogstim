@@ -22,6 +22,7 @@ from cogstim.generators.match_to_sample import (
     MatchToSampleGenerator,
     GENERAL_CONFIG as MTS_GENERAL_CONFIG,
 )
+from cogstim.generators.mask import MaskGenerator
 from cogstim.helpers.constants import (
     IMAGE_DEFAULTS,
     DOT_DEFAULTS,
@@ -29,6 +30,7 @@ from cogstim.helpers.constants import (
     LINE_DEFAULTS,
     FIXATION_DEFAULTS,
     MTS_DEFAULTS,
+    MASK_DEFAULTS,
     CLI_DEFAULTS,
 )
 
@@ -147,6 +149,8 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
             "seed": args.seed,
             "img_format": args.img_format,
             "version_tag": args.version_tag,
+            "layout": args.layout,
+            "gap": args.gap,
         },
     }
 
@@ -155,6 +159,10 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
         cfg["colour_1"] = args.dot_colour1
     if hasattr(args, 'dot_colour2'):
         cfg["colour_2"] = args.dot_colour2
+
+    if getattr(args, 'tasks_csv', None):
+        cfg["tasks_csv"] = args.tasks_csv
+        cfg["tasks_copies"] = getattr(args, 'tasks_copies', 1)
     
     return cfg
 
@@ -216,7 +224,32 @@ def build_mts_config(args: argparse.Namespace) -> Dict[str, Any]:
         cfg["tolerance"] = args.tolerance
     if hasattr(args, 'abs_tolerance') and args.abs_tolerance is not None:
         cfg["abs_tolerance"] = args.abs_tolerance
+
+    if getattr(args, 'tasks_csv', None):
+        cfg["tasks_csv"] = args.tasks_csv
+        cfg["tasks_copies"] = getattr(args, 'tasks_copies', 1)
     
+    return cfg
+
+
+def build_mask_config(args: argparse.Namespace) -> Dict[str, Any]:
+    """Build configuration for mask generation."""
+    cfg = {
+        "output_dir": args.output_dir,
+        "num_masks": args.num_masks,
+        "num_dots": args.num_dots,
+        "min_dot_radius": args.min_dot_radius,
+        "max_dot_radius": args.max_dot_radius,
+        "dot_colour": args.dot_colour,
+        "dot_colour_2": args.dot_colour_2,
+        "background_colour": args.background_colour,
+        "init_size": args.img_size,
+        "layout": args.layout,
+        "gap": args.gap,
+        "seed": args.seed,
+        "img_format": args.img_format,
+        "version_tag": args.version_tag,
+    }
     return cfg
 
 
@@ -349,11 +382,20 @@ def run_mts(args: argparse.Namespace) -> None:
     """Execute match-to-sample generation."""
     config = build_mts_config(args)
     generator = MatchToSampleGenerator(config)
-    generator.generate_images()
+    total = generator.generate_images()
     
     if not args.quiet:
-        total = args.train_num + args.test_num
-        print(f"\n✓ Generated {total} image pairs. Output: {config['output_dir']}")
+        print(f"\n✓ Generated {total} sets (image pairs). Output: {config['output_dir']}")
+
+
+def run_mask(args: argparse.Namespace) -> None:
+    """Execute mask generation."""
+    config = build_mask_config(args)
+    generator = MaskGenerator(config)
+    total = generator.generate_images()
+
+    if not args.quiet:
+        print(f"\n✓ Generated {total} mask images. Output: {config['output_dir']}")
 
 
 def run_lines(args: argparse.Namespace) -> None:
@@ -644,6 +686,33 @@ def setup_ans_subcommand(subparsers) -> None:
         default="blue",
         help="Second dot colour"
     )
+    parser.add_argument(
+        "--layout",
+        type=str,
+        choices=["mixed", "separated"],
+        default=DOT_DEFAULTS["layout"],
+        help="Dot placement layout: 'mixed' (all dots share the canvas) or 'separated' (colour_1 left, colour_2 right)"
+    )
+    parser.add_argument(
+        "--gap",
+        type=int,
+        default=DOT_DEFAULTS["gap"],
+        help=f"Pixel gap between left and right halves in separated layout (default: {DOT_DEFAULTS['gap']})"
+    )
+    parser.add_argument(
+        "--tasks-csv",
+        type=str,
+        default=None,
+        metavar="PATH",
+        help="Path to CSV file specifying tasks (columns: n1, n2, equalized). When set, ratios and min/max-point-num are ignored."
+    )
+    parser.add_argument(
+        "--tasks-copies",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Number of copies of the tasks distribution (default: 1). Applies when --tasks-csv is used."
+    )
     
     parser.set_defaults(func=run_ans)
 
@@ -706,8 +775,90 @@ def setup_mts_subcommand(subparsers) -> None:
         default=None,
         help=f"Absolute area tolerance in pixels (default: {MTS_DEFAULTS['abs_tolerance']})"
     )
+    parser.add_argument(
+        "--tasks-csv",
+        type=str,
+        default=None,
+        metavar="PATH",
+        help="Path to CSV file specifying tasks (columns: sample, match, equalized). When set, ratios and min/max-point-num are ignored."
+    )
+    parser.add_argument(
+        "--tasks-copies",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Number of copies of the tasks distribution (default: 1). Applies when --tasks-csv is used."
+    )
     
     parser.set_defaults(func=run_mts)
+
+
+def setup_mask_subcommand(subparsers) -> None:
+    """Setup 'mask' subcommand for visual mask generation."""
+    parser = subparsers.add_parser(
+        "mask",
+        help="Generate visual mask images (dense overlapping dot patterns)",
+        description="Generate N mask images filled with overlapping dots of varying sizes. "
+                    "Useful as backward/forward masks in match-to-sample or ANS paradigms.",
+        epilog="Example: cogstim mask --num-masks 10 --num-dots 400 --img-size 512",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    add_common_options(parser)
+
+    parser.add_argument(
+        "--num-masks",
+        type=int,
+        default=MASK_DEFAULTS["num_masks"],
+        help=f"Number of mask variants to generate (default: {MASK_DEFAULTS['num_masks']})",
+    )
+    parser.add_argument(
+        "--num-dots",
+        type=int,
+        default=MASK_DEFAULTS["num_dots"],
+        help=f"Number of dots per mask (default: {MASK_DEFAULTS['num_dots']})",
+    )
+    parser.add_argument(
+        "--min-dot-radius",
+        type=int,
+        default=MASK_DEFAULTS["min_dot_radius"],
+        help=f"Minimum dot radius in pixels (default: {MASK_DEFAULTS['min_dot_radius']})",
+    )
+    parser.add_argument(
+        "--max-dot-radius",
+        type=int,
+        default=MASK_DEFAULTS["max_dot_radius"],
+        help=f"Maximum dot radius in pixels (default: {MASK_DEFAULTS['max_dot_radius']})",
+    )
+    parser.add_argument(
+        "--dot-colour",
+        type=str,
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        default=MASK_DEFAULTS["dot_colour"],
+        help=f"Dot colour (default: {MASK_DEFAULTS['dot_colour']})",
+    )
+    parser.add_argument(
+        "--dot-colour-2",
+        type=str,
+        choices=["yellow", "blue", "red", "green", "black", "white", "gray"],
+        default=None,
+        help="Optional second dot colour. When set, each dot is randomly assigned one of the two colours (e.g. for ANS masks).",
+    )
+    parser.add_argument(
+        "--layout",
+        type=str,
+        choices=["full", "separated"],
+        default="full",
+        help="'full' fills the entire canvas; 'separated' splits into two halves with a gap (default: full)",
+    )
+    parser.add_argument(
+        "--gap",
+        type=int,
+        default=DOT_DEFAULTS["gap"],
+        help=f"Pixel gap between left and right halves in separated layout (default: {DOT_DEFAULTS['gap']})",
+    )
+
+    parser.set_defaults(func=run_mask)
 
 
 def setup_lines_subcommand(subparsers) -> None:
@@ -879,6 +1030,7 @@ Available tasks:
   ans             Two-colour dot arrays (Approximate Number System)
   one-colour      Single-colour dot arrays (quantity discrimination)
   match-to-sample Match-to-sample dot array pairs
+  mask            Visual masks (dense overlapping dot patterns)
   lines           Rotated stripe/line patterns
   fixation        Fixation target images
   custom          Custom shape/colour combinations
@@ -896,7 +1048,7 @@ For help on a specific task:
     parser.add_argument(
         "--version",
         action="version",
-        version="cogstim 0.4.1"
+        version="cogstim 0.8.0"
     )
     
     subparsers = parser.add_subparsers(
@@ -911,6 +1063,7 @@ For help on a specific task:
     setup_ans_subcommand(subparsers)
     setup_one_colour_subcommand(subparsers)
     setup_mts_subcommand(subparsers)
+    setup_mask_subcommand(subparsers)
     setup_lines_subcommand(subparsers)
     setup_fixation_subcommand(subparsers)
     setup_custom_subcommand(subparsers)

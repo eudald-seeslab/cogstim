@@ -90,6 +90,8 @@ DOT_DEFAULTS = {
     "max_point_radius": 30,
     "attempts_limit": 10000,
     "dot_colour": "yellow",
+    "layout": "mixed",
+    "gap": 40,
 }
 
 # Shape generation defaults
@@ -117,6 +119,16 @@ FIXATION_DEFAULTS = {
     "cross_arm_px": 128,
     "jitter_px": 0,
     "symbol_colour": "white",
+}
+
+# Mask defaults (dense dot patterns for visual masking)
+MASK_DEFAULTS = {
+    "num_masks": 5,
+    "num_dots": 300,
+    "min_dot_radius": 3,
+    "max_dot_radius": 25,
+    "dot_colour": "black",
+    "background_colour": "white",
 }
 
 # Match-to-sample defaults

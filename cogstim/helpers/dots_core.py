@@ -63,6 +63,18 @@ class DotsCore:
 
         return x, y, radius
 
+    def _create_random_point_in_rect(self, x_min, x_max, y_min, y_max):
+        """Generate a random dot constrained to a rectangular region.
+
+        The dot (center +/- radius + point_sep) is guaranteed to fit inside the
+        rectangle defined by (x_min, x_max, y_min, y_max).
+        """
+        radius = randint(self.min_point_radius, self.max_point_radius)
+        margin = radius + self.point_sep
+        x = randint(int(x_min + margin), int(x_max - margin))
+        y = randint(int(y_min + margin), int(y_max - margin))
+        return x, y, radius
+
     def _check_no_overlaps(self, point_array, new_point):
         return all([self._check_points_not_overlapping(a[0], new_point) for a in point_array])
 
@@ -71,17 +83,32 @@ class DotsCore:
 
         return dist > point[2] + new_point[2] + self.point_sep
 
-    def design_n_points(self, n, colour, point_array=None):
+    def design_n_points(self, n, colour, point_array=None, region=None):
+        """Place *n* non-overlapping dots for *colour*.
 
+        Args:
+            n: Number of dots to place.
+            colour: Colour tag (``"colour_1"`` or ``"colour_2"``).
+            point_array: Existing points to avoid overlapping with.
+            region: Optional ``(x_min, x_max, y_min, y_max)`` rectangle that
+                constrains placement.  When *None*, the default circular
+                placement covering the full canvas is used.
+        """
         if point_array is None:
             point_array = []
 
+        if region is not None:
+            def point_fn():
+                return self._create_random_point_in_rect(*region)
+        else:
+            point_fn = self._create_random_point
+
         for _ in range(n):
-            new_point = self._create_random_point()
+            new_point = point_fn()
 
             attempts = 0
             while not self._check_no_overlaps(point_array, new_point):
-                new_point = self._create_random_point()
+                new_point = point_fn()
                 attempts += 1
                 if attempts > self.attempts_limit:
                     raise PointLayoutError("Too many attempts to create a good layout.")

@@ -18,6 +18,8 @@ GENERAL_CONFIG = {
     "background_colour": "black",
     "min_point_radius": DOT_DEFAULTS["min_point_radius"],
     "max_point_radius": DOT_DEFAULTS["max_point_radius"],
+    "layout": DOT_DEFAULTS["layout"],
+    "gap": DOT_DEFAULTS["gap"],
 }
 
 
@@ -49,8 +51,14 @@ class DotsANSGenerator(BaseGenerator):
         
         return subdirs
 
+    def _compute_separated_regions(self, init_size, boundary, gap):
+        """Return (left_region, right_region) rectangles for separated layout."""
+        half = init_size / 2
+        left = (boundary, half - gap / 2, boundary, init_size - boundary)
+        right = (half + gap / 2, init_size - boundary, boundary, init_size - boundary)
+        return left, right
+
     def create_image(self, n1, n2, equalized):
-        # Map configured colours to drawer colours. In one-colour mode, only pass colour_1.
         colour_2 = None if self.config["ONE_COLOUR"] else COLOUR_MAP[self.config["colour_2"]]
 
         number_points = DotsCore(
@@ -63,10 +71,21 @@ class DotsANSGenerator(BaseGenerator):
             max_point_radius=self.config["max_point_radius"],
             attempts_limit=self.config["attempts_limit"]
         )
-        
-        point_array = number_points.design_n_points(n1, "colour_1")
-        point_array = number_points.design_n_points(n2, "colour_2", point_array=point_array)
-        
+
+        layout = self.config.get("layout", "mixed")
+        if layout == "separated" and not self.config["ONE_COLOUR"]:
+            gap = self.config.get("gap", DOT_DEFAULTS["gap"])
+            left_region, right_region = self._compute_separated_regions(
+                IMAGE_DEFAULTS["init_size"], number_points.boundary_width, gap
+            )
+            point_array = number_points.design_n_points(n1, "colour_1", region=left_region)
+            point_array = number_points.design_n_points(
+                n2, "colour_2", point_array=point_array, region=right_region
+            )
+        else:
+            point_array = number_points.design_n_points(n1, "colour_1")
+            point_array = number_points.design_n_points(n2, "colour_2", point_array=point_array)
+
         if equalized and not self.config["ONE_COLOUR"]:
             point_array = number_points.equalize_areas(point_array)
         return number_points.draw_points(point_array)
@@ -74,8 +93,10 @@ class DotsANSGenerator(BaseGenerator):
     def create_and_save(self, n1, n2, equalized, phase, tag=""):
         eq = "_equalized" if equalized else ""
         v_tag = f"_{self.config['version_tag']}" if self.config['version_tag'] else ""
+        layout = self.config.get("layout", "mixed")
+        sep = "_separated" if layout == "separated" else ""
         
-        filename = f"img_{n1}_{n2}_{tag}{eq}{v_tag}"
+        filename = f"img_{n1}_{n2}_{tag}{eq}{sep}{v_tag}"
 
         attempts = 0
         while attempts < self.config["attempts_limit"]:
@@ -112,36 +133,43 @@ class DotsANSGenerator(BaseGenerator):
         return plan.compute_positions()
 
     def generate_images(self):
-        """Generate images using unified planning mechanism."""
+        """Generate images using unified planning mechanism or CSV."""
         task_type = "one_colour" if self.config["ONE_COLOUR"] else "ans"
-        
+        tasks_csv = self.config.get("tasks_csv")
+        tasks_copies = self.config.get("tasks_copies", 1)
+
         for phase, num_images in self.iter_phases():
+            if tasks_csv and num_images <= 0:
+                continue
             plan = GenerationPlan(
                 task_type=task_type,
                 min_point_num=self.config["min_point_num"],
                 max_point_num=self.config["max_point_num"],
                 num_repeats=num_images,
                 ratios=self.ratios
-            ).build()
+            )
+            if tasks_csv:
+                copies = max(1, num_images) * tasks_copies
+                plan.build_from_ans_csv(tasks_csv, num_copies=copies)
+            else:
+                plan.build()
             
             self.log_generation_info(
                 f"Generating {len(plan)} images for {phase} in '{self.output_dir}/{phase}'."
             )
             
-            # Execute plan
             for task in tqdm(plan.tasks, desc=f"{phase}"):
                 if task.task_type == "one_colour":
                     n1 = task.params.get('n')
                     n2 = 0
                     equalized = False
-                else:  # ans (two-colour)
+                else:
                     n1 = task.params.get('n1')
                     n2 = task.params.get('n2', 0)
                     equalized = task.params.get('equalize', False)
                 
                 rep = task.rep
                 
-                # Create and save image
                 self.create_and_save(n1, n2, equalized=equalized, phase=phase, tag=rep)
             
             self.write_summary_if_enabled(plan, phase)

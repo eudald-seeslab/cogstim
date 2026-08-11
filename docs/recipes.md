@@ -90,16 +90,16 @@ cogstim match-to-sample \
 ```
 images/match_to_sample/
   ├── train/
-  │   ├── img_2_3_0_equalized_s.png
-  │   ├── img_2_3_0_equalized_m.png
-  │   ├── img_2_3_0_s.png
-  │   ├── img_2_3_0_m.png
+  │   ├── mts_00000_e_a_3.png
+  │   ├── mts_00000_e_b_2.png
+  │   ├── mts_00001_r_a_5.png
+  │   ├── mts_00001_r_b_4.png
   │   └── ... (many pairs)
   └── test/
       └── ... (similar structure)
 ```
 
-**Note:** Files are named `*_s.png` (sample) and `*_m.png` (match). The pattern is `img_{n}_{m}_{k}[_equalized]_{s|m}.png` where `n` = sample dots, `m` = match dots, `k` = trial index.
+**Note:** Each file is named `mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png`; `a` = match, `b` = sample; `r` = random, `e` = equalized.
 
 ---
 

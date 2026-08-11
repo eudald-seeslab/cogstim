@@ -9,7 +9,7 @@ CogStim is a small Python toolkit that produces **synthetic image datasets** com
 
 * Shape discrimination (e.g. *circle vs star*).
 * Colour discrimination (e.g. *yellow vs blue* circles).
-* Approximate Number System (ANS) dot arrays with two colours.
+* Approximate Number System (Panamath) dot arrays with two colours.
 * Single-colour dot arrays for number-discrimination tasks.
 * Custom combinations of geometrical *shapes × colours*.
 * Rotated stripe patterns ("lines" dataset) for orientation discrimination.
@@ -73,6 +73,19 @@ Most tasks accept these options:
 
 > **Note**: Use `--seed SEED` (where SEED is an integer) to make generation deterministic and reproducible. Without a seed, each run will produce different random variations.
 
+### Task specification from CSV
+
+For some tasks, you can specify exactly which stimuli to generate via a CSV file instead of using ratios or parameter ranges. You can do this with the `--tasks-csv PATH` to point to a CSV (find below the format of the CSV depending on the task). This method allows to create "n" copies of the tasks in the CSV (`--tasks-copies N` (default: 1) to repeat the distribution N times). When `--tasks-csv` is set, `--ratios` and `--min-point-num` / `--max-point-num` are ignored.
+
+For now, this is supported only for the following tasks, with the CSV specifications
+
+| Task             | CSV columns                 |
+|------------------|-----------------------------|
+| Match to sample  | sample, match, equalized    |
+| Panamath              | n1, n2, equalized           |
+
+
+
 ## Examples
 
 ### Shape recognition – *circle vs star* in yellow
@@ -114,6 +127,19 @@ cogstim ans --ratios easy --train-num 100 --test-num 40
 
 This is based on Halberda et al. (2008).
 
+#### Separated layout
+
+By default, dots of both colours are interleaved across the full canvas (`--layout mixed`). Use `--layout separated` to place colour 1 on the left half and colour 2 on the right half, with a configurable gap between them:
+
+```bash
+cogstim ans --ratios easy --train-num 100 --test-num 40 --layout separated --gap 40
+```
+
+- `--layout separated` constrains each colour to its own half of the image.
+- `--gap N` controls the pixel-wide empty strip between the two halves (default: 40).
+- Area equalization still works: the `_equalized` variants are generated as usual.
+- One-colour mode (`cogstim one-colour`) ignores `--layout separated` since there is only one colour.
+
 ### Match-to-sample (MTS) – dot arrays (sample/match) with controlled total surface
 ```bash
 cogstim match-to-sample \
@@ -123,11 +149,11 @@ cogstim match-to-sample \
   --dot-colour yellow
 ```
 
-- Generates pairs of images per trial: `*_s.png` (sample) and `*_m.png` (match).
+- Generates pairs of images per trial: match (`*_a_*.png`) and sample (`*_b_*.png`).
 - For half of the trials, total dot surface is equalized between sample and match; for the other half, dot sizes are random.
 - The target total surface for the match is derived from the sample image of the same trial.
 - Unequal pairs are built from the same ratio set used by ANS, with both orders (n→m and m→n) included, and equal (n=m) trials added to balance labels.
-- Output layout: `images/match_to_sample/{train|test}/img_{n}_{m}_{k}[...]_s.png` and corresponding `img_{n}_{m}_{k}[...]_m.png`.
+- Output layout: `images/match_to_sample/{train|test}/mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png` (each image self-described; pairs share trial_id).
 
 This task is based on Sella et al. (2013).
 
@@ -206,7 +232,7 @@ This project is distributed under the **MIT License** – see the `LICENCE` file
 ## TODO's
 
 - The equalization algorithm of match-to-sample could be improved.
-- Let users create stimuli based on a csv with the specific images they need
+- Extend CSV-based task specification to other tasks (ANS, one-colour, shapes, etc.).
 - Check that the image is big enough for the parameters set.
 
 

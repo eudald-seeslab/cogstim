@@ -5,6 +5,8 @@ This module provides a common interface for planning image generation tasks,
 replacing the previously duplicated logic in different generators.
 """
 
+import csv
+from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
 
 
@@ -155,27 +157,22 @@ class GenerationPlan:
         """
         Expand match-to-sample tasks for a given (n, m) pair.
         
-        Generates 6 variants:
-        - (n, m) non-equalized
-        - (m, n) non-equalized (order swap)
-        - (n, m) equalized
-        - (m, n) equalized (order swap)
-        - (n, n) equalized (equal pair)
-        - (m, m) non-equalized (equal pair)
+        Generates 8 variants (balanced 50/50 match vs non-match):
+        - (n, m) non-equalized, (m, n) non-equalized, (n, m) equalized, (m, n) equalized (4 different)
+        - (n, n) equalized, (n, n) non-equalized, (m, m) equalized, (m, m) non-equalized (4 equal)
         
         Args:
             n: First point count
             m: Second point count
             rep: Repetition number
         """
-        # Random orders
         self.tasks.append(GenerationTask("mts", rep, n1=n, n2=m, equalize=False))
         self.tasks.append(GenerationTask("mts", rep, n1=m, n2=n, equalize=False))
-        # Equalized orders
         self.tasks.append(GenerationTask("mts", rep, n1=n, n2=m, equalize=True))
         self.tasks.append(GenerationTask("mts", rep, n1=m, n2=n, equalize=True))
-        # Equal pairs
         self.tasks.append(GenerationTask("mts", rep, n1=n, n2=n, equalize=True))
+        self.tasks.append(GenerationTask("mts", rep, n1=n, n2=n, equalize=False))
+        self.tasks.append(GenerationTask("mts", rep, n1=m, n2=m, equalize=True))
         self.tasks.append(GenerationTask("mts", rep, n1=m, n2=m, equalize=False))
     
     def expand_one_colour_tasks(self, n: int, rep: int) -> None:
@@ -268,6 +265,93 @@ class GenerationPlan:
             raise ValueError(f"Unknown task_type: {self.task_type}")
         
         return self
+
+    def build_from_mts_csv(
+        self, csv_path: str | Path, num_copies: int = 1
+    ) -> "GenerationPlan":
+        """
+        Build MTS task list from a CSV file.
+
+        CSV must have columns: sample, match, equalized.
+        Each row defines one (n1, n2, equalize) task.
+        num_copies repeats the entire distribution that many times (rep 0..num_copies-1).
+
+        Args:
+            csv_path: Path to CSV file
+            num_copies: Number of copies of the statement distribution (default 1)
+
+        Returns:
+            self (for method chaining)
+        """
+        if self.task_type != "mts":
+            raise ValueError("build_from_mts_csv only applies to task_type='mts'")
+        tasks_spec = load_mts_tasks_from_csv(csv_path)
+        self.tasks = []
+        task_id = 0
+        for copy_idx in range(num_copies):
+            for n1, n2, equalize in tasks_spec:
+                # Use a unique rep per emitted task so repeated CSV rows do not
+                # overwrite each other when filenames include n1/n2/equalized/rep.
+                self.tasks.append(
+                    GenerationTask(
+                        "mts",
+                        task_id,
+                        n1=n1,
+                        n2=n2,
+                        equalize=equalize,
+                        copy_idx=copy_idx,
+                    )
+                )
+                task_id += 1
+        return self
+
+    def build_from_ans_csv(
+        self, csv_path: str | Path, num_copies: int = 1
+    ) -> "GenerationPlan":
+        """
+        Build ANS task list from a CSV file.
+
+        CSV must have columns: n1, n2, equalized.
+        Each row defines one (n1, n2, equalize) task.
+        num_copies repeats the entire distribution that many times.
+
+        Args:
+            csv_path: Path to CSV file
+            num_copies: Number of copies of the task distribution (default 1)
+
+        Returns:
+            self (for method chaining)
+        """
+        if self.task_type not in ("ans", "one_colour"):
+            raise ValueError("build_from_ans_csv only applies to task_type 'ans' or 'one_colour'")
+        tasks_spec = load_ans_tasks_from_csv(csv_path)
+        self.tasks = []
+        task_id = 0
+        for copy_idx in range(num_copies):
+            for n1, n2, equalize in tasks_spec:
+                task_type = self.task_type
+                if task_type == "one_colour":
+                    self.tasks.append(
+                        GenerationTask(
+                            "one_colour",
+                            task_id,
+                            n=n1,
+                            copy_idx=copy_idx,
+                        )
+                    )
+                else:
+                    self.tasks.append(
+                        GenerationTask(
+                            "ans",
+                            task_id,
+                            n1=n1,
+                            n2=n2,
+                            equalize=equalize,
+                            copy_idx=copy_idx,
+                        )
+                    )
+                task_id += 1
+        return self
     
     def __len__(self):
         """Return the number of tasks in the plan."""
@@ -319,6 +403,62 @@ class GenerationPlan:
                     writer.writerow(row)
         
         print(f"Summary written to: {target_path}")
+
+
+def load_mts_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, bool]]:
+    """
+    Load match-to-sample task specifications from a CSV file.
+
+    Expected columns: sample, match, equalized
+    - sample: number of dots in sample image
+    - match: number of dots in match image
+    - equalized: TRUE/FALSE (case-insensitive)
+
+    Returns:
+        List of (n1, n2, equalize) tuples.
+    """
+    path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Tasks CSV not found: {path}")
+
+    tasks = []
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            sample = int(row["sample"])
+            match = int(row["match"])
+            eq_val = str(row.get("equalized", "FALSE")).strip().upper()
+            equalize = eq_val in ("TRUE", "1", "YES")
+            tasks.append((sample, match, equalize))
+    return tasks
+
+
+def load_ans_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, bool]]:
+    """
+    Load ANS task specifications from a CSV file.
+
+    Expected columns: n1, n2, equalized
+    - n1: number of dots for colour_1
+    - n2: number of dots for colour_2 (ignored for one_colour tasks)
+    - equalized: TRUE/FALSE (case-insensitive)
+
+    Returns:
+        List of (n1, n2, equalize) tuples.
+    """
+    path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Tasks CSV not found: {path}")
+
+    tasks = []
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            n1 = int(row["n1"])
+            n2 = int(row["n2"])
+            eq_val = str(row.get("equalized", "FALSE")).strip().upper()
+            equalize = eq_val in ("TRUE", "1", "YES")
+            tasks.append((n1, n2, equalize))
+    return tasks
 
 
 def resolve_ratios(ratios, easy_ratios: List[float], hard_ratios: List[float]) -> List[float]:

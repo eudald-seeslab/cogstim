@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Usage discussion
+    url: https://github.com/eudald-seeslab/cogstim/discussions
+    about: Open-ended questions and sharing what you have built with CogStim
+  - name: Documentation
+    url: https://github.com/eudald-seeslab/cogstim/blob/main/docs/guide.md
+    about: The user guide, options reference and FAQ
+  - name: Contributing
+    url: https://github.com/eudald-seeslab/cogstim/blob/main/CONTRIBUTING.md
+    about: How to report problems, ask for help, and send code

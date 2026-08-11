@@ -92,6 +92,9 @@ This is helpful for quickly checking output before generating larger datasets.
 
 - **[User Guide](guide.md)** – Detailed documentation for each task with all options
 - **[Options reference](options.md)** – Every option of every task, generated from the CLI
+- **[Contributing](../CONTRIBUTING.md)** – Reporting problems, asking questions, sending code
+- **[Roadmap](../ROADMAP.md)** – What is planned and what is out of scope
+- **[Architecture](development/architecture.md)** – Developer documentation
 - **[Recipes](recipes.md)** – Copy-paste commands for common research goals
 - **[FAQ](faq.md)** – Troubleshooting and common questions
 

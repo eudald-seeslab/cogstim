@@ -1,0 +1,31 @@
+name: Question
+description: How do I generate ...?
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Questions are welcome. Worth a look first: the
+        [user guide](https://github.com/eudald-seeslab/cogstim/blob/main/docs/guide.md),
+        the [recipes](https://github.com/eudald-seeslab/cogstim/blob/main/docs/recipes.md)
+        for copy-paste commands, and the
+        [options reference](https://github.com/eudald-seeslab/cogstim/blob/main/docs/options.md).
+
+        If the documentation should have answered your question and did not,
+        say so — that is a documentation bug and worth fixing.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you have tried
+      description: Commands you ran and what they produced.
+      render: shell
+    validations:
+      required: false

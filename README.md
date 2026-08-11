@@ -26,12 +26,20 @@ pip install cogstim
 
 - **[Quick Start](docs/index.md)** – Installation and first steps
 - **[User Guide](docs/guide.md)** – Detailed documentation for each task
+- **[Options reference](docs/options.md)** – Every option of every task, generated from the CLI
 - **[Recipes](docs/recipes.md)** – Copy-paste commands for common goals
 - **[FAQ](docs/faq.md)** – Troubleshooting and common questions
 
-### For LLM/AI Agents
+## Contributing and support
 
-- **[LLM Documentation](docs/LLM_DOCUMENTATION.md)** – Single-file comprehensive documentation optimized for feeding to Large Language Models (Context + Architecture + API Reference)
+- **[Contributing](CONTRIBUTING.md)** – Reporting problems, asking questions, sending code
+- **[Roadmap](ROADMAP.md)** – What is covered, what is planned, what is out of scope
+- **[Architecture](docs/development/architecture.md)** – How the package fits together
+- **[Adding a stimulus type](docs/development/adding-a-generator.md)** – A worked example
+- **[Deprecations](DEPRECATIONS.md)** – What is going away, and what replaces it
+
+Questions and bug reports go to the
+[issue tracker](https://github.com/eudald-seeslab/cogstim/issues).
 
 ## Command-line interface
 
@@ -229,11 +237,18 @@ images/two_shapes/
 
 This project is distributed under the **MIT License** – see the `LICENCE` file for details.
 
-## TODO's
+## Known limitations
 
-- The equalization algorithm of match-to-sample could be improved.
-- Extend CSV-based task specification to other tasks (ANS, one-colour, shapes, etc.).
-- Check that the image is big enough for the parameters set.
+Planned work is tracked in the [roadmap](ROADMAP.md). Current rough edges:
+
+- The match-to-sample equalization algorithm grows radii a whole pixel at a
+  time and can fail on an unlucky layout; it retries, and reports any pair it
+  could not produce.
+- CSV-based task specification exists for `ans` and `match-to-sample` only.
+- Nothing checks up front that the canvas is large enough for the requested dot
+  sizes and counts; placement fails at generation time instead.
+- Colours are limited to seven names; hex and named-colour formats are under
+  consideration.
 
 
 ## References

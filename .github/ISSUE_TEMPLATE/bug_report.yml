@@ -1,0 +1,66 @@
+name: Bug report
+description: Something CogStim did was wrong, or not what the documentation said
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. The most useful thing you can attach is the
+        `cogstim_config.yaml` written into your output directory — it records
+        every option and the resolved seed, so the run can be reproduced exactly.
+
+  - type: textarea
+    id: command
+    attributes:
+      label: The command you ran
+      description: Or the `cogstim_config.yaml` from the output directory.
+      render: shell
+      placeholder: cogstim ans --train-num 10 --ratios easy --seed 1234
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      placeholder: |
+        15 images, as the guide says for these options.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+      description: |
+        Paste the full terminal output. If the images look wrong, attach one —
+        a picture of the problem is usually faster than describing it.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: CogStim version
+      description: The output of `cogstim --version`.
+      placeholder: cogstim 0.8.1
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Python version and operating system
+      placeholder: Python 3.11 on Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: |
+        Optional. What you were trying to build is often useful context — it
+        sometimes turns out there is a better way to get there.
+    validations:
+      required: false

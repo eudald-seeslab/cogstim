@@ -10,6 +10,14 @@ import logging
 from PIL import Image, ImageDraw
 
 from cogstim.helpers.constants import COLOUR_MAP
+from cogstim.helpers.geometry import (
+    DrawnElement,
+    Scene,
+    ELLIPSE,
+    RECTANGLE,
+    POLYGON,
+    LINE,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -89,20 +97,62 @@ class ImageCanvas:
         self._draw = ImageDraw.Draw(self._img)
         self.size = size
         self.mode = mode
-    
+        # Everything drawn here is also recorded, which is what lets the same
+        # stimulus be written as vector output or exported as annotations.
+        self.scene = Scene(width=size, height=size, background=to_hex(bg_colour))
+
     @property
     def img(self):
         """Access underlying PIL Image."""
         return self._img
-    
-    def draw_ellipse(self, xy, fill):
+
+    @property
+    def elements(self):
+        """The primitives drawn on this canvas, in drawing order."""
+        return self.scene.elements
+
+    @classmethod
+    def from_image(cls, img, scene):
+        """Wrap an already-rendered image together with its geometry.
+
+        Used where a generator transforms the rasterised image after drawing --
+        the lines task rotates and crops -- and needs to carry the matching
+        transformed geometry alongside it.
+
+        Args:
+            img: A PIL Image.
+            scene: The Scene describing it, in the image's own coordinates.
+
+        Returns:
+            ImageCanvas: A canvas backed by that image.
+        """
+        canvas = cls.__new__(cls)
+        canvas._img = img
+        canvas._draw = ImageDraw.Draw(img)
+        canvas.size = img.size[0]
+        canvas.mode = img.mode
+        canvas.scene = scene
+        return canvas
+
+    @staticmethod
+    def _corners(xy):
+        """Normalise PIL's several bounding-box spellings to two corner points."""
+        if len(xy) == 2:
+            (x0, y0), (x1, y1) = xy
+        else:
+            x0, y0, x1, y1 = xy
+        return ((x0, y0), (x1, y1))
+
+    def draw_ellipse(self, xy, fill, label="ellipse"):
         """Draw an ellipse.
         
         Args:
             xy: Tuple of (x1, y1, x2, y2) coordinates
             fill: Fill colour
+            label: What this element is in the stimulus, recorded for export
         """
         self._draw.ellipse(xy, fill=fill)
+        self.scene.add(DrawnElement(ELLIPSE, self._corners(xy), to_hex(fill), label))
     
     def draw_line(self, xy, fill, width=1):
         """Draw a line.
@@ -113,26 +163,38 @@ class ImageCanvas:
             width: Line width in pixels
         """
         self._draw.line(xy, fill=fill, width=width)
+        self.scene.add(
+            DrawnElement(LINE, self._corners(xy), to_hex(fill), "line", width)
+        )
     
-    def draw_polygon(self, points, fill, outline=None):
+    def draw_polygon(self, points, fill, outline=None, label="polygon"):
         """Draw a polygon.
         
         Args:
             points: List of (x, y) coordinate tuples
             fill: Fill colour
             outline: Optional outline colour
+            label: What this element is in the stimulus, recorded for export
         """
         self._draw.polygon(points, fill=fill, outline=outline)
+        self.scene.add(
+            DrawnElement(POLYGON, tuple(tuple(p) for p in points), to_hex(fill), label)
+        )
     
-    def draw_rectangle(self, xy, fill=None, outline=None):
+    def draw_rectangle(self, xy, fill=None, outline=None, label="rectangle"):
         """Draw a rectangle.
         
         Args:
             xy: Tuple of (x1, y1, x2, y2) coordinates
             fill: Optional fill colour
             outline: Optional outline colour
+            label: What this element is in the stimulus, recorded for export
         """
         self._draw.rectangle(xy, fill=fill, outline=outline)
+        if fill is not None:
+            self.scene.add(
+                DrawnElement(RECTANGLE, self._corners(xy), to_hex(fill), label)
+            )
     
     def save(self, path, **kwargs):
         """Save the image to a file.

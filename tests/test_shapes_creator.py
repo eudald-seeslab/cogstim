@@ -25,10 +25,14 @@ def test_draw_shape_circle():
             version_tag="",
             img_format="png",
         )
-        img, dist, angle, rotation = sg.draw_shape("circle", 10000, COLOUR_MAP["yellow"], jitter=False)
+        canvas, dist, angle, rotation = sg.draw_shape(
+            "circle", 10000, COLOUR_MAP["yellow"], jitter=False
+        )
 
-        # Basic sanity checks
-        assert img.size == (512, 512)
+        # draw_shape returns the canvas, not just the raster, so that the drawn
+        # geometry travels with the image for metadata and vector export.
+        assert canvas.img.size == (512, 512)
+        assert [e.label for e in canvas.elements] == ["circle"]
         assert 0 <= dist <= 124  # within max jitter range used in code
         assert 0 <= angle <= 360
         assert rotation == 0

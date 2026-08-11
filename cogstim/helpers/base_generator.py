@@ -12,6 +12,12 @@ import logging
 from abc import ABC
 from typing import Dict, Any
 from cogstim.helpers.random_seed import set_seed
+from cogstim.helpers.annotations import (
+    element_records,
+    scene_to_svg,
+    write_annotations_csv,
+    write_annotations_json,
+)
 
 
 class BaseGenerator(ABC):
@@ -48,6 +54,10 @@ class BaseGenerator(ABC):
         # on disk rather than what was planned. Every generator saves through
         # save_image(), which makes this the single authoritative count.
         self.images_written = 0
+
+        # Geometry of everything drawn, exported once the run finishes.
+        self._annotations = []
+        self._canvas_size = None
         
         if 'output_dir' not in config:
             raise ValueError(
@@ -186,6 +196,35 @@ class BaseGenerator(ABC):
         """
         return "jpg" if img_format == "jpeg" else img_format
     
+    def _record_annotations(self, relative_name: str, scene) -> None:
+        """Accumulate the geometry of one image for later export."""
+        if self.config.get("metadata", "none") == "none":
+            return
+        self._annotations.extend(element_records(relative_name, scene))
+        if self._canvas_size is None:
+            self._canvas_size = (scene.width, scene.height)
+
+    def write_annotations(self):
+        """Write the accumulated annotations in the requested formats.
+
+        Returns:
+            list: Paths written, empty when annotations were not requested.
+        """
+        wanted = self.config.get("metadata", "none")
+        if wanted == "none" or not self._annotations:
+            return []
+
+        written = []
+        if wanted in ("csv", "both"):
+            path = os.path.join(self.output_dir, "annotations.csv")
+            write_annotations_csv(path, self._annotations)
+            written.append(path)
+        if wanted in ("json", "both"):
+            path = os.path.join(self.output_dir, "annotations.json")
+            write_annotations_json(path, self._annotations, self._canvas_size)
+            written.append(path)
+        return written
+
     def save_image(self, img, filename_without_ext: str, *subdirs):
         """
         Save an image to disk with proper path construction and format handling.
@@ -218,17 +257,39 @@ class BaseGenerator(ABC):
         filename = f"{filename_without_ext}.{ext}"
         path = os.path.join(self.output_dir, *subdirs, filename)
         
-        # Normalize image to PIL Image
+        # Normalize image to PIL Image, keeping the recorded geometry when the
+        # caller passed something that carries it.
+        scene = None
         if hasattr(img, 'canvas') and hasattr(img, 'draw_points'):
             # DotsCore instance
             pil_img = img.canvas.img
+            scene = img.canvas.scene
         elif hasattr(img, '_img'):
             # ImageCanvas wrapper
             pil_img = img._img
+            scene = getattr(img, "scene", None)
         else:
             # Already a PIL Image
             pil_img = img
-        
+
+        relative_name = os.path.join(*subdirs, filename) if subdirs else filename
+
+        if img_format == "svg":
+            if scene is None:
+                raise ValueError(
+                    f"{self.__class__.__name__} cannot produce SVG: it renders "
+                    "straight to pixels without recording the shapes drawn."
+                )
+            os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(scene_to_svg(scene))
+            self.images_written += 1
+            self._record_annotations(relative_name, scene)
+            return
+
+        if scene is not None:
+            self._record_annotations(relative_name, scene)
+
         # Save with appropriate format
         if img_format in ["jpg", "jpeg"]:
             pil_img.save(path, format="JPEG", quality=95)

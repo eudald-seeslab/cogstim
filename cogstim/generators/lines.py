@@ -109,17 +109,26 @@ class LinesGenerator(BaseGenerator):
                 starting_positions[i] + stripe_thickness[i],
                 self.c_size,
             )
-            canvas.draw_rectangle([upper_left, lower_right], fill=self.line_colour)
+            canvas.draw_rectangle(
+                [upper_left, lower_right], fill=self.line_colour, label="stripe"
+            )
 
-        # Rotate and crop
+        # Rotate and crop. The stripes were drawn upright on an oversized
+        # canvas, so the recorded geometry gets the same transform; otherwise the
+        # exported coordinates would describe the pre-rotation layout.
         rotated_img = canvas.img.rotate(angle)
-        crop_box = (
-            (self.c_size - self.size) // 2,
-            (self.c_size - self.size) // 2,
-            (self.c_size + self.size) // 2,
-            (self.c_size + self.size) // 2,
+        offset = (self.c_size - self.size) // 2
+        crop_box = (offset, offset, offset + self.size, offset + self.size)
+
+        centre = (self.c_size / 2, self.c_size / 2)
+        scene = canvas.scene.transformed(
+            rotation_deg=angle,
+            centre=centre,
+            offset=(offset, offset),
+            width=self.size,
+            height=self.size,
         )
-        return rotated_img.crop(crop_box)
+        return ImageCanvas.from_image(rotated_img.crop(crop_box), scene)
 
     def _generate_valid_positions(self, num_stripes, min_start, max_start, thicknesses):
         """Generate non-overlapping positions for stripes."""

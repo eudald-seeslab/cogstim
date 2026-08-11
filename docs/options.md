@@ -24,11 +24,12 @@ Generate two-colour dot array images for approximate number system tasks. Classe
 | `--dot-colour-2` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Second dot colour (default: blue, or its inverse when that matches the background) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--gap` | `40` |  | Pixel gap between halves in separated layout (default: 40) |
-| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff` | Image file format (default: png) |
+| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--layout` | `mixed` | `full`, `mixed`, `separated` | Dot placement: 'full' (all dots share the canvas) or 'separated' (colour 1 left, colour 2 right). 'mixed' is a deprecated synonym for 'full'. |
 | `--max-dot-num` | `10` |  | Maximum number of dots per colour (default: 10) |
 | `--max-dot-radius-px` | `30` |  | Maximum dot radius in pixels (default: 30) |
+| `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-dot-num` | `1` |  | Minimum number of dots per colour (default: 1) |
 | `--min-dot-radius-px` | `20` |  | Minimum dot radius in pixels (default: 20) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
@@ -51,10 +52,11 @@ Generate images of the same shape in different colours for colour recognition ta
 | `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
-| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff` | Image file format (default: png) |
+| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--max-rotation` | `360` |  | Maximum rotation angle in degrees (default: 360) |
 | `--max-surface` | `20000` |  | Maximum shape surface area in px² (default: 20000) |
+| `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-rotation` | `0` |  | Minimum rotation angle in degrees (default: 0) |
 | `--min-surface` | `10000` |  | Minimum shape surface area in px² (default: 10000) |
 | `--no-jitter` | off |  | Disable positional jitter |
@@ -79,10 +81,11 @@ Generate images with custom combinations of shapes and colours.
 | `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
-| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff` | Image file format (default: png) |
+| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--max-rotation` | `360` |  | Maximum rotation angle in degrees (default: 360) |
 | `--max-surface` | `20000` |  | Maximum shape surface area in px² (default: 20000) |
+| `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-rotation` | `0` |  | Minimum rotation angle in degrees (default: 0) |
 | `--min-surface` | `10000` |  | Minimum shape surface area in px² (default: 10000) |
 | `--no-jitter` | off |  | Disable positional jitter |
@@ -111,9 +114,10 @@ Generate fixation target images with different element combinations.
 | `--disk-radius-px` | `48` |  | Radius of the filled disk in pixels (default: 48) |
 | `--dot-radius-px` | `6` |  | Radius of the central dot in pixels (default: 6) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
-| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff` | Image file format (default: png) |
+| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--jitter-px` | `0` |  | Maximum positional jitter in pixels (default: 0) |
+| `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
@@ -132,11 +136,12 @@ Generate images with rotated stripe patterns at different angles.
 | `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
-| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff` | Image file format (default: png) |
+| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--line-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Stripe colour (default: black, or its inverse when that matches the background) |
 | `--max-line-thickness-px` | `30` |  | Maximum stripe thickness in pixels (default: 30) |
 | `--max-stripe-num` | `10` |  | Maximum number of stripes per image |
+| `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-line-spacing-px` | `5` |  | Minimum gap between stripes in pixels (default: 5) |
 | `--min-line-thickness-px` | `10` |  | Minimum stripe thickness in pixels (default: 10) |
 | `--min-stripe-num` | `2` |  | Minimum number of stripes per image |
@@ -160,11 +165,12 @@ Generate N mask images filled with overlapping dots of varying sizes. Useful as 
 | `--dot-num` | `300` |  | Number of dots per mask (default: 300) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--gap` | `40` |  | Pixel gap between halves in separated layout (default: 40) |
-| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff` | Image file format (default: png) |
+| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--layout` | `full` | `full`, `mixed`, `separated` | 'full' fills the entire canvas; 'separated' splits it into two halves with a gap. 'mixed' is a deprecated synonym for 'full'. |
 | `--mask-num` | `5` |  | Number of mask variants to generate (default: 5) |
 | `--max-dot-radius-px` | `25` |  | Maximum dot radius in pixels (default: 25) |
+| `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-dot-radius-px` | `3` |  | Minimum dot radius in pixels (default: 3) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
 | `--quiet` | off |  | Suppress all non-error output |
@@ -184,10 +190,11 @@ Generate sample/match image pairs for match-to-sample tasks with area equalizati
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dot-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Dot colour (default: black, or its inverse when that matches the background) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
-| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff` | Image file format (default: png) |
+| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--max-dot-num` | `10` |  | Maximum number of dots per colour (default: 10) |
 | `--max-dot-radius-px` | `30` |  | Maximum dot radius in pixels (default: 30) |
+| `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-dot-num` | `1` |  | Minimum number of dots per colour (default: 1) |
 | `--min-dot-radius-px` | `20` |  | Minimum dot radius in pixels (default: 20) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
@@ -213,10 +220,11 @@ Generate single-colour dot array images. Classes are based on quantity without c
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dot-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Dot colour (default: yellow, or its inverse when that matches the background) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
-| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff` | Image file format (default: png) |
+| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--max-dot-num` | `10` |  | Maximum number of dots per colour (default: 10) |
 | `--max-dot-radius-px` | `30` |  | Maximum dot radius in pixels (default: 30) |
+| `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-dot-num` | `1` |  | Minimum number of dots per colour (default: 1) |
 | `--min-dot-radius-px` | `20` |  | Minimum dot radius in pixels (default: 20) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
@@ -244,10 +252,11 @@ Generate images of different shapes in the same colour for shape recognition tas
 | `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
-| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff` | Image file format (default: png) |
+| `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--max-rotation` | `360` |  | Maximum rotation angle in degrees (default: 360) |
 | `--max-surface` | `20000` |  | Maximum shape surface area in px² (default: 20000) |
+| `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-rotation` | `0` |  | Minimum rotation angle in degrees (default: 0) |
 | `--min-surface` | `10000` |  | Minimum shape surface area in px² (default: 10000) |
 | `--no-jitter` | off |  | Disable positional jitter |

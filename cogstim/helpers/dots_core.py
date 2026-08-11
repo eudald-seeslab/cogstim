@@ -129,11 +129,16 @@ class DotsCore:
             fill_colour = self.colour_1
         else:
             fill_colour = self.colour_1 if colour == "colour_1" else self.colour_2
-        self.canvas.draw_ellipse((x1, y1, x2, y2), fill=fill_colour)
+        self.canvas.draw_ellipse((x1, y1, x2, y2), fill=fill_colour, label="dot")
 
     def draw_points(self, point_array):
+        """Draw every dot and return the canvas.
+
+        Returns the canvas rather than the bare PIL image so the recorded
+        geometry reaches save_image, which needs it for annotations and SVG.
+        """
         [self._draw_point(a[0], a[1]) for a in point_array]
-        return self.canvas.img
+        return self.canvas
 
     @staticmethod
     def compute_area(point_array, colour):

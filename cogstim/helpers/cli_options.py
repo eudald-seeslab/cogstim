@@ -39,7 +39,12 @@ COLOUR_CHOICES = ["yellow", "blue", "red", "green", "black", "white", "gray"]
 
 SHAPE_CHOICES = ["circle", "star", "triangle", "square"]
 
-IMAGE_FORMAT_CHOICES = ["png", "jpg", "jpeg", "bmp", "tiff"]
+# svg is rendered from the recorded geometry rather than rasterised, so
+# pixel-based options such as --min-dot-radius-px still describe the drawing
+# but the output itself scales without loss.
+IMAGE_FORMAT_CHOICES = ["png", "jpg", "jpeg", "bmp", "tiff", "svg"]
+
+METADATA_CHOICES = ["none", "csv", "json", "both"]
 
 
 class DeprecatedAliasAction(argparse.Action):
@@ -194,6 +199,10 @@ COMMON = [
     Option("--quiet", store_true=True, help="Suppress all non-error output"),
     Option("--dry-run", store_true=True,
            help="Report how many images would be generated, and why, without writing any"),
+    Option("--metadata", type=str, default="none", choices=METADATA_CHOICES,
+           help=("Also export where every stimulus feature is: bounding box, "
+                 "centre, size and colour of each element, for computer-vision "
+                 "training or eye-tracking analysis (default: none)")),
 ]
 
 TRAIN_TEST = [

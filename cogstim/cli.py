@@ -84,6 +84,7 @@ def build_shapes_config(args: argparse.Namespace) -> Dict[str, Any]:
         "min_rotation": args.min_rotation,
         "max_rotation": args.max_rotation,
         "img_format": args.img_format,
+        "metadata": args.metadata,
         "version_tag": args.version_tag,
     }
     
@@ -112,6 +113,7 @@ def build_colours_config(args: argparse.Namespace) -> Dict[str, Any]:
         "min_rotation": args.min_rotation,
         "max_rotation": args.max_rotation,
         "img_format": args.img_format,
+        "metadata": args.metadata,
         "version_tag": args.version_tag,
     }
 
@@ -135,6 +137,7 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
             "attempts_limit": args.attempts_limit,
             "seed": args.seed,
             "img_format": args.img_format,
+            "metadata": args.metadata,
             "version_tag": args.version_tag,
             "layout": args.layout,
             "gap": args.gap,
@@ -177,6 +180,7 @@ def build_one_colour_config(args: argparse.Namespace) -> Dict[str, Any]:
             "colour_1": args.dot_colour or DOT_DEFAULTS["dot_colour"],
             "colour_2": None,
             "img_format": args.img_format,
+            "metadata": args.metadata,
             "version_tag": args.version_tag,
         },
     }
@@ -204,6 +208,7 @@ def build_mts_config(args: argparse.Namespace) -> Dict[str, Any]:
             "init_size": args.img_size,
             "seed": args.seed,
             "img_format": args.img_format,
+            "metadata": args.metadata,
             "version_tag": args.version_tag,
         },
     }
@@ -237,6 +242,7 @@ def build_mask_config(args: argparse.Namespace) -> Dict[str, Any]:
         "gap": args.gap,
         "seed": args.seed,
         "img_format": args.img_format,
+        "metadata": args.metadata,
         "version_tag": args.version_tag,
     }
     return cfg
@@ -261,6 +267,7 @@ def build_lines_config(args: argparse.Namespace) -> Dict[str, Any]:
         "background_colour": args.background_colour,
         "seed": args.seed,
         "img_format": args.img_format,
+        "metadata": args.metadata,
         "version_tag": args.version_tag,
     }
 
@@ -288,6 +295,7 @@ def build_fixation_config(args: argparse.Namespace) -> Dict[str, Any]:
         "symbol_colour": args.symbol_colour,
         "seed": args.seed,
         "img_format": args.img_format,
+        "metadata": args.metadata,
         "version_tag": args.version_tag,
     }
 
@@ -317,6 +325,7 @@ def build_custom_config(args: argparse.Namespace) -> Dict[str, Any]:
         "max_rotation": args.max_rotation,
         "version_tag": args.version_tag,
         "img_format": args.img_format,
+        "metadata": args.metadata,
     }
 
 
@@ -333,6 +342,8 @@ def execute(args, config, generator, note: str = "") -> None:
 
     generator.generate_images()
 
+    annotation_paths = generator.write_annotations()
+
     # Record what was run alongside what it produced. The seed comes from the
     # generator because it may have been drawn rather than supplied, and without
     # it a run started without --seed could never be reproduced.
@@ -346,9 +357,12 @@ def execute(args, config, generator, note: str = "") -> None:
 
     report_generation(args, config, generator, note)
 
-    if config_path and not args.quiet:
-        print(f"  Options used were written to {config_path}")
-        print(f"  Reproduce this run with: cogstim run {config_path}")
+    if not args.quiet:
+        for path in annotation_paths:
+            print(f"  Stimulus annotations written to {path}")
+        if config_path:
+            print(f"  Options used were written to {config_path}")
+            print(f"  Reproduce this run with: cogstim run {config_path}")
 
 
 def report_dry_run(args, config, generator, note: str = "") -> None:

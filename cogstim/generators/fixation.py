@@ -77,19 +77,29 @@ class FixationGenerator(BaseGenerator):
         # Helper lambdas
         def draw_dot(colour: str):
             r = self.dot_radius
-            canvas.draw_ellipse([(cx - r, cy - r), (cx + r, cy + r)], fill=colour)
+            canvas.draw_ellipse(
+                [(cx - r, cy - r), (cx + r, cy + r)], fill=colour, label="fixation_dot"
+            )
 
         def draw_disk(colour: str):
             r = self.disk_radius
-            canvas.draw_ellipse([(cx - r, cy - r), (cx + r, cy + r)], fill=colour)
+            canvas.draw_ellipse(
+                [(cx - r, cy - r), (cx + r, cy + r)], fill=colour, label="fixation_disk"
+            )
 
         def draw_cross(colour: str):
             t = self.cross_thickness
             a = self.cross_arm
             # Horizontal bar centered at (cx, cy) with half-length a
-            canvas.draw_rectangle([(cx - a, cy - t // 2), (cx + a, cy + t // 2)], fill=colour)
+            canvas.draw_rectangle(
+                [(cx - a, cy - t // 2), (cx + a, cy + t // 2)],
+                fill=colour, label="fixation_cross_bar",
+            )
             # Vertical bar centered at (cx, cy) with half-length a
-            canvas.draw_rectangle([(cx - t // 2, cy - a), (cx + t // 2, cy + a)], fill=colour)
+            canvas.draw_rectangle(
+                [(cx - t // 2, cy - a), (cx + t // 2, cy + a)],
+                fill=colour, label="fixation_cross_bar",
+            )
 
         # Compose according to type
         s_type = s_type.upper()
@@ -118,4 +128,4 @@ class FixationGenerator(BaseGenerator):
         else:
             raise ValueError(f"Unknown fixation type: {s_type}")
 
-        return canvas.img
+        return canvas

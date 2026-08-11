@@ -44,6 +44,7 @@ class ShapesGenerator(BaseGenerator):
         min_rotation=None,
         max_rotation=None,
         surface_step=SHAPE_DEFAULTS["surface_step"],
+        metadata="none",
     ):
 
         # If random_rotation is True, min_rotation and max_rotation must be provided
@@ -80,6 +81,7 @@ class ShapesGenerator(BaseGenerator):
             'min_rotation': min_rotation,
             'max_rotation': max_rotation,
             'img_format': img_format,
+            'metadata': metadata,
             'version_tag': version_tag,
         }
         super().__init__(config)
@@ -277,11 +279,11 @@ class ShapesGenerator(BaseGenerator):
 
         vertices = self.get_vertices(shape, center, radius, rotation)
         if shape == "circle":
-            canvas.draw_ellipse(vertices, fill=colour)
+            canvas.draw_ellipse(vertices, fill=colour, label=shape)
         else:
-            canvas.draw_polygon(vertices, fill=colour)
+            canvas.draw_polygon(vertices, fill=colour, label=shape)
 
-        return canvas.img, distance, angle, rotation
+        return canvas, distance, angle, rotation
     
     def save_shape_image(self, image, shape, surface, dist_from_center, angle, it, rotation=0, *subdirs):
         """Save a shape image with proper filename construction."""
@@ -292,7 +294,7 @@ class ShapesGenerator(BaseGenerator):
         """One task per (surface, shape/colour) combination, repeated once per set.
 
         Surfaces are swept from min_surface to max_surface in steps of
-        SURFACE_STEP, which is the largest hidden multiplier in the package.
+        surface_step, which sets how many images a set contains.
         """
         return GenerationPlan(
             task_type="shapes",

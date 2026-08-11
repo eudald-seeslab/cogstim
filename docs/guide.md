@@ -47,6 +47,53 @@ These figures change with the options you pass — a wider `--min-surface`/
 `--max-surface` range or more `--angles` increases them. `--dry-run` always
 reports the figure for the arguments you actually gave.
 
+## Annotations and vector output
+
+Every task can describe what it drew, and can write vector images instead of
+pixels. Both come from the same record of the drawing, so they always agree with
+the raster.
+
+### Where each stimulus feature is
+
+`--metadata` exports the position, size and colour of every element:
+
+```bash
+cogstim ans --train-num 10 --metadata csv
+```
+
+This writes `annotations.csv` in the output directory, one row per drawn
+element:
+
+| Column | Meaning |
+|---|---|
+| `image` | File the element belongs to, relative to the output directory |
+| `element_index` | Position in drawing order within that image |
+| `label` | What the element is: `dot`, `stripe`, `circle`, `fixation_disk`, … |
+| `kind` | Primitive drawn: `ellipse`, `rectangle`, `polygon`, `line` |
+| `centre_x`, `centre_y` | Centre of the bounding box, in pixels |
+| `bbox_x_min` … `bbox_y_max` | Bounding box corners, in pixels |
+| `bbox_width`, `bbox_height` | Bounding box size |
+| `radius` | Half the mean bounding-box side; the dot radius for circles |
+| `colour` | Fill colour as a hex code |
+| `vertices` | Every vertex, for rotated or polygonal elements |
+
+Use `--metadata json` for the same data grouped per image, or `--metadata both`.
+
+This is what makes the output usable for training object detectors, and for
+scoring eye-tracking data against known feature positions. Coordinates describe
+the finished image: for `lines`, which draws upright and then rotates, the
+recorded vertices are the rotated ones.
+
+### Vector images
+
+```bash
+cogstim shapes --train-num 10 --img-format svg
+```
+
+SVG is rendered from the recorded shapes rather than traced from pixels, so it
+scales without loss. Pixel-based options such as `--min-dot-radius-px` still
+describe the drawing; they set the coordinates written into the SVG.
+
 ## Table of Contents
 
 - [Shapes – Shape Discrimination](#shapes--shape-discrimination)

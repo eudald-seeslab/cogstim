@@ -36,6 +36,7 @@ Generate two-colour dot array images for approximate number system tasks. Classe
 | `--quiet` | off |  | Suppress all non-error output |
 | `--ratios` | `all` |  | Ratio set: 'easy', 'hard', 'all', or comma-separated fractions (e.g., '1/2,2/3,3/4') (default: all) |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
+| `--surface` | `random equal` | `random`, `equal`, `inverse` | Total dot surface conditions to generate, each applied to every dot-count pair. 'random' draws every dot size independently, so surface grows with number; 'equal' matches the surface of the two arrays; 'inverse' gives the array with fewer dots more surface, by the factor the other has more dots, so surface contradicts number (default: random equal) |
 | `--tasks-copies` | `1` |  | Number of copies of the task distribution (default: 1) |
 | `--tasks-csv` | *(chosen automatically)* |  | Path to a CSV specifying tasks. When set, --ratios and --min/--max-point-num are ignored. |
 | `--test-num` | `0` |  | Number of test SETS to generate, not images (default: 0) |
@@ -181,7 +182,7 @@ Generate N mask images filled with overlapping dots of varying sizes. Useful as 
 
 ## `cogstim match-to-sample`
 
-Generate sample/match image pairs for match-to-sample tasks with area equalization.
+Generate sample/match image pairs for match-to-sample tasks with controlled total surface.
 
 | Option | Default | Choices | Description |
 |---|---|---|---|
@@ -202,6 +203,7 @@ Generate sample/match image pairs for match-to-sample tasks with area equalizati
 | `--quiet` | off |  | Suppress all non-error output |
 | `--ratios` | `all` |  | Ratio set: 'easy', 'hard', 'all', or comma-separated fractions (e.g., '1/2,2/3,3/4') (default: all) |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
+| `--surface` | `random equal` | `random`, `equal`, `inverse` | Total dot surface conditions to generate, each applied to every dot-count pair. 'random' draws every dot size independently, so surface grows with number; 'equal' matches the surface of the two arrays; 'inverse' gives the array with fewer dots more surface, by the factor the other has more dots, so surface contradicts number (default: random equal) |
 | `--tasks-copies` | `1` |  | Number of copies of the task distribution (default: 1) |
 | `--tasks-csv` | *(chosen automatically)* |  | Path to a CSV specifying tasks. When set, --ratios and --min/--max-point-num are ignored. |
 | `--test-num` | `0` |  | Number of test SETS to generate, not images (default: 0) |

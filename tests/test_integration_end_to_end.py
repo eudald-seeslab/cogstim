@@ -5,6 +5,7 @@ real images and checking their properties. Images are saved to test_images/
 directory for manual inspection.
 """
 
+import shutil
 from pathlib import Path
 from PIL import Image
 import numpy as np
@@ -245,8 +246,8 @@ class TestANSImageGeneration:
         generator.generate_images()
 
         output_dir = Path(config["output_dir"])
-        equalized_images = list(output_dir.rglob("*_equalized_separated*.png"))
-        assert len(equalized_images) > 0, "No equalized separated images found"
+        equal_images = list(output_dir.rglob("*_equal_separated*.png"))
+        assert len(equal_images) > 0, "No equal-surface separated images found"
 
 
 class TestMatchToSampleImageGeneration:
@@ -373,6 +374,10 @@ class TestMatchToSampleImageGeneration:
             "img_format": "png",
         }
         
+        # The directory persists between runs; files from an earlier run with
+        # other trial numbering would otherwise be counted alongside this one's.
+        shutil.rmtree(config["output_dir"], ignore_errors=True)
+
         generator = MatchToSampleGenerator(config)
         generator.generate_images()
         

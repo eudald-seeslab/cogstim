@@ -46,6 +46,21 @@ The per-module `parse_args`/`main` functions predate the unified `cogstim`
 command. They still use the old option names and lack every option added since,
 including `--dry-run`, `--metadata` and the run configuration.
 
+## Removed
+
+These were replaced outright rather than aliased, so old inputs fail with a
+message naming the replacement.
+
+| Removed | Use instead |
+|---|---|
+| `equalized` column in `--tasks-csv` files (`TRUE`/`FALSE`) | `surface` column with `equal`/`random`, or `inverse` |
+| `_equalized` filename suffix in `ans` output | `_equal`; `_inverse` for the new condition |
+| `equalized` / `equalize` arguments of `DotsANSGenerator` and `MatchToSampleGenerator` methods | `surface`, one of `random`, `equal`, `inverse` |
+
+The boolean could only say whether the total dot surface was matched. The
+surface condition adds a third case, `inverse`, in which the array with fewer
+dots covers more surface; see the [guide](docs/guide.md#surface-conditions).
+
 ## Not deprecated, but internal
 
 `GENERAL_CONFIG` in `cogstim.generators.dots_ans` and

@@ -77,7 +77,17 @@ class DotsANSGenerator(BaseGenerator):
             )
         return colour_1, colour_2
 
-    def create_image(self, n1, n2, equalized):
+    def create_image(self, n1, n2, surface):
+        """Place and draw n1 dots of colour 1 and n2 of colour 2.
+
+        Args:
+            n1: Dots of colour 1.
+            n2: Dots of colour 2; 0 in one-colour mode.
+            surface: One of SURFACE_CONDITIONS. 'random' leaves the drawn radii
+                as they are, 'equal' matches the total surface of the two
+                colours, and 'inverse' makes the colour with fewer dots cover
+                more surface, by the factor the other has more dots.
+        """
         colour_1, colour_2 = self.dot_colours
 
         number_points = DotsCore(
@@ -105,22 +115,27 @@ class DotsANSGenerator(BaseGenerator):
             point_array = number_points.design_n_points(n1, "colour_1")
             point_array = number_points.design_n_points(n2, "colour_2", point_array=point_array)
 
-        if equalized and not self.config["ONE_COLOUR"]:
-            point_array = number_points.equalize_areas(point_array)
+        if not self.config["ONE_COLOUR"]:
+            if surface == "equal":
+                point_array = number_points.equalize_areas(point_array)
+            elif surface == "inverse":
+                point_array = number_points.set_area_ratio(point_array, n2 / n1)
+            elif surface != "random":
+                raise ValueError(f"Unknown surface condition '{surface}'")
         return number_points.draw_points(point_array)
 
-    def create_and_save(self, n1, n2, equalized, phase, tag=""):
-        eq = "_equalized" if equalized else ""
+    def create_and_save(self, n1, n2, surface, phase, tag=""):
+        condition = "" if surface == "random" else f"_{surface}"
         v_tag = f"_{self.config['version_tag']}" if self.config['version_tag'] else ""
         layout = self.config.get("layout", "mixed")
         sep = "_separated" if layout == "separated" else ""
         
-        filename = f"img_{n1}_{n2}_{tag}{eq}{sep}{v_tag}"
+        filename = f"img_{n1}_{n2}_{tag}{condition}{sep}{v_tag}"
 
         attempts = 0
         while attempts < self.config["attempts_limit"]:
             try:
-                self.create_and_save_once(filename, n1, n2, equalized, phase)
+                self.create_and_save_once(filename, n1, n2, surface, phase)
                 break
             except PointLayoutError as e:
                 logging.debug(f"Failed to create image {filename} because '{e}' Retrying.")
@@ -133,8 +148,8 @@ class DotsANSGenerator(BaseGenerator):
                         Stopping."""
                     )
 
-    def create_and_save_once(self, filename, n1, n2, equalized, phase):
-        img = self.create_image(n1, n2, equalized)
+    def create_and_save_once(self, filename, n1, n2, surface, phase):
+        img = self.create_image(n1, n2, surface)
         colour = self.config["colour_1"] if n1 > n2 else self.config["colour_2"]
         
         image_name = self.save_image(img, filename, phase, colour)
@@ -155,7 +170,7 @@ class DotsANSGenerator(BaseGenerator):
         return plan.compute_positions()
 
     def build_plan(self, phase, num_sets):
-        """Four tasks per (n1, n2) pair: both colour orders, equalized and not.
+        """Both colour orders of each (n1, n2) pair, once per surface condition.
 
         With --tasks-csv the pairs come from the file instead of from the ratio
         sweep, and each set is one copy of that distribution.
@@ -169,7 +184,8 @@ class DotsANSGenerator(BaseGenerator):
             min_point_num=self.config["min_point_num"],
             max_point_num=self.config["max_point_num"],
             num_repeats=num_sets,
-            ratios=self.ratios
+            ratios=self.ratios,
+            surface_conditions=self.config.get("surface_conditions"),
         )
         if tasks_csv:
             copies = max(1, num_sets) * tasks_copies
@@ -199,14 +215,14 @@ class DotsANSGenerator(BaseGenerator):
                 if task.task_type == "one_colour":
                     n1 = task.params.get('n')
                     n2 = 0
-                    equalized = False
+                    surface = "random"
                 else:
                     n1 = task.params.get('n1')
                     n2 = task.params.get('n2', 0)
-                    equalized = task.params.get('equalize', False)
+                    surface = task.params.get('surface', "random")
                 
                 rep = task.rep
                 
-                self.create_and_save(n1, n2, equalized=equalized, phase=phase, tag=rep)
+                self.create_and_save(n1, n2, surface=surface, phase=phase, tag=rep)
             
             self.write_summary_if_enabled(plan, phase)

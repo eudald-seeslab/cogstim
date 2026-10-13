@@ -38,7 +38,7 @@ Generate approximate number system (ANS) dot arrays with easy discrimination rat
 cogstim ans --ratios easy
 ```
 
-**What it produces:** 10 training sets with two-colour dot arrays (yellow and blue), organised by the dominant colour. Half of the images have equalized total surfaces; the other half use random dot sizes.
+**What it produces:** 10 training sets with two-colour dot arrays (yellow and blue), organised by the dominant colour. Half of the images have equal total surfaces for the two colours; the other half use random dot sizes.
 
 ## Key Tips
 

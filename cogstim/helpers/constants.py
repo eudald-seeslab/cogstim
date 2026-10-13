@@ -101,6 +101,15 @@ DOT_DEFAULTS = {
 # 1-4 dots, against 5% with 4-7. Pairs below this count are warned about.
 SMALL_NUMEROSITY = 4
 
+# How the total dot surface of the two arrays in a pair relates to their counts.
+# 'random' draws every radius independently, so surface grows with number;
+# 'equal' matches the two surfaces; 'inverse' gives the array with fewer dots
+# more surface, by the factor the other has more dots. Gebuis & Reynvoet (2011)
+# argue that a set needs trials where a cue contradicts number as well as
+# trials where it agrees, or a participant can answer from the cue alone.
+SURFACE_CONDITIONS = ("random", "equal", "inverse")
+DEFAULT_SURFACE_CONDITIONS = ("random", "equal")
+
 # Shape generation defaults
 SHAPE_DEFAULTS = {
     "min_surface": 10000,

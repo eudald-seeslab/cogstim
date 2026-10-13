@@ -8,7 +8,11 @@ replacing the previously duplicated logic in different generators.
 import csv
 from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
-from cogstim.helpers.constants import SMALL_NUMEROSITY
+from cogstim.helpers.constants import (
+    SMALL_NUMEROSITY,
+    SURFACE_CONDITIONS,
+    DEFAULT_SURFACE_CONDITIONS,
+)
 
 
 class GenerationTask:
@@ -22,7 +26,7 @@ class GenerationTask:
             task_type: Type of task ('ans', 'mts', 'one_colour', 'shapes', 'lines')
             rep: Repetition/iteration number
             **params: Task-specific parameters:
-                - For ans/mts: n1, n2, equalize
+                - For ans/mts: n1, n2, surface
                 - For one_colour: n
                 - For shapes: shape, color, surface
                 - For lines: angle, num_stripes
@@ -61,6 +65,7 @@ class GenerationPlan:
                  max_point_num: int = 0, 
                  num_repeats: int = 1,
                  ratios: Optional[List[float]] = None,
+                 surface_conditions: Optional[List[str]] = None,
                  # Shapes-specific params
                  shapes: Optional[List[str]] = None,
                  colors: Optional[List[str]] = None,
@@ -80,6 +85,8 @@ class GenerationPlan:
             max_point_num: Maximum number of points (for ans/mts/one_colour)
             num_repeats: Number of repetitions per combination
             ratios: List of ratios for ANS/MTS tasks
+            surface_conditions: Surface conditions each ANS/MTS pair is generated
+                in, from SURFACE_CONDITIONS (default: random and equal)
             shapes: List of shape names (for shapes tasks)
             colors: List of color names (for shapes tasks)
             min_surface: Minimum surface area (for shapes tasks)
@@ -94,6 +101,10 @@ class GenerationPlan:
         self.max_point_num = max_point_num
         self.num_repeats = num_repeats
         self.ratios = ratios if ratios is not None else []
+        self.surface_conditions = (
+            list(surface_conditions) if surface_conditions is not None
+            else list(DEFAULT_SURFACE_CONDITIONS)
+        )
         # Shapes params
         self.shapes = shapes or []
         self.colors = colors or []
@@ -135,46 +146,37 @@ class GenerationPlan:
     def expand_ans_tasks(self, n: int, m: int, rep: int) -> None:
         """
         Expand ANS two-colour tasks for a given (n, m) pair.
-        
-        Generates 4 variants:
-        - (n, m) non-equalized
-        - (m, n) non-equalized (order swap)
-        - (n, m) equalized
-        - (m, n) equalized (order swap)
-        
+
+        Both colour orders, (n, m) and (m, n), once per surface condition:
+        four tasks with the default random and equal conditions.
+
         Args:
             n: First point count
             m: Second point count
             rep: Repetition number
         """
-        # Non-equalized orders
-        self.tasks.append(GenerationTask("ans", rep, n1=n, n2=m, equalize=False))
-        self.tasks.append(GenerationTask("ans", rep, n1=m, n2=n, equalize=False))
-        # Equalized orders
-        self.tasks.append(GenerationTask("ans", rep, n1=n, n2=m, equalize=True))
-        self.tasks.append(GenerationTask("ans", rep, n1=m, n2=n, equalize=True))
+        for surface in self.surface_conditions:
+            self.tasks.append(GenerationTask("ans", rep, n1=n, n2=m, surface=surface))
+            self.tasks.append(GenerationTask("ans", rep, n1=m, n2=n, surface=surface))
     
     def expand_mts_tasks(self, n: int, m: int, rep: int) -> None:
         """
         Expand match-to-sample tasks for a given (n, m) pair.
-        
-        Generates 8 variants (balanced 50/50 match vs non-match):
-        - (n, m) non-equalized, (m, n) non-equalized, (n, m) equalized, (m, n) equalized (4 different)
-        - (n, n) equalized, (n, n) non-equalized, (m, m) equalized, (m, m) non-equalized (4 equal)
-        
+
+        Per surface condition, four tasks balanced 50/50 match against
+        non-match: (n, m) and (m, n), then (n, n) and (m, m). That is eight
+        tasks with the default random and equal conditions.
+
         Args:
             n: First point count
             m: Second point count
             rep: Repetition number
         """
-        self.tasks.append(GenerationTask("mts", rep, n1=n, n2=m, equalize=False))
-        self.tasks.append(GenerationTask("mts", rep, n1=m, n2=n, equalize=False))
-        self.tasks.append(GenerationTask("mts", rep, n1=n, n2=m, equalize=True))
-        self.tasks.append(GenerationTask("mts", rep, n1=m, n2=n, equalize=True))
-        self.tasks.append(GenerationTask("mts", rep, n1=n, n2=n, equalize=True))
-        self.tasks.append(GenerationTask("mts", rep, n1=n, n2=n, equalize=False))
-        self.tasks.append(GenerationTask("mts", rep, n1=m, n2=m, equalize=True))
-        self.tasks.append(GenerationTask("mts", rep, n1=m, n2=m, equalize=False))
+        for surface in self.surface_conditions:
+            self.tasks.append(GenerationTask("mts", rep, n1=n, n2=m, surface=surface))
+            self.tasks.append(GenerationTask("mts", rep, n1=m, n2=n, surface=surface))
+            self.tasks.append(GenerationTask("mts", rep, n1=n, n2=n, surface=surface))
+            self.tasks.append(GenerationTask("mts", rep, n1=m, n2=m, surface=surface))
     
     def expand_one_colour_tasks(self, n: int, rep: int) -> None:
         """
@@ -273,8 +275,8 @@ class GenerationPlan:
         """
         Build MTS task list from a CSV file.
 
-        CSV must have columns: sample, match, equalized.
-        Each row defines one (n1, n2, equalize) task.
+        CSV must have columns: sample, match, surface.
+        Each row defines one (n1, n2, surface) task.
         num_copies repeats the entire distribution that many times (rep 0..num_copies-1).
 
         Args:
@@ -290,16 +292,16 @@ class GenerationPlan:
         self.tasks = []
         task_id = 0
         for copy_idx in range(num_copies):
-            for n1, n2, equalize in tasks_spec:
+            for n1, n2, surface in tasks_spec:
                 # Use a unique rep per emitted task so repeated CSV rows do not
-                # overwrite each other when filenames include n1/n2/equalized/rep.
+                # overwrite each other when filenames include n1/n2/surface/rep.
                 self.tasks.append(
                     GenerationTask(
                         "mts",
                         task_id,
                         n1=n1,
                         n2=n2,
-                        equalize=equalize,
+                        surface=surface,
                         copy_idx=copy_idx,
                     )
                 )
@@ -312,8 +314,8 @@ class GenerationPlan:
         """
         Build ANS task list from a CSV file.
 
-        CSV must have columns: n1, n2, equalized.
-        Each row defines one (n1, n2, equalize) task.
+        CSV must have columns: n1, n2, surface.
+        Each row defines one (n1, n2, surface) task.
         num_copies repeats the entire distribution that many times.
 
         Args:
@@ -329,7 +331,7 @@ class GenerationPlan:
         self.tasks = []
         task_id = 0
         for copy_idx in range(num_copies):
-            for n1, n2, equalize in tasks_spec:
+            for n1, n2, surface in tasks_spec:
                 task_type = self.task_type
                 if task_type == "one_colour":
                     self.tasks.append(
@@ -347,7 +349,7 @@ class GenerationPlan:
                             task_id,
                             n1=n1,
                             n2=n2,
-                            equalize=equalize,
+                            surface=surface,
                             copy_idx=copy_idx,
                         )
                     )
@@ -421,60 +423,66 @@ class GenerationPlan:
         print(f"Summary written to: {target_path}")
 
 
-def load_mts_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, bool]]:
+def _load_tasks_csv(csv_path, first_column: str, second_column: str) -> List[Tuple[int, int, str]]:
+    """Read a task CSV with two count columns and an optional surface column.
+
+    The surface column takes a value from SURFACE_CONDITIONS, in any case. A
+    missing column or an empty cell means random. The column replaced the
+    earlier boolean ``equalized`` column, which is refused rather than guessed
+    at: its TRUE is now ``equal`` and its FALSE is ``random``.
+    """
+    path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Tasks CSV not found: {path}")
+
+    tasks = []
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        if reader.fieldnames and "equalized" in reader.fieldnames:
+            raise ValueError(
+                f"{path}: the 'equalized' column was replaced by 'surface', with "
+                f"values {', '.join(SURFACE_CONDITIONS)}. Write 'equal' where it "
+                "said TRUE and 'random' where it said FALSE."
+            )
+        for line, row in enumerate(reader, start=2):
+            surface = str(row.get("surface") or "random").strip().lower()
+            if surface not in SURFACE_CONDITIONS:
+                raise ValueError(
+                    f"{path}, line {line}: surface must be one of "
+                    f"{', '.join(SURFACE_CONDITIONS)}, not '{row['surface']}'"
+                )
+            tasks.append((int(row[first_column]), int(row[second_column]), surface))
+    return tasks
+
+
+def load_mts_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, str]]:
     """
     Load match-to-sample task specifications from a CSV file.
 
-    Expected columns: sample, match, equalized
+    Expected columns: sample, match, surface
     - sample: number of dots in sample image
     - match: number of dots in match image
-    - equalized: TRUE/FALSE (case-insensitive)
+    - surface: random, equal or inverse (case-insensitive; random when absent)
 
     Returns:
-        List of (n1, n2, equalize) tuples.
+        List of (n1, n2, surface) tuples.
     """
-    path = Path(csv_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Tasks CSV not found: {path}")
-
-    tasks = []
-    with open(path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            sample = int(row["sample"])
-            match = int(row["match"])
-            eq_val = str(row.get("equalized", "FALSE")).strip().upper()
-            equalize = eq_val in ("TRUE", "1", "YES")
-            tasks.append((sample, match, equalize))
-    return tasks
+    return _load_tasks_csv(csv_path, "sample", "match")
 
 
-def load_ans_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, bool]]:
+def load_ans_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, str]]:
     """
     Load ANS task specifications from a CSV file.
 
-    Expected columns: n1, n2, equalized
+    Expected columns: n1, n2, surface
     - n1: number of dots for colour_1
     - n2: number of dots for colour_2 (ignored for one_colour tasks)
-    - equalized: TRUE/FALSE (case-insensitive)
+    - surface: random, equal or inverse (case-insensitive; random when absent)
 
     Returns:
-        List of (n1, n2, equalize) tuples.
+        List of (n1, n2, surface) tuples.
     """
-    path = Path(csv_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Tasks CSV not found: {path}")
-
-    tasks = []
-    with open(path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            n1 = int(row["n1"])
-            n2 = int(row["n2"])
-            eq_val = str(row.get("equalized", "FALSE")).strip().upper()
-            equalize = eq_val in ("TRUE", "1", "YES")
-            tasks.append((n1, n2, equalize))
-    return tasks
+    return _load_tasks_csv(csv_path, "n1", "n2")
 
 
 def small_numerosity_warning(plan: "GenerationPlan") -> Optional[str]:

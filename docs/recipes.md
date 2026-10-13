@@ -36,7 +36,7 @@ images/shapes/
 
 ## Recipe 2: ANS Easy Ratios – Small Pilot Set
 
-**Goal:** Generate a small approximate number system dataset with easy discrimination ratios. Half the images have equalized total surface (controlling for cumulative area); half use random dot sizes.
+**Goal:** Generate a small approximate number system dataset with easy discrimination ratios. Half the images have equal total surface for the two colours (controlling for cumulative area); half use random dot sizes.
 
 ```bash
 cogstim ans --ratios easy --train-num 20 --test-num 10 --seed 1234
@@ -53,7 +53,7 @@ images/ans/
       └── blue/
 ```
 
-**Note:** Each image set produces ~75 images covering different ratios and quantities. Filenames include `_equalized` for surface-controlled images.
+**Note:** Each image set produces ~75 images covering different ratios and quantities. Filenames include `_equal` for images whose two colours cover the same surface.
 
 **Tip**: You can specify custom ratios for precise control. For example, `--ratios 1/2,3/4` generates only 1:2 and 3:4 ratios.
 
@@ -86,7 +86,7 @@ images/one-colour/
 
 ## Recipe 4: Match-to-Sample Pairs with Controlled Surface
 
-**Goal:** Generate sample/match dot array pairs for enumeration tasks. Half equalized for surface area; half with random dot sizes. Uses sample/match naming convention.
+**Goal:** Generate sample/match dot array pairs for enumeration tasks. Half with equal total surface; half with random dot sizes. Uses sample/match naming convention.
 
 ```bash
 cogstim match-to-sample \
@@ -110,7 +110,7 @@ images/match_to_sample/
       └── ... (similar structure)
 ```
 
-**Note:** Each file is named `mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png`; `a` = match, `b` = sample; `r` = random, `e` = equalized.
+**Note:** Each file is named `mts_{trial_id:05d}_{r|e|i}_{a|b}_{n_dots}[_version].png`; `a` = match, `b` = sample; `r` = random, `e` = equal surface, `i` = inverse surface.
 
 ---
 

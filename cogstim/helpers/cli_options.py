@@ -31,6 +31,8 @@ from cogstim.helpers.constants import (
     MTS_DEFAULTS,
     MASK_DEFAULTS,
     CLI_DEFAULTS,
+    SURFACE_CONDITIONS,
+    DEFAULT_SURFACE_CONDITIONS,
 )
 
 # The colours a stimulus or background may take. Only these names are accepted;
@@ -265,6 +267,17 @@ TASKS_CSV = [
                  "--min/--max-point-num are ignored.")),
     Option("--tasks-copies", type=int, default=1, metavar="N",
            help="Number of copies of the task distribution (default: 1)"),
+]
+
+SURFACE = [
+    Option("--surface", nargs="+", choices=SURFACE_CONDITIONS,
+           default=list(DEFAULT_SURFACE_CONDITIONS),
+           help=("Total dot surface conditions to generate, each applied to every "
+                 "dot-count pair. 'random' draws every dot size independently, so "
+                 "surface grows with number; 'equal' matches the surface of the two "
+                 "arrays; 'inverse' gives the array with fewer dots more surface, by "
+                 "the factor the other has more dots, so surface contradicts number "
+                 "(default: random equal)")),
 ]
 
 VISUAL_PROPERTIES = [

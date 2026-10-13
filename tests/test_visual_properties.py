@@ -207,16 +207,16 @@ class TestExportDescribesTheImages:
             n1, n2 = (int(part) for part in Path(row["image_1"]).name.split("_")[1:3])
             assert (int(row["n_1"]), int(row["n_2"])) == (n1, n2)
 
-    def test_equalized_ans_images_report_matched_surfaces(self, tmp_path):
-        """The export must reflect the equalization the filename claims."""
+    def test_equal_surface_images_report_matched_surfaces(self, tmp_path):
+        """The export must reflect the surface condition the filename claims."""
         run_cli(*ANS_ARGS, "--visual-properties", "--output-dir", tmp_path)
 
         pairs = read_csv(tmp_path / "visual_property_pairs.csv")
-        equalized = [row for row in pairs if "_equalized" in row["image_1"]]
-        random_sizes = [row for row in pairs if "_equalized" not in row["image_1"]]
-        assert equalized and random_sizes
+        equal = [row for row in pairs if "_equal" in row["image_1"]]
+        random_sizes = [row for row in pairs if "_equal" not in row["image_1"]]
+        assert equal and random_sizes
 
-        for row in equalized:
+        for row in equal:
             assert float(row["total_surface_px_ratio"]) == pytest.approx(1, abs=0.01)
         # With random sizes, more dots means more surface: the cue is congruent.
         assert all(float(row["total_surface_px_diff"]) > 0 for row in random_sizes)
@@ -286,7 +286,7 @@ class TestSmallNumerosityWarning:
     def test_matching_pairs_have_no_distance_to_confound(self, tmp_path):
         """A 2-vs-2 match trial compares nothing numerically."""
         tasks = tmp_path / "tasks.csv"
-        tasks.write_text("sample,match,equalized\n2,2,FALSE\n2,3,FALSE\n", encoding="utf-8")
+        tasks.write_text("sample,match,surface\n2,2,random\n2,3,random\n", encoding="utf-8")
         plan = GenerationPlan(task_type="mts", min_point_num=1, max_point_num=3,
                               num_repeats=1, ratios=[])
         plan.build_from_mts_csv(tasks, num_copies=1)

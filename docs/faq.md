@@ -115,16 +115,17 @@ cogstim ans --img-size 1024 --train-num 10 --test-num 5
 
 ---
 
-### Q: Why do some ANS/match-to-sample images say "equalized" and others don't?
+### Q: Why do some ANS/match-to-sample filenames end in `_equal` or `_inverse`?
 
-**A:** For ANS and match-to-sample tasks, CogStim generates two types of images:
+**A:** The suffix is the surface condition of the image, which says how the total dot surface of the two arrays relates to their counts:
 
-1. **Equalized** (`*_equalized`): Total surface area is controlled between the two colours/quantities. This removes cumulative surface as a confounding cue.
-2. **Non-equalized** (no suffix): Dot sizes are random, so surface area varies naturally.
+1. **Random** (no suffix; `r` in match-to-sample names): dot sizes are drawn independently, so the array with more dots usually covers more surface.
+2. **Equal** (`_equal`; `e`): both arrays cover the same total surface, so surface says nothing about number.
+3. **Inverse** (`_inverse`; `i`): the array with fewer dots covers more surface, so surface contradicts number.
 
-This split allows you to test whether participants rely on surface area cues. Typically, half the images are equalized and half are not.
+By default half the images are random and half equal; `--surface random equal inverse` adds the third condition so that, over the whole set, surface does not predict number.
 
-**See also:** [User Guide – ANS](guide.md#note-on-equalization) for details on the equalization strategy.
+**See also:** [User Guide – ANS](guide.md#surface-conditions) for details.
 
 ---
 

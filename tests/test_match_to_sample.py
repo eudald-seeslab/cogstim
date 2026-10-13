@@ -13,6 +13,7 @@ from cogstim.helpers.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS
 from cogstim.helpers.planner import GenerationPlan, load_mts_tasks_from_csv
 from cogstim.helpers.dots_core import DotsCore
 from cogstim.helpers.mts_geometry import equalize_pair as geometry_equalize_pair
+from cogstim.helpers.constants import SURFACE_CONDITIONS
 from cogstim.generators.match_to_sample import save_image_pair, build_basename
 
 
@@ -55,14 +56,14 @@ class TestMatchToSampleGenerator:
     def test_load_mts_tasks_from_csv(self, tmp_path):
         """Test loading MTS tasks from CSV."""
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("sample,match,equalized\n4,4,TRUE\n2,3,FALSE\n5,5,TRUE\n")
+        csv_path.write_text("sample,match,surface\n4,4,equal\n2,3,random\n5,5,inverse\n")
         tasks = load_mts_tasks_from_csv(csv_path)
-        assert tasks == [(4, 4, True), (2, 3, False), (5, 5, True)]
+        assert tasks == [(4, 4, "equal"), (2, 3, "random"), (5, 5, "inverse")]
 
     def test_build_from_mts_csv(self, tmp_path):
         """Test building plan from CSV with num_copies."""
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("sample,match,equalized\n3,4,TRUE\n")
+        csv_path.write_text("sample,match,surface\n3,4,equal\n")
         plan = GenerationPlan("mts", 1, 10, 1, ratios=[]).build_from_mts_csv(
             csv_path, num_copies=3
         )
@@ -70,13 +71,13 @@ class TestMatchToSampleGenerator:
         for rep, task in enumerate(plan.tasks):
             assert task.params["n1"] == 3
             assert task.params["n2"] == 4
-            assert task.params["equalize"] is True
+            assert task.params["surface"] == "equal"
             assert task.rep == rep
 
     def test_build_from_mts_csv_duplicate_rows_keep_unique_rep(self, tmp_path):
         """Duplicate CSV rows should not collide on output filenames."""
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("sample,match,equalized\n6,6,TRUE\n6,6,TRUE\n")
+        csv_path.write_text("sample,match,surface\n6,6,equal\n6,6,equal\n")
 
         plan = GenerationPlan("mts", 1, 10, 1, ratios=[]).build_from_mts_csv(
             csv_path, num_copies=1
@@ -85,10 +86,10 @@ class TestMatchToSampleGenerator:
         assert len(plan.tasks) == 2
         assert plan.tasks[0].params["n1"] == 6
         assert plan.tasks[0].params["n2"] == 6
-        assert plan.tasks[0].params["equalize"] is True
+        assert plan.tasks[0].params["surface"] == "equal"
         assert plan.tasks[1].params["n1"] == 6
         assert plan.tasks[1].params["n2"] == 6
-        assert plan.tasks[1].params["equalize"] is True
+        assert plan.tasks[1].params["surface"] == "equal"
         assert plan.tasks[0].rep != plan.tasks[1].rep
 
     def test_get_positions(self):
@@ -115,24 +116,24 @@ class TestMatchToSampleGenerator:
             generator.generate_images()
             assert mock_create.call_count > 0
 
-    def test_create_and_save_equalized_pair(self):
-        """Test create_and_save(trial_id, n1, n2, equalize, phase) for equalized pairs."""
+    def test_create_and_save_equal_surface_pair(self):
+        """Test create_and_save(trial_id, n1, n2, surface, phase) for equal-surface pairs."""
         with patch('cogstim.generators.match_to_sample.os.makedirs'), \
              patch.object(MatchToSampleGenerator, 'create_image_pair') as mock_create, \
              patch.object(MatchToSampleGenerator, 'save_image_pair') as mock_save:
             generator = MatchToSampleGenerator(self.config)
-            generator.create_and_save(3, 4, 5, True, "test_tag")
-            mock_create.assert_called_once_with(4, 5, True)
+            generator.create_and_save(3, 4, 5, "equal", "test_tag")
+            mock_create.assert_called_once_with(4, 5, "equal")
             mock_save.assert_called_once()
 
     def test_create_and_save_random_pair(self):
-        """Test create_and_save(trial_id, n1, n2, equalize, phase) for random pairs."""
+        """Test create_and_save(trial_id, n1, n2, surface, phase) for random pairs."""
         with patch('cogstim.generators.match_to_sample.os.makedirs'), \
              patch.object(MatchToSampleGenerator, 'create_image_pair') as mock_create, \
              patch.object(MatchToSampleGenerator, 'save_image_pair') as mock_save:
             generator = MatchToSampleGenerator(self.config)
-            generator.create_and_save(3, 4, 5, False, "test_tag")
-            mock_create.assert_called_once_with(4, 5, False)
+            generator.create_and_save(3, 4, 5, "random", "test_tag")
+            mock_create.assert_called_once_with(4, 5, "random")
             mock_save.assert_called_once()
 
 
@@ -254,7 +255,7 @@ class TestHelperFunctions:
         mock_generator = MagicMock()
         mock_generator.save_image = MagicMock()
 
-        save_image_pair(mock_generator, s_np, s_points, m_np, m_points, 0, 5, 3, False, "train")
+        save_image_pair(mock_generator, s_np, s_points, m_np, m_points, 0, 5, 3, "random", "train")
         s_np.draw_points.assert_called_once_with(s_points)
         m_np.draw_points.assert_called_once_with(m_points)
 
@@ -266,17 +267,20 @@ class TestHelperFunctions:
         assert calls[1][0][2] == "train"
 
     def test_build_basename(self):
-        """Test build_basename function (trial_id, role, n_dots, equalized, version_tag)."""
-        result = build_basename(0, "a", 5, False)
+        """Test build_basename function (trial_id, role, n_dots, surface, version_tag)."""
+        result = build_basename(0, "a", 5, "random")
         assert result == "mts_00000_r_a_5"
 
-        result = build_basename(1, "b", 3, True)
+        result = build_basename(1, "b", 3, "equal")
         assert result == "mts_00001_e_b_3"
 
-        result = build_basename(99, "a", 2, False, "v1")
+        result = build_basename(2, "a", 7, "inverse")
+        assert result == "mts_00002_i_a_7"
+
+        result = build_basename(99, "a", 2, "random", "v1")
         assert result == "mts_00099_r_a_2_v1"
 
-        result = build_basename(0, "b", 4, True, "v2")
+        result = build_basename(0, "b", 4, "equal", "v2")
         assert result == "mts_00000_e_b_4_v2"
 
 
@@ -363,7 +367,7 @@ class TestMissingPairsAreReported:
         rows = list(csv.DictReader(report.open(encoding="utf-8")))
         assert len(rows) == len(gen.failed_pairs)
         # Written in the --tasks-csv format so the pairs can be regenerated directly.
-        assert set(rows[0]) >= {"sample", "match", "equalized"}
+        assert set(rows[0]) >= {"sample", "match", "surface"}
 
     def test_failure_report_is_accepted_by_tasks_csv(self, tmp_path):
         """The failure report can be fed straight back in to regenerate the gaps."""
@@ -374,9 +378,9 @@ class TestMissingPairsAreReported:
         report = Path(tmp_path) / "failed_pairs.csv"
         tasks = load_mts_tasks_from_csv(report)
         assert len(tasks) == len(gen.failed_pairs)
-        for n1, n2, equalize in tasks:
+        for n1, n2, surface in tasks:
             assert isinstance(n1, int) and isinstance(n2, int)
-            assert isinstance(equalize, bool)
+            assert surface in SURFACE_CONDITIONS
 
     def test_retries_before_giving_up(self, tmp_path):
         """An unlucky layout is retried rather than dropped."""
@@ -391,5 +395,5 @@ class TestMissingPairsAreReported:
             return real(*args, **kwargs)
 
         with patch.object(gen, "create_image_pair", side_effect=fail_once_then_succeed):
-            assert gen.create_and_save(0, 2, 3, True, "train") is True
+            assert gen.create_and_save(0, 2, 3, "equal", "train") is True
         assert calls["n"] == 2, "Should have retried exactly once after the failure"

@@ -8,7 +8,7 @@ This guide provides detailed documentation for each CogStim task, including rele
 
 A set is one sweep of every condition the paradigm defines. For `shapes`, that
 means every shape at every surface area in the configured range; for `ans`, every
-valid (n1, n2) dot-count pair in both colour orders, equalized and not. So a
+valid (n1, n2) dot-count pair in both colour orders and every surface condition. So a
 single set is many images, and asking for 10 training sets produces far more than
 10 files.
 
@@ -36,7 +36,7 @@ Images per set for the default options of each task:
 | `shapes` | 200 | 100 surface areas × 2 shapes |
 | `colours` | 200 | 100 surface areas × 2 colours |
 | `custom` | 100 per shape-colour pair | 100 surface areas × every shape × every colour |
-| `ans` | 112 | 28 dot-count pairs × 2 colour orders × {equalized, not} |
+| `ans` | 112 | 28 dot-count pairs × 2 colour orders × 2 surface conditions |
 | `match-to-sample` | 192 | 12 dot-count pairs × 8 variants × 2 images per pair |
 | `one-colour` | 10 | one image per dot count |
 | `lines` | 36 | 4 angles × 9 stripe counts |
@@ -284,7 +284,7 @@ Generate two-colour dot arrays for approximate number system tasks. Use this for
 
 **Relation to Panamath.** This task implements the stimulus side of the two-colour dot
 comparison used by Panamath (Halberda et al., 2008): intermixed yellow and blue dots at
-controlled numerical ratios, with total dot surface optionally equalized between the
+controlled numerical ratios, with total dot surface optionally matched or inverted between the
 colours so that cumulative area cannot substitute for numerosity. If you have seen this
 paradigm referred to as a Panamath task, this is the subcommand you want.
 
@@ -299,7 +299,7 @@ your own experiment software.
 cogstim ans --train-num 10 --test-num 5
 ```
 
-**What it produces:** 15 sets = **1680 images**, at 112 images per set (28 dot-count pairs x 2 colour orders x {equalized, not}). Yellow and blue dots, organised by dominant colour. Half have equalized total dot surface; half have random dot sizes.
+**What it produces:** 15 sets = **1680 images**, at 112 images per set (28 dot-count pairs x 2 colour orders x {random, equal} surface). Yellow and blue dots, organised by dominant colour. Half have equal total dot surface for the two colours; half have random dot sizes.
 
 ### Relevant Options
 
@@ -309,22 +309,37 @@ cogstim ans --train-num 10 --test-num 5
   - **all**: Both easy and hard ratios combined
   - **Custom**: Comma-separated fractions, e.g., `--ratios 1/2,2/3,3/4` (see Advanced Tweak below)
 - `--min-dot-num` / `--max-dot-num` – Range of dots per colour (defaults: 1–10)
+- `--surface` – Surface conditions to generate: `random`, `equal`, `inverse` (default: `random equal`); see [Surface conditions](#surface-conditions)
 - `--dot-colour-1` / `--dot-colour-2` – Dot colours (defaults: `yellow`, `blue`)
 - `--min-dot-radius-px` / `--max-dot-radius-px` – Dot radius range in pixels (defaults: 20–30)
 - `--attempts-limit` – Maximum placement attempts before giving up (default: 10000)
 - `--seed` – Random seed for reproducibility
 
-### Note on Equalization
+### Surface conditions
 
-By default, half the images equalize total surface area between the two colours,
-controlling for cumulative surface as a cue; the other half use random dot sizes.
-Filenames carry `_equalized` or no suffix accordingly.
+Every dot-count pair is generated once per surface condition, which says how the total
+dot surface of the two colours relates to their counts:
 
-To choose a different proportion, or to generate only one kind, specify the stimuli
-directly with `--tasks-csv` — see below.
+| Condition | Filename suffix | What it does |
+|---|---|---|
+| `random` | none | Every radius is drawn independently, so the colour with more dots usually covers more surface |
+| `equal` | `_equal` | The two colours cover the same total surface, so surface says nothing about number |
+| `inverse` | `_inverse` | The colour with fewer dots covers more surface, by the factor the other has more dots: with 4 vs 8 dots, the 4 cover twice the surface of the 8 |
 
-Each image is generated from an independent random layout, including the equalized and
-non-equalized versions of the same dot counts. This is deliberate: reusing a spatial
+The default, `--surface random equal`, gives half the images of each. Gebuis and Reynvoet
+(2011) note that such a set never contradicts number: a participant answering from
+surface alone is right in the random images and at chance in the equal ones. Adding
+`inverse` (`--surface random equal inverse`) makes surface useless over the set as a
+whole. The `equal` condition grows the colour with less surface; `inverse` rescales both
+colours, the fewer up and the more down by the same factor, so dot sizes leave the
+configured radius range. Which cues each condition leaves congruent with number can be
+read off the [visual properties export](#visual-properties-of-dot-arrays).
+
+To choose a different proportion, or a condition per image, specify the stimuli directly
+with `--tasks-csv` — see below.
+
+Each image is generated from an independent random layout, including the different
+surface conditions of the same dot counts. This is deliberate: reusing a spatial
 configuration across conditions would let participants learn the arrangement rather than
 judge numerosity, which is what per-trial randomization exists to prevent.
 
@@ -346,26 +361,26 @@ The same applies to `match-to-sample` pairs whose counts differ.
 ### Choosing exactly which stimuli to generate
 
 `--tasks-csv` replaces the ratio sweep with an explicit list, one row per image. This is
-how you control which stimuli are equalized and in what proportion.
+how you control which stimuli get which surface condition, and in what proportion.
 
 ```csv
-n1,n2,equalized
-3,2,TRUE
-3,2,FALSE
-3,2,FALSE
-5,4,FALSE
+n1,n2,surface
+3,2,equal
+3,2,random
+3,2,inverse
+5,4,random
 ```
 
 ```bash
 cogstim ans --tasks-csv tasks.csv --train-num 1
 ```
 
-Produces four images — one equalized, three not:
+Produces four images, one per row:
 
 ```
-train/yellow/img_3_2_0_equalized.png
+train/yellow/img_3_2_0_equal.png
 train/yellow/img_3_2_1.png
-train/yellow/img_3_2_2.png
+train/yellow/img_3_2_2_inverse.png
 train/yellow/img_5_4_3.png
 ```
 
@@ -373,13 +388,13 @@ train/yellow/img_5_4_3.png
 |---|---|
 | `n1` | Dots of the first colour |
 | `n2` | Dots of the second colour |
-| `equalized` | `TRUE` or `FALSE`: whether total dot surface is matched between colours |
+| `surface` | `random`, `equal` or `inverse`: the [surface condition](#surface-conditions) of the image; random when the column is absent |
 
 `--tasks-copies N` repeats the whole distribution N times. When `--tasks-csv` is set,
 `--ratios`, `--min-dot-num` and `--max-dot-num` are ignored, since the file already says
 exactly what to generate.
 
-Match-to-sample takes the same approach with columns `sample,match,equalized`.
+Match-to-sample takes the same approach with columns `sample,match,surface`.
 
 ### Advanced Tweak: Controlling Difficulty with Ratios
 
@@ -423,6 +438,7 @@ This generates a large dataset with only easy ratios and 5–15 dots per colour.
 | Flag | Meaning | Default | When to use |
 |------|---------|---------|-------------|
 | `--ratios` | Ratio difficulty set | `all` | Use `easy` for simpler tasks, `hard` for difficult discrimination |
+| `--surface` | Surface conditions | `random equal` | Add `inverse` so that surface contradicts number in some images |
 | `--min-dot-num` | Min dots per colour | `1` | To set quantity range |
 | `--max-dot-num` | Max dots per colour | `10` | To set quantity range |
 | `--dot-colour-1` | First dot colour | `yellow` | To customize colours |
@@ -492,7 +508,7 @@ This generates red dot arrays numbered 1–5 with constant total surface area.
 
 ## Match-to-Sample – Dot Array Pairs
 
-Generate sample/match image pairs for match-to-sample tasks. Each trial produces two images: a sample (role `b`) and a match (role `a`). For half the trials, total dot surface is equalized between sample and match; for the other half, dot sizes are random. Based on Sella et al. (2013).
+Generate sample/match image pairs for match-to-sample tasks. Each trial produces two images: a sample (role `b`) and a match (role `a`). By default, half the trials have equal total dot surface between sample and match and half have random dot sizes; `--surface` adds the inverse condition, in which the image with fewer dots covers more surface. Based on Sella et al. (2013).
 
 ### Minimal Command
 
@@ -500,12 +516,13 @@ Generate sample/match image pairs for match-to-sample tasks. Each trial produces
 cogstim match-to-sample --train-num 10 --test-num 5
 ```
 
-**What it produces:** 15 sets = 1440 image pairs = **2880 images**, at 192 images per set (12 dot-count pairs x 8 variants x 2 images per pair). Written flat into `images/match_to_sample/train/` and `images/match_to_sample/test/`. Each pair consists of `mts_{trial_id}_{r|e}_b_{n_dots}.png` (sample) and `mts_{trial_id}_{r|e}_a_{n_dots}.png` (match).
+**What it produces:** 15 sets = 1440 image pairs = **2880 images**, at 192 images per set (12 dot-count pairs x 8 variants x 2 images per pair). Written flat into `images/match_to_sample/train/` and `images/match_to_sample/test/`. Each pair consists of `mts_{trial_id}_{r|e|i}_b_{n_dots}.png` (sample) and `mts_{trial_id}_{r|e|i}_a_{n_dots}.png` (match).
 
 ### Relevant Options
 
 - `--ratios` – Ratio set: `easy`, `hard`, or `all` (default: `all`)
 - `--min-dot-num` / `--max-dot-num` – Range of dot quantities (defaults: 1–10)
+- `--surface` – Surface conditions to generate: `random`, `equal`, `inverse` (default: `random equal`); see [Surface conditions](#surface-conditions)
 - `--dot-colour-1` – Dot colour (default: `black`)
 - `--min-dot-radius-px` / `--max-dot-radius-px` – Dot radius range (defaults: 5–15)
 - `--tolerance` – Relative tolerance for area equalization (default: 0.01, i.e., 1%)
@@ -518,9 +535,9 @@ the reason given in the [note on small numerosities](#note-on-small-numerosities
 
 ### File Naming
 
-Filenames are self-described and sort by trial then role: `mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png`, where:
+Filenames are self-described and sort by trial then role: `mts_{trial_id:05d}_{r|e|i}_{a|b}_{n_dots}[_version].png`, where:
 - `trial_id` = zero-padded trial index (pairs share this id)
-- `r` = random dot sizes, `e` = equalized surface area
+- `r` = random dot sizes, `e` = equal surface, `i` = inverse surface (see [Surface conditions](#surface-conditions))
 - `a` = match image, `b` = sample image (alphabetical order: match then sample)
 - `n_dots` = number of dots in that image
 - Optional `_version` tag may follow.
@@ -555,6 +572,7 @@ This generates yellow dot array pairs with easy ratios and controlled surface eq
 | Flag | Meaning | Default | When to use |
 |------|---------|---------|-------------|
 | `--ratios` | Ratio difficulty set | `all` | Use `easy` for simpler discrimination |
+| `--surface` | Surface conditions | `random equal` | Add `inverse` so that surface contradicts number in some trials |
 | `--min-dot-num` | Min number of dots | `1` | To set quantity range |
 | `--max-dot-num` | Max number of dots | `10` | To set quantity range |
 | `--dot-colour-1` | Dot colour | `black` | To customize colour |

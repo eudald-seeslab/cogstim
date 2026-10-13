@@ -8,9 +8,9 @@ from PIL import Image
 import numpy as np
 
 
-# One image per file: mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png
+# One image per file: mts_{trial_id:05d}_{r|e|i}_{a|b}_{n_dots}[_version].png
 FILENAME_RE = re.compile(
-    r"^mts_(?P<trial_id>\d{5})_(?P<eq_type>r|e)_(?P<role>a|b)_(?P<n_dots>\d+)(?:_[^_]+)?\.png$"
+    r"^mts_(?P<trial_id>\d{5})_(?P<eq_type>r|e|i)_(?P<role>a|b)_(?P<n_dots>\d+)(?:_[^_]+)?\.png$"
 )
 
 

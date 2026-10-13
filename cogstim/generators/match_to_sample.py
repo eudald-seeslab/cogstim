@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from cogstim.helpers.dots_core import DotsCore, PointLayoutError
 from cogstim.helpers.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS, MTS_DEFAULTS, IMAGE_DEFAULTS
-from cogstim.helpers.mts_geometry import equalize_pair as _equalize_geom
+from cogstim.helpers.mts_geometry import equalize_pair as _equalize_geom, set_pair_area_ratio
 from cogstim.helpers.planner import GenerationPlan, resolve_ratios, small_numerosity_warning
 from cogstim.helpers.base_generator import BaseGenerator
 from cogstim.helpers.image_utils import resolve_stimulus_colour
@@ -20,30 +20,32 @@ GENERAL_CONFIG = {
 
 MTS_TRIAL_ID_PADDING = 5
 
+# One letter per surface condition, for the filename.
+SURFACE_LETTERS = {"random": "r", "equal": "e", "inverse": "i"}
 
-def build_basename(trial_id: int, role: str, n_dots: int, equalized: bool, version_tag: str | None = None) -> str:
+
+def build_basename(trial_id: int, role: str, n_dots: int, surface: str, version_tag: str | None = None) -> str:
     """
     Build a basename for a single MTS image (sample or match).
-    Each file is self-described: trial id, random/equalized, role (a=match, b=sample), dot count.
+    Each file is self-described: trial id, surface condition, role (a=match, b=sample), dot count.
     Pairs are linked by trial_id; sorting by filename orders by trial then role (a before b).
-    Format: mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png
+    Format: mts_{trial_id:05d}_{r|e|i}_{a|b}_{n_dots}[_version].png
 
     Args:
         trial_id: Zero-based trial index (pairs share this id).
         role: "a" (match) or "b" (sample).
         n_dots: Number of dots in this image.
-        equalized: Whether this pair used area equalization ("e"); otherwise "r" (random).
+        surface: Surface condition of the pair: "random" (r), "equal" (e) or "inverse" (i).
         version_tag: Optional version tag to append.
 
     Returns:
         Basename string like "mts_00000_r_a_5" or "mts_00000_e_b_3_v1".
     """
-    eq_char = "e" if equalized else "r"
     v_tag = f"_{version_tag}" if version_tag else ""
-    return f"mts_{trial_id:0{MTS_TRIAL_ID_PADDING}d}_{eq_char}_{role}_{n_dots}{v_tag}"
+    return f"mts_{trial_id:0{MTS_TRIAL_ID_PADDING}d}_{SURFACE_LETTERS[surface]}_{role}_{n_dots}{v_tag}"
 
 
-def save_image_pair(generator, s_np, s_points, m_np, m_points, trial_id, n1, n2, equalized, *subdirs, version_tag=None):
+def save_image_pair(generator, s_np, s_points, m_np, m_points, trial_id, n1, n2, surface, *subdirs, version_tag=None):
     """
     Save a pair of images (sample and match) using a generator's save method.
     Sample is role "b", match is role "a" so filenames sort with match then sample per trial.
@@ -51,8 +53,8 @@ def save_image_pair(generator, s_np, s_points, m_np, m_points, trial_id, n1, n2,
     s_np.draw_points(s_points)
     m_np.draw_points(m_points)
 
-    s_basename = build_basename(trial_id, "b", n1, equalized, version_tag)
-    m_basename = build_basename(trial_id, "a", n2, equalized, version_tag)
+    s_basename = build_basename(trial_id, "b", n1, surface, version_tag)
+    m_basename = build_basename(trial_id, "a", n2, surface, version_tag)
 
     s_name = generator.save_image(s_np, s_basename, *subdirs)
     m_name = generator.save_image(m_np, m_basename, *subdirs)
@@ -79,8 +81,21 @@ class MatchToSampleGenerator(BaseGenerator):
         
         self.setup_directories()
     
-    def create_image_pair(self, n1, n2, equalize=False):
-        """Create a pair of images (sample and match)."""
+    def create_image_pair(self, n1, n2, surface="random"):
+        """Create a pair of images (sample and match).
+
+        Args:
+            n1: Dots in the sample.
+            n2: Dots in the match.
+            surface: One of SURFACE_CONDITIONS. 'equal' matches the total
+                surface of the two images within the configured tolerances;
+                'inverse' gives the image with fewer dots more surface, by the
+                factor the other has more dots.
+
+        Returns:
+            (s_np, s_points, m_np, m_points), or None when the condition could
+            not be met for this layout.
+        """
         init_size = self.config["init_size"]
         dot_colour = resolve_stimulus_colour(
             self.config.get("dot_colour"),
@@ -110,8 +125,7 @@ class MatchToSampleGenerator(BaseGenerator):
         )
         m_points = m_np.design_n_points(n2, "colour_1")
         
-        # Equalize areas if requested
-        if equalize:
+        if surface == "equal":
             success, s_points, m_points = _equalize_geom(
                 s_np, s_points, m_np, m_points,
                 rel_tolerance=self.config["tolerance"],
@@ -120,19 +134,27 @@ class MatchToSampleGenerator(BaseGenerator):
             )
             if not success:
                 return None
+        elif surface == "inverse":
+            success, s_points, m_points = set_pair_area_ratio(
+                s_np, s_points, m_np, m_points, n2 / n1
+            )
+            if not success:
+                return None
+        elif surface != "random":
+            raise ValueError(f"Unknown surface condition '{surface}'")
         
         return (s_np, s_points, m_np, m_points)
     
-    def save_image_pair(self, pair, trial_id, n1, n2, equalized, phase="train"):
+    def save_image_pair(self, pair, trial_id, n1, n2, surface, phase="train"):
         """Save a pair of images with trial-scoped basenames."""
         s_np, s_points, m_np, m_points = pair
         save_image_pair(
             self, s_np, s_points, m_np, m_points,
-            trial_id, n1, n2, equalized, phase,
+            trial_id, n1, n2, surface, phase,
             version_tag=self.config.get("version_tag"),
         )
 
-    def create_and_save(self, trial_id, n1, n2, equalize, phase="train"):
+    def create_and_save(self, trial_id, n1, n2, surface, phase="train"):
         """Create and save a pair of images, retrying unlucky layouts.
 
         Equalizing a pair can fail for a particular random draw: growing the
@@ -146,12 +168,12 @@ class MatchToSampleGenerator(BaseGenerator):
         """
         for _ in range(self.config["attempts_limit"]):
             try:
-                pair = self.create_image_pair(n1, n2, equalize)
+                pair = self.create_image_pair(n1, n2, surface)
             except PointLayoutError:
                 # Could not even place the dots; a new draw may do better.
                 continue
             if pair is not None:
-                self.save_image_pair(pair, trial_id, n1, n2, equalize, phase)
+                self.save_image_pair(pair, trial_id, n1, n2, surface, phase)
                 return True
         return False
 
@@ -167,7 +189,7 @@ class MatchToSampleGenerator(BaseGenerator):
             cogstim match-to-sample --tasks-csv <output_dir>/failed_pairs.csv
 
         Args:
-            failures: list of (phase, trial_id, n1, n2, equalized) tuples.
+            failures: list of (phase, trial_id, n1, n2, surface) tuples.
 
         Returns:
             str: path to the file written.
@@ -175,13 +197,13 @@ class MatchToSampleGenerator(BaseGenerator):
         path = os.path.join(self.output_dir, "failed_pairs.csv")
         with open(path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
-            writer.writerow(["sample", "match", "equalized", "phase", "trial_id"])
-            for phase, trial_id, n1, n2, equalized in failures:
-                writer.writerow([n1, n2, str(bool(equalized)).upper(), phase, trial_id])
+            writer.writerow(["sample", "match", "surface", "phase", "trial_id"])
+            for phase, trial_id, n1, n2, surface in failures:
+                writer.writerow([n1, n2, surface, phase, trial_id])
         return path
     
     def build_plan(self, phase, num_sets):
-        """Eight tasks per (n1, n2) pair, balanced 50/50 match against non-match.
+        """Four tasks per (n1, n2) pair and surface condition, balanced 50/50 match against non-match.
 
         Each task writes two images, a sample and a match, so images_per_task
         is 2 for this generator.
@@ -194,7 +216,8 @@ class MatchToSampleGenerator(BaseGenerator):
             min_point_num=self.config["min_point_num"],
             max_point_num=self.config["max_point_num"],
             num_repeats=num_sets,
-            ratios=self.ratios
+            ratios=self.ratios,
+            surface_conditions=self.config.get("surface_conditions"),
         )
         if tasks_csv:
             copies = max(1, num_sets) * tasks_copies
@@ -222,11 +245,11 @@ class MatchToSampleGenerator(BaseGenerator):
             for trial_id, task in enumerate(tqdm(plan.tasks, desc=f"{phase}")):
                 n = task.params.get("n1")
                 m = task.params.get("n2")
-                equalize = task.params.get("equalize", False)
-                if self.create_and_save(trial_id, n, m, equalize, phase):
+                surface = task.params.get("surface", "random")
+                if self.create_and_save(trial_id, n, m, surface, phase):
                     total_pairs += 1
                 else:
-                    failures.append((phase, trial_id, n, m, equalize))
+                    failures.append((phase, trial_id, n, m, surface))
 
             self.write_summary_if_enabled(plan, phase)
 

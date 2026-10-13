@@ -213,6 +213,38 @@ class DotsCore:
         return point_array
 
     
+    def set_area_ratio(self, point_array, target_ratio):
+        """Rescale both colours so that area(colour_1) / area(colour_2) == target_ratio.
+
+        The inverse surface condition needs the colour with fewer dots to cover
+        more surface. Growing that colour alone would make its dots very large
+        for the wider ratios, so the change is shared: colour_1's radii are
+        multiplied by the fourth root of the required change in area ratio and
+        colour_2's divided by it, which moves the mean dot size as little as
+        possible. A ratio of 1 equalizes the two areas.
+
+        Raises:
+            PointLayoutError: if either colour has no dots, or a grown dot would
+                leave the canvas or overlap a neighbour. Callers retry with a
+                fresh layout.
+        """
+        area_1 = self.compute_area(point_array, "colour_1")
+        area_2 = self.compute_area(point_array, "colour_2")
+        if area_1 == 0 or area_2 == 0:
+            raise PointLayoutError("Both colours need dots to set an area ratio")
+
+        change = target_ratio / (area_1 / area_2)
+        factor_1 = change ** 0.25
+        scaled = [
+            self._set_radius(p, p[0][2] * (factor_1 if p[1] == "colour_1" else 1 / factor_1))
+            for p in point_array
+        ]
+        if not self.validate_layout(scaled):
+            raise PointLayoutError(
+                "Setting the area ratio pushed a dot off the canvas or into a neighbour"
+            )
+        return scaled
+
     def _check_within_boundaries(self, point):
         """True if the dot's rasterised extent fits inside the canvas.
 

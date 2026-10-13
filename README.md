@@ -90,12 +90,13 @@ For now, this is supported only for the following tasks, with the CSV specificat
 
 | Task              | Subcommand        | CSV columns              |
 |-------------------|-------------------|--------------------------|
-| Match to sample   | `match-to-sample` | sample, match, equalized |
-| ANS dot arrays    | `ans`             | n1, n2, equalized        |
+| Match to sample   | `match-to-sample` | sample, match, surface |
+| ANS dot arrays    | `ans`             | n1, n2, surface        |
 
-The `equalized` column is per row, so it also controls **which** stimuli have their
-total dot surface equalized and **in what proportion**. A CSV of four rows with one
-`TRUE` produces three non-equalized images and one equalized one. See
+The `surface` column takes `random`, `equal` or `inverse` per row, so it also controls
+**which** stimuli get each surface condition and **in what proportion**. A CSV of four
+rows with one `equal` produces three random-size images and one whose two colours cover
+the same surface. See
 [the guide](docs/guide.md#choosing-exactly-which-stimuli-to-generate).
 
 
@@ -137,9 +138,14 @@ cogstim ans --ratios easy --train-num 100 --test-num 40
   <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/ans.png" alt="ANS non-equalized" width="220"/></td>
 </tr></table>
 
-> Note that on the left image, total surfaces are equalized, and, on the right image, dot size is random.
+> Note that on the left image, the two colours cover the same total surface, and, on the right image, dot size is random.
 
 This is based on Halberda et al. (2008).
+
+By default every dot-count pair is generated in two surface conditions, `random` and
+`equal`. `--surface random equal inverse` adds a third in which the colour with fewer
+dots covers more surface, so that surface contradicts number in a third of the images;
+see [the guide](docs/guide.md#surface-conditions).
 
 Add `--visual-properties` to also export, for every array and every pair, the
 visual cues that covary with number (total surface, item size, contour, convex
@@ -156,7 +162,7 @@ cogstim ans --ratios easy --train-num 100 --test-num 40 --layout separated --gap
 
 - `--layout separated` constrains each colour to its own half of the image.
 - `--gap N` controls the pixel-wide empty strip between the two halves (default: 40).
-- Area equalization still works: the `_equalized` variants are generated as usual.
+- Surface conditions still apply: the `_equal` and `_inverse` variants are generated as usual.
 - One-colour mode (`cogstim one-colour`) ignores `--layout separated` since there is only one colour.
 
 ### Match-to-sample (MTS) – dot arrays (sample/match) with controlled total surface
@@ -169,10 +175,10 @@ cogstim match-to-sample \
 ```
 
 - Generates pairs of images per trial: match (`*_a_*.png`) and sample (`*_b_*.png`).
-- For half of the trials, total dot surface is equalized between sample and match; for the other half, dot sizes are random.
+- By default, half the trials have equal total dot surface between sample and match and half have random dot sizes; `--surface` adds the inverse condition.
 - The target total surface for the match is derived from the sample image of the same trial.
 - Unequal pairs are built from the same ratio set used by ANS, with both orders (n→m and m→n) included, and equal (n=m) trials added to balance labels.
-- Output layout: `images/match_to_sample/{train|test}/mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png` (each image self-described; pairs share trial_id).
+- Output layout: `images/match_to_sample/{train|test}/mts_{trial_id:05d}_{r|e|i}_{a|b}_{n_dots}[_version].png` (each image self-described; pairs share trial_id).
 
 This task is based on Sella et al. (2013).
 

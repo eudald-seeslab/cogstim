@@ -91,7 +91,7 @@ def test_cli_ans_subcommand(tmp_path):
 def test_cli_ans_with_tasks_csv(tmp_path):
     """Test ANS subcommand with --tasks-csv and --tasks-copies."""
     csv_path = tmp_path / "tasks.csv"
-    csv_path.write_text("n1,n2,equalized\n3,5,TRUE\n2,4,FALSE\n")
+    csv_path.write_text("n1,n2,surface\n3,5,equal\n2,4,random\n")
     cli_args = [
         "ans",
         "--tasks-csv", str(csv_path),
@@ -152,7 +152,7 @@ def test_cli_match_to_sample_subcommand(tmp_path):
 def test_cli_match_to_sample_with_tasks_csv(tmp_path):
     """Test match-to-sample with --tasks-csv and --tasks-copies."""
     csv_path = tmp_path / "tasks.csv"
-    csv_path.write_text("sample,match,equalized\n3,4,TRUE\n5,5,FALSE\n")
+    csv_path.write_text("sample,match,surface\n3,4,equal\n5,5,random\n")
     cli_args = [
         "match-to-sample",
         "--tasks-csv", str(csv_path),

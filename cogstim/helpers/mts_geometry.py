@@ -67,3 +67,36 @@ def equalize_pair(
         iterations += 1
         if iterations >= attempts_limit:
             return False, s_points, m_points
+
+
+def set_pair_area_ratio(
+    s_np: DotsCore,
+    s_points,
+    m_np: DotsCore,
+    m_points,
+    target_ratio: float,
+):
+    """Rescale sample and match so that area(sample) / area(match) == target_ratio.
+
+    This is the inverse surface condition for a pair of images. The change is
+    shared between the two images as DotsCore.set_area_ratio shares it between
+    two colours: the sample's radii are multiplied by the fourth root of the
+    required change and the match's divided by it.
+
+    Returns:
+        (success, s_points_out, m_points_out); on failure the inputs come back
+        unchanged, and the caller retries with a fresh layout.
+    """
+    area_s = s_np.compute_area(s_points, "colour_1")
+    area_m = m_np.compute_area(m_points, "colour_1")
+    if area_s == 0 or area_m == 0:
+        return False, s_points, m_points
+
+    change = target_ratio / (area_s / area_m)
+    factor = change ** 0.25
+    try:
+        s_scaled = s_np.scale_by_factor(s_points, factor, round_radii=False)
+        m_scaled = m_np.scale_by_factor(m_points, 1 / factor, round_radii=False)
+    except PointLayoutError:
+        return False, s_points, m_points
+    return True, s_scaled, m_scaled

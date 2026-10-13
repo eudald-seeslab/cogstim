@@ -141,6 +141,11 @@ cogstim ans --ratios easy --train-num 100 --test-num 40
 
 This is based on Halberda et al. (2008).
 
+Add `--visual-properties` to also export, for every array and every pair, the
+visual cues that covary with number (total surface, item size, contour, convex
+hull, density), following Gebuis & Reynvoet (2011); see
+[the guide](docs/guide.md#visual-properties-of-dot-arrays).
+
 #### Separated layout
 
 By default, dots of both colours are interleaved across the full canvas (`--layout mixed`). Use `--layout separated` to place colour 1 on the left half and colour 2 on the right half, with a configurable gap between them:
@@ -258,6 +263,8 @@ Planned work is tracked in the [roadmap](ROADMAP.md). Current rough edges:
 
 
 ## References
+
+- Gebuis, T., & Reynvoet, B. (2011). Generating nonsymbolic number stimuli. Behavior Research Methods, 43(4), 981-986. https://doi.org/10.3758/s13428-011-0097-5
 
 - Halberda, J., Mazzocco, M. M. M., & Feigenson, L. (2008). Individual differences in non-verbal number acuity correlate with maths achievement. Nature, 455(7213), 665-668. https://doi.org/10.1038/nature07246
 

@@ -139,6 +139,7 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
             "seed": args.seed,
             "img_format": args.img_format,
             "metadata": args.metadata,
+            "visual_properties": args.visual_properties,
             "version_tag": args.version_tag,
             "layout": args.layout,
             "gap": args.gap,
@@ -182,6 +183,7 @@ def build_one_colour_config(args: argparse.Namespace) -> Dict[str, Any]:
             "colour_2": None,
             "img_format": args.img_format,
             "metadata": args.metadata,
+            "visual_properties": args.visual_properties,
             "version_tag": args.version_tag,
         },
     }
@@ -210,6 +212,7 @@ def build_mts_config(args: argparse.Namespace) -> Dict[str, Any]:
             "seed": args.seed,
             "img_format": args.img_format,
             "metadata": args.metadata,
+            "visual_properties": args.visual_properties,
             "version_tag": args.version_tag,
         },
     }
@@ -344,6 +347,7 @@ def execute(args, config, generator, note: str = "") -> None:
     generator.generate_images()
 
     annotation_paths = generator.write_annotations()
+    property_paths = generator.write_visual_properties()
 
     # Record what was run alongside what it produced. The seed comes from the
     # generator because it may have been drawn rather than supplied, and without
@@ -361,6 +365,8 @@ def execute(args, config, generator, note: str = "") -> None:
     if not args.quiet:
         for path in annotation_paths:
             print(f"  Stimulus annotations written to {path}")
+        for path in property_paths:
+            print(f"  Visual properties written to {path}")
         if config_path:
             print(f"  Options used were written to {config_path}")
             print(f"  Reproduce this run with: cogstim run {config_path}")
@@ -571,6 +577,7 @@ def setup_ans_subcommand(subparsers) -> None:
         subparsers, "ans",
         opts.COMMON, opts.TRAIN_TEST, opts.RATIOS, opts.DOT_LAYOUT,
         opts.ANS_SPECIFIC, opts.SEPARATED_LAYOUT, opts.TASKS_CSV,
+        opts.VISUAL_PROPERTIES,
         help="Generate ANS (Approximate Number System) dot arrays with two colours",
         description="Generate two-colour dot array images for approximate number system tasks. Classes are based on dominant colour.",
         epilog="Example: cogstim ans --ratios easy --train-num 100 --test-num 40",
@@ -583,6 +590,7 @@ def setup_one_colour_subcommand(subparsers) -> None:
     _add_subcommand(
         subparsers, "one-colour",
         opts.COMMON, opts.TRAIN_TEST, opts.DOT_LAYOUT, opts.ONE_COLOUR_SPECIFIC,
+        opts.VISUAL_PROPERTIES,
         help="Generate single-colour dot arrays (quantity discrimination)",
         description="Generate single-colour dot array images. Classes are based on quantity without colour cues.",
         epilog="Example: cogstim one-colour --train-num 80 --test-num 20 --dot-colour yellow",
@@ -595,7 +603,7 @@ def setup_mts_subcommand(subparsers) -> None:
     _add_subcommand(
         subparsers, "match-to-sample",
         opts.COMMON, opts.TRAIN_TEST, opts.RATIOS, opts.DOT_LAYOUT,
-        opts.MTS_SPECIFIC, opts.TASKS_CSV,
+        opts.MTS_SPECIFIC, opts.TASKS_CSV, opts.VISUAL_PROPERTIES,
         help="Generate match-to-sample dot array pairs",
         description="Generate sample/match image pairs for match-to-sample tasks with area equalization.",
         epilog="Example: cogstim match-to-sample --ratios easy --train-num 50 --test-num 20",

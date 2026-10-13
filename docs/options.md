@@ -42,6 +42,7 @@ Generate two-colour dot array images for approximate number system tasks. Classe
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--visual-properties` | off |  | Also export the visual properties of every dot array (total surface, mean diameter, total circumference, convex hull, density) and, for each pair, the numerical distance and the difference in each property, so that visual cues can be checked against number post hoc (Gebuis & Reynvoet, 2011) |
 
 ## `cogstim colours`
 
@@ -208,6 +209,7 @@ Generate sample/match image pairs for match-to-sample tasks with area equalizati
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--visual-properties` | off |  | Also export the visual properties of every dot array (total surface, mean diameter, total circumference, convex hull, density) and, for each pair, the numerical distance and the difference in each property, so that visual cues can be checked against number post hoc (Gebuis & Reynvoet, 2011) |
 
 ## `cogstim one-colour`
 
@@ -234,6 +236,7 @@ Generate single-colour dot array images. Classes are based on quantity without c
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--visual-properties` | off |  | Also export the visual properties of every dot array (total surface, mean diameter, total circumference, convex hull, density) and, for each pair, the numerical distance and the difference in each property, so that visual cues can be checked against number post hoc (Gebuis & Reynvoet, 2011) |
 
 ## `cogstim run`
 

@@ -84,6 +84,52 @@ scoring eye-tracking data against known feature positions. Coordinates describe
 the finished image: for `lines`, which draws upright and then rotates, the
 recorded vertices are the rotated ones.
 
+### Visual properties of dot arrays
+
+Changing how many dots an array holds changes how it looks: more dots cover
+more surface, spread over a larger area and have a longer total contour. Gebuis
+and Reynvoet (2011) showed that no way of generating arrays removes this for
+every cue at once, and argued that a generator should instead report the visual
+properties of every array, so that an analysis can check afterwards whether
+number or a visual cue explains a result.
+
+`--visual-properties` does this for `ans`, `one-colour` and `match-to-sample`:
+
+```bash
+cogstim ans --train-num 10 --visual-properties
+```
+
+It writes `visual_properties.csv`, one row per dot array (an `ans` image holds
+two, one per colour):
+
+| Column | Meaning |
+|---|---|
+| `image` | File the array belongs to, relative to the output directory |
+| `colour` | Dot colour as a hex code |
+| `n_dots` | Number of dots |
+| `total_surface_px` | Summed dot area, in square pixels |
+| `mean_diameter_px` | Mean dot diameter, the item size |
+| `total_circumference_px` | Summed dot perimeter |
+| `convex_hull_px` | Area extended: the convex hull around the dots' outlines |
+| `density` | Convex hull divided by total surface, as Gebuis and Reynvoet define it; larger means sparser |
+
+For `ans` and `match-to-sample` it also writes `visual_property_pairs.csv`, one
+row per pair: the two colours of an `ans` image, or the sample and match of a
+`match-to-sample` trial. Each row gives `numerical_distance`, `numerical_ratio`
+and `weber_fraction` (the difference over the larger count), then the `_diff`
+and `_ratio` of every property above, taken as the more numerous array against
+the less numerous one. A positive difference therefore means the cue grows with
+number, which is what a participant could exploit. Regressing
+`numerical_distance` on each `_diff` column is the check Gebuis and Reynvoet
+ran on their own stimuli.
+
+The convex hull is computed from 90 points on each dot's outline, which
+understates the exact hull of the discs by less than 0.1%.
+
+Arrays with fewer than 4 dots cannot have their hull or contour matched to a
+larger array's at all; see the
+[note on small numerosities](#note-on-small-numerosities).
+
 ### Vector images
 
 ```bash
@@ -282,6 +328,21 @@ non-equalized versions of the same dot counts. This is deliberate: reusing a spa
 configuration across conditions would let participants learn the arrangement rather than
 judge numerosity, which is what per-trial randomization exists to prevent.
 
+### Note on small numerosities
+
+The defaults (`--min-dot-num 1`, `--ratios all`) include pairs such as 1 vs 5
+and 2 vs 10. Gebuis and Reynvoet (2011) showed that below 4 dots the area an
+array covers (its convex hull) and its total contour cannot be matched to those
+of a larger array: a single dot's hull is the dot itself, and enlarging it until
+it covers what five dots cover makes dot size covary with number instead. In
+their data the hull alone explained 28% of the variance in numerical distance
+with arrays of 1 to 4 dots, against 5% once every array had at least 4.
+
+CogStim warns when a plan contains such pairs. Use `--min-dot-num 4` to avoid
+them, or keep them, for instance to cover the subitizing range, and check the
+cues post hoc with [`--visual-properties`](#visual-properties-of-dot-arrays).
+The same applies to `match-to-sample` pairs whose counts differ.
+
 ### Choosing exactly which stimuli to generate
 
 `--tasks-csv` replaces the ratio sweep with an explicit list, one row per image. This is
@@ -451,6 +512,9 @@ cogstim match-to-sample --train-num 10 --test-num 5
 - `--abs-tolerance` – Absolute area tolerance in pixels (default: 2)
 - `--attempts-limit` – Maximum placement attempts (default: 5000)
 - `--seed` – Random seed for reproducibility
+
+Pairs whose counts differ and include fewer than 4 dots are warned about, for
+the reason given in the [note on small numerosities](#note-on-small-numerosities).
 
 ### File Naming
 

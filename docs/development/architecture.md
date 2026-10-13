@@ -24,6 +24,7 @@ cogstim/
     image_utils.py          ImageCanvas: all drawing, and colour resolution
     geometry.py             The record of what was drawn
     annotations.py          Exporting that record as CSV/JSON or SVG
+    visual_properties.py    Visual cues of dot arrays, and their differences within pairs
     run_config.py           Recording and replaying a run
     constants.py            Defaults and colour definitions
 ```
@@ -116,6 +117,7 @@ geometry of its own stimulus:
 | `plan_summary()` | `--dry-run`, via your `build_plan()` |
 | `setup_directories()` | Output tree from `get_subdirectories()` |
 | `write_annotations()` | Exporting the accumulated geometry |
+| `write_visual_properties()` | Exporting the visual properties of dot arrays and pairs |
 
 A generator implements `build_plan()`, `generate_images()`,
 `get_subdirectories()`, and whatever drawing it needs.
@@ -146,6 +148,7 @@ generate_images()
         |
         v
 write_annotations()        annotations.csv / .json, if --metadata was given
+write_visual_properties()  visual_properties.csv and _pairs.csv, if --visual-properties was given
 write_run_config()         cogstim_config.yaml, always
 report_generation()        counts what was actually written
 ```

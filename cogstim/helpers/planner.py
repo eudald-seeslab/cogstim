@@ -8,6 +8,7 @@ replacing the previously duplicated logic in different generators.
 import csv
 from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
+from cogstim.helpers.constants import SMALL_NUMEROSITY
 
 
 class GenerationTask:
@@ -353,6 +354,21 @@ class GenerationPlan:
                 task_id += 1
         return self
     
+    def small_numerosity_pairs(self) -> List[Tuple[int, int]]:
+        """Dot-count pairs that compare fewer than SMALL_NUMEROSITY dots with a different count.
+
+        Returns:
+            list: Sorted (smaller, larger) pairs, each listed once.
+        """
+        pairs = set()
+        for task in self.tasks:
+            n1, n2 = task.params.get("n1"), task.params.get("n2")
+            if n1 is None or n2 is None or n1 == n2:
+                continue
+            if min(n1, n2) < SMALL_NUMEROSITY:
+                pairs.add((min(n1, n2), max(n1, n2)))
+        return sorted(pairs)
+
     def __len__(self):
         """Return the number of tasks in the plan."""
         return len(self.tasks)
@@ -459,6 +475,40 @@ def load_ans_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, bool]]
             equalize = eq_val in ("TRUE", "1", "YES")
             tasks.append((n1, n2, equalize))
     return tasks
+
+
+def small_numerosity_warning(plan: "GenerationPlan") -> Optional[str]:
+    """Explain why the plan's smallest arrays confound visual cues with number.
+
+    Gebuis & Reynvoet (2011) found that with arrays of 1-4 dots the area
+    extended alone explained 28% of the variance in numerical distance, against
+    5% once every array had at least 4 dots. Below that, the hull and the
+    contour of an array cannot be matched to a larger array's without making
+    the dots themselves bigger, which is a confound of its own. The only
+    remedies are to avoid such pairs or to check the cues after the fact.
+
+    Args:
+        plan: The GenerationPlan about to be generated.
+
+    Returns:
+        str or None: The warning to log, or None when every compared array has
+        at least SMALL_NUMEROSITY dots.
+    """
+    pairs = plan.small_numerosity_pairs()
+    if not pairs:
+        return None
+    examples = ", ".join(f"{a} vs {b}" for a, b in pairs[:3])
+    if len(pairs) > 3:
+        examples += ", ..."
+    return (
+        f"{len(pairs)} dot-count pairs compare fewer than {SMALL_NUMEROSITY} dots "
+        f"with a larger array ({examples}). Below that count, the area an array "
+        "covers and its total contour cannot be matched to a larger array's "
+        "without making its dots bigger, so these cues stay confounded with "
+        f"number (Gebuis & Reynvoet, 2011). Use --min-dot-num {SMALL_NUMEROSITY} "
+        "to avoid such pairs, or keep them and check the cues post hoc with "
+        "--visual-properties."
+    )
 
 
 def resolve_ratios(ratios, easy_ratios: List[float], hard_ratios: List[float]) -> List[float]:

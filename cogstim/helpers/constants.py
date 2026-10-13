@@ -94,6 +94,13 @@ DOT_DEFAULTS = {
     "gap": 40,
 }
 
+# Dot arrays with fewer dots than this cannot have their area extended (convex
+# hull) or total circumference matched to those of a larger array without making
+# the dots themselves bigger: a single dot's hull is the dot. Gebuis & Reynvoet
+# (2011) found the hull explained 28% of the variance in numerical distance with
+# 1-4 dots, against 5% with 4-7. Pairs below this count are warned about.
+SMALL_NUMEROSITY = 4
+
 # Shape generation defaults
 SHAPE_DEFAULTS = {
     "min_surface": 10000,

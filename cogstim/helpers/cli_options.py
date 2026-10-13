@@ -267,6 +267,15 @@ TASKS_CSV = [
            help="Number of copies of the task distribution (default: 1)"),
 ]
 
+VISUAL_PROPERTIES = [
+    Option("--visual-properties", store_true=True,
+           help=("Also export the visual properties of every dot array (total "
+                 "surface, mean diameter, total circumference, convex hull, "
+                 "density) and, for each pair, the numerical distance and the "
+                 "difference in each property, so that visual cues can be "
+                 "checked against number post hoc (Gebuis & Reynvoet, 2011)")),
+]
+
 # 'mixed' is the historical spelling of 'full' in the ans task, kept working so
 # existing commands do not break. Both tasks now offer the same vocabulary.
 LAYOUT_CHOICES = ["full", "mixed", "separated"]

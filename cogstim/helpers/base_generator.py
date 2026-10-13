@@ -18,6 +18,14 @@ from cogstim.helpers.annotations import (
     write_annotations_csv,
     write_annotations_json,
 )
+from cogstim.helpers.image_utils import to_hex
+from cogstim.helpers.visual_properties import (
+    PAIR_FIELDS,
+    PROPERTY_FIELDS,
+    image_property_records,
+    pair_property_records,
+    write_properties_csv,
+)
 
 
 class BaseGenerator(ABC):
@@ -58,6 +66,11 @@ class BaseGenerator(ABC):
         # Geometry of everything drawn, exported once the run finishes.
         self._annotations = []
         self._canvas_size = None
+
+        # Visual properties of every dot array drawn, and which arrays form a
+        # pair, exported once the run finishes.
+        self._visual_properties = []
+        self._property_pairs = []
         
         if 'output_dir' not in config:
             raise ValueError(
@@ -225,6 +238,51 @@ class BaseGenerator(ABC):
             written.append(path)
         return written
 
+    def _record_visual_properties(self, relative_name: str, scene) -> None:
+        """Accumulate the visual properties of the dot arrays in one image."""
+        if not self.config.get("visual_properties", False):
+            return
+        self._visual_properties.extend(image_property_records(relative_name, scene))
+
+    def record_property_pair(self, side_1, side_2) -> None:
+        """Declare two dot arrays a pair whose visual differences are reported.
+
+        A pair is the two colours of one ANS image, or the sample and match
+        images of one match-to-sample trial. Each side is identified by its
+        image and dot colour, since an image may hold more than one array.
+
+        Args:
+            side_1: (image, colour), the image being the path save_image()
+                returned and the colour a name or hex code.
+            side_2: Same, for the other array.
+        """
+        if not self.config.get("visual_properties", False):
+            return
+        self._property_pairs.append(
+            ((side_1[0], to_hex(side_1[1])), (side_2[0], to_hex(side_2[1])))
+        )
+
+    def write_visual_properties(self):
+        """Write the accumulated visual properties, and the pair comparisons.
+
+        Returns:
+            list: Paths written, empty when properties were not requested or
+            no dot array was drawn.
+        """
+        if not self._visual_properties:
+            return []
+
+        path = os.path.join(self.output_dir, "visual_properties.csv")
+        write_properties_csv(path, self._visual_properties, PROPERTY_FIELDS)
+        written = [path]
+
+        pairs = pair_property_records(self._visual_properties, self._property_pairs)
+        if pairs:
+            path = os.path.join(self.output_dir, "visual_property_pairs.csv")
+            write_properties_csv(path, pairs, PAIR_FIELDS)
+            written.append(path)
+        return written
+
     def save_image(self, img, filename_without_ext: str, *subdirs):
         """
         Save an image to disk with proper path construction and format handling.
@@ -245,6 +303,10 @@ class BaseGenerator(ABC):
                      Example: save_image(img, "file", "train", "5") 
                               → output_dir/train/5/file.png
         
+        Returns:
+            str: The path written, relative to output_dir. Generators pass it
+            to record_property_pair() to say which images form a pair.
+
         Example:
             self.save_image(img, "img_5_0", "train", "yellow")
             # Saves to: output_dir/train/yellow/img_5_0.png
@@ -285,10 +347,12 @@ class BaseGenerator(ABC):
                 handle.write(scene_to_svg(scene))
             self.images_written += 1
             self._record_annotations(relative_name, scene)
-            return
+            self._record_visual_properties(relative_name, scene)
+            return relative_name
 
         if scene is not None:
             self._record_annotations(relative_name, scene)
+            self._record_visual_properties(relative_name, scene)
 
         # Save with appropriate format
         if img_format in ["jpg", "jpeg"]:
@@ -297,3 +361,4 @@ class BaseGenerator(ABC):
             pil_img.save(path, format=img_format.upper())
 
         self.images_written += 1
+        return relative_name

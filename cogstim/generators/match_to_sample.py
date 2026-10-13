@@ -5,7 +5,7 @@ from tqdm import tqdm
 from cogstim.helpers.dots_core import DotsCore, PointLayoutError
 from cogstim.helpers.constants import MTS_EASY_RATIOS, MTS_HARD_RATIOS, MTS_DEFAULTS, IMAGE_DEFAULTS
 from cogstim.helpers.mts_geometry import equalize_pair as _equalize_geom
-from cogstim.helpers.planner import GenerationPlan, resolve_ratios
+from cogstim.helpers.planner import GenerationPlan, resolve_ratios, small_numerosity_warning
 from cogstim.helpers.base_generator import BaseGenerator
 from cogstim.helpers.image_utils import resolve_stimulus_colour
 
@@ -54,8 +54,9 @@ def save_image_pair(generator, s_np, s_points, m_np, m_points, trial_id, n1, n2,
     s_basename = build_basename(trial_id, "b", n1, equalized, version_tag)
     m_basename = build_basename(trial_id, "a", n2, equalized, version_tag)
 
-    generator.save_image(s_np, s_basename, *subdirs)
-    generator.save_image(m_np, m_basename, *subdirs)
+    s_name = generator.save_image(s_np, s_basename, *subdirs)
+    m_name = generator.save_image(m_np, m_basename, *subdirs)
+    generator.record_property_pair((s_name, s_np.colour_1), (m_name, m_np.colour_1))
 
 
 
@@ -200,6 +201,10 @@ class MatchToSampleGenerator(BaseGenerator):
             plan.build_from_mts_csv(tasks_csv, num_copies=copies)
         else:
             plan.build()
+
+        message = small_numerosity_warning(plan)
+        if message:
+            self._logger.warning(message)
         return plan
 
     def generate_images(self):

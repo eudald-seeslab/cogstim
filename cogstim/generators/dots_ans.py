@@ -6,7 +6,7 @@ from cogstim.helpers.dots_core import DotsCore, PointLayoutError
 from cogstim.helpers.constants import COLOUR_MAP, ANS_EASY_RATIOS, ANS_HARD_RATIOS, DOT_DEFAULTS, IMAGE_DEFAULTS
 from cogstim.helpers.base_generator import BaseGenerator
 from cogstim.helpers.image_utils import resolve_stimulus_colour
-from cogstim.helpers.planner import GenerationPlan, resolve_ratios
+from cogstim.helpers.planner import GenerationPlan, resolve_ratios, small_numerosity_warning
 
 logging.basicConfig(level=logging.INFO)
 
@@ -37,6 +37,7 @@ class DotsANSGenerator(BaseGenerator):
             ANS_EASY_RATIOS, 
             ANS_HARD_RATIOS
         )
+        self.dot_colours = self._resolve_dot_colours()
         
         self.setup_directories()
 
@@ -59,7 +60,12 @@ class DotsANSGenerator(BaseGenerator):
         right = (half + gap / 2, init_size - boundary, boundary, init_size - boundary)
         return left, right
 
-    def create_image(self, n1, n2, equalized):
+    def _resolve_dot_colours(self):
+        """Hex codes of the dot colours, visible against the background.
+
+        Returns:
+            tuple: (colour_1, colour_2); colour_2 is None in one-colour mode.
+        """
         background = self.config["background_colour"]
         colour_1 = resolve_stimulus_colour(
             self.config.get("colour_1"), background, DOT_DEFAULTS["dot_colour"]
@@ -69,6 +75,10 @@ class DotsANSGenerator(BaseGenerator):
             colour_2 = resolve_stimulus_colour(
                 self.config.get("colour_2"), background, "blue"
             )
+        return colour_1, colour_2
+
+    def create_image(self, n1, n2, equalized):
+        colour_1, colour_2 = self.dot_colours
 
         number_points = DotsCore(
             init_size=IMAGE_DEFAULTS["init_size"],
@@ -127,7 +137,10 @@ class DotsANSGenerator(BaseGenerator):
         img = self.create_image(n1, n2, equalized)
         colour = self.config["colour_1"] if n1 > n2 else self.config["colour_2"]
         
-        self.save_image(img, filename, phase, colour)
+        image_name = self.save_image(img, filename, phase, colour)
+        colour_1, colour_2 = self.dot_colours
+        if colour_2 is not None:
+            self.record_property_pair((image_name, colour_1), (image_name, colour_2))
 
     def get_positions(self):
         """Get valid (n1, n2) position pairs based on configured ratios."""
@@ -163,6 +176,10 @@ class DotsANSGenerator(BaseGenerator):
             plan.build_from_ans_csv(tasks_csv, num_copies=copies)
         else:
             plan.build()
+
+        message = small_numerosity_warning(plan)
+        if message:
+            self._logger.warning(message)
         return plan
 
     def generate_images(self):

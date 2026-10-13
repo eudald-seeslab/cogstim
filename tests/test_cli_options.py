@@ -147,6 +147,25 @@ def test_same_flag_means_the_same_thing_everywhere():
     assert not problems, "Same flag, different meaning:\n  " + "\n  ".join(problems)
 
 
+def test_match_to_sample_keeps_its_own_dot_sizes():
+    """match-to-sample defaults to the 5-15 px dots its documentation promises.
+
+    After the registry refactor it shared the ans dot-size options and silently
+    got 20-30 px dots and a 10000 placement limit, while the guide, the README
+    and MTS_DEFAULTS all said 5-15 px and 5000.
+    """
+    from cogstim.helpers.constants import DOT_DEFAULTS, MTS_DEFAULTS
+
+    mts = subcommand_parsers()["match-to-sample"].parse_args([])
+    assert mts.min_point_radius == MTS_DEFAULTS["min_point_radius"]
+    assert mts.max_point_radius == MTS_DEFAULTS["max_point_radius"]
+    assert mts.attempts_limit == MTS_DEFAULTS["attempts_limit"]
+
+    ans = subcommand_parsers()["ans"].parse_args([])
+    assert ans.min_point_radius == DOT_DEFAULTS["min_point_radius"]
+    assert ans.max_point_radius == DOT_DEFAULTS["max_point_radius"]
+
+
 def test_every_stimulus_task_can_set_its_colour():
     """No task may leave the colour of its stimulus unconfigurable.
 

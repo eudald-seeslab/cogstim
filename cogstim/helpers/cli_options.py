@@ -227,22 +227,41 @@ RATIOS = [
                  "(e.g., '1/2,2/3,3/4') (default: all)")),
 ]
 
-DOT_LAYOUT = [
+DOT_COUNTS = [
     Option("--min-dot-num", dest="min_point_num", type=int, default=1,
            aliases=("--min-point-num",),
            help="Minimum number of dots per colour (default: 1)"),
     Option("--max-dot-num", dest="max_point_num", type=int, default=10,
            aliases=("--max-point-num",),
            help="Maximum number of dots per colour (default: 10)"),
-    Option("--min-dot-radius-px", dest="min_point_radius", type=int,
-           default=DOT_DEFAULTS["min_point_radius"], aliases=("--min-point-radius",),
-           help=f"Minimum dot radius in pixels (default: {DOT_DEFAULTS['min_point_radius']})"),
-    Option("--max-dot-radius-px", dest="max_point_radius", type=int,
-           default=DOT_DEFAULTS["max_point_radius"], aliases=("--max-point-radius",),
-           help=f"Maximum dot radius in pixels (default: {DOT_DEFAULTS['max_point_radius']})"),
-    Option("--attempts-limit", type=int, default=DOT_DEFAULTS["attempts_limit"],
-           help=f"Maximum attempts for dot placement (default: {DOT_DEFAULTS['attempts_limit']})"),
 ]
+
+
+def dot_size_options(defaults):
+    """Dot radius and placement options with a task's own defaults.
+
+    The ans and match-to-sample tasks have always documented different dot
+    sizes (20-30 px against 5-15 px), but once every option moved into this
+    registry they shared one group, and match-to-sample silently got the ans
+    sizes. Each task now states its defaults here, so the reference generated
+    from the parser and the behaviour cannot disagree again.
+    """
+    return [
+        Option("--min-dot-radius-px", dest="min_point_radius", type=int,
+               default=defaults["min_point_radius"], aliases=("--min-point-radius",),
+               help=f"Minimum dot radius in pixels (default: {defaults['min_point_radius']})"),
+        Option("--max-dot-radius-px", dest="max_point_radius", type=int,
+               default=defaults["max_point_radius"], aliases=("--max-point-radius",),
+               help=f"Maximum dot radius in pixels (default: {defaults['max_point_radius']})"),
+        Option("--attempts-limit", type=int, default=defaults["attempts_limit"],
+               help=f"Maximum attempts for dot placement (default: {defaults['attempts_limit']})"),
+    ]
+
+
+DOT_SIZE = dot_size_options(DOT_DEFAULTS)
+MTS_DOT_SIZE = dot_size_options(MTS_DEFAULTS)
+DOT_LAYOUT = DOT_COUNTS + DOT_SIZE
+MTS_DOT_LAYOUT = DOT_COUNTS + MTS_DOT_SIZE
 
 SHAPE_GEOMETRY = [
     Option("--min-surface", type=int, default=SHAPE_DEFAULTS["min_surface"],

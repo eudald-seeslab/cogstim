@@ -606,7 +606,7 @@ def setup_mts_subcommand(subparsers) -> None:
     """Setup 'match-to-sample' subcommand."""
     _add_subcommand(
         subparsers, "match-to-sample",
-        opts.COMMON, opts.TRAIN_TEST, opts.RATIOS, opts.DOT_LAYOUT,
+        opts.COMMON, opts.TRAIN_TEST, opts.RATIOS, opts.MTS_DOT_LAYOUT,
         opts.MTS_SPECIFIC, opts.SURFACE, opts.HULL, opts.TASKS_CSV, opts.VISUAL_PROPERTIES,
         help="Generate match-to-sample dot array pairs",
         description="Generate sample/match image pairs for match-to-sample tasks with controlled total surface.",

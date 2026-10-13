@@ -188,7 +188,7 @@ Generate sample/match image pairs for match-to-sample tasks with controlled tota
 | Option | Default | Choices | Description |
 |---|---|---|---|
 | `--abs-tolerance` | *(chosen automatically)* |  | Absolute area tolerance in pixels (default: 2) |
-| `--attempts-limit` | `10000` |  | Maximum attempts for dot placement (default: 10000) |
+| `--attempts-limit` | `5000` |  | Maximum attempts for dot placement (default: 5000) |
 | `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dot-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Dot colour (default: black, or its inverse when that matches the background) |
@@ -197,10 +197,10 @@ Generate sample/match image pairs for match-to-sample tasks with controlled tota
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--max-dot-num` | `10` |  | Maximum number of dots per colour (default: 10) |
-| `--max-dot-radius-px` | `30` |  | Maximum dot radius in pixels (default: 30) |
+| `--max-dot-radius-px` | `15` |  | Maximum dot radius in pixels (default: 15) |
 | `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-dot-num` | `1` |  | Minimum number of dots per colour (default: 1) |
-| `--min-dot-radius-px` | `20` |  | Minimum dot radius in pixels (default: 20) |
+| `--min-dot-radius-px` | `5` |  | Minimum dot radius in pixels (default: 5) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--ratios` | `all` |  | Ratio set: 'easy', 'hard', 'all', or comma-separated fractions (e.g., '1/2,2/3,3/4') (default: all) |

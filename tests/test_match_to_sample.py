@@ -58,7 +58,7 @@ class TestMatchToSampleGenerator:
         csv_path = tmp_path / "tasks.csv"
         csv_path.write_text("sample,match,surface\n4,4,equal\n2,3,random\n5,5,inverse\n")
         tasks = load_mts_tasks_from_csv(csv_path)
-        assert tasks == [(4, 4, "equal"), (2, 3, "random"), (5, 5, "inverse")]
+        assert tasks == [(4, 4, "equal", "random"), (2, 3, "random", "random"), (5, 5, "inverse", "random")]
 
     def test_build_from_mts_csv(self, tmp_path):
         """Test building plan from CSV with num_copies."""
@@ -123,7 +123,7 @@ class TestMatchToSampleGenerator:
              patch.object(MatchToSampleGenerator, 'save_image_pair') as mock_save:
             generator = MatchToSampleGenerator(self.config)
             generator.create_and_save(3, 4, 5, "equal", "test_tag")
-            mock_create.assert_called_once_with(4, 5, "equal")
+            mock_create.assert_called_once_with(4, 5, "equal", "random")
             mock_save.assert_called_once()
 
     def test_create_and_save_random_pair(self):
@@ -133,7 +133,7 @@ class TestMatchToSampleGenerator:
              patch.object(MatchToSampleGenerator, 'save_image_pair') as mock_save:
             generator = MatchToSampleGenerator(self.config)
             generator.create_and_save(3, 4, 5, "random", "test_tag")
-            mock_create.assert_called_once_with(4, 5, "random")
+            mock_create.assert_called_once_with(4, 5, "random", "random")
             mock_save.assert_called_once()
 
 
@@ -283,6 +283,9 @@ class TestHelperFunctions:
         result = build_basename(0, "b", 4, "equal", "v2")
         assert result == "mts_00000_e_b_4_v2"
 
+        result = build_basename(3, "b", 6, "random", hull="inverse")
+        assert result == "mts_00003_ri_b_6"
+
 
 class TestMatchToSampleIntegration:
     """Integration tests for match_to_sample module."""
@@ -378,9 +381,9 @@ class TestMissingPairsAreReported:
         report = Path(tmp_path) / "failed_pairs.csv"
         tasks = load_mts_tasks_from_csv(report)
         assert len(tasks) == len(gen.failed_pairs)
-        for n1, n2, surface in tasks:
+        for n1, n2, surface, hull in tasks:
             assert isinstance(n1, int) and isinstance(n2, int)
-            assert surface in SURFACE_CONDITIONS
+            assert surface in SURFACE_CONDITIONS and hull in SURFACE_CONDITIONS
 
     def test_retries_before_giving_up(self, tmp_path):
         """An unlucky layout is retried rather than dropped."""

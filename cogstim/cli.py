@@ -129,6 +129,7 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
             "output_dir": args.output_dir,
             "ratios": args.ratios,
             "surface_conditions": args.surface,
+            "hull_conditions": args.hull,
             "ONE_COLOUR": False,
             "version_tag": getattr(args, 'version_tag', ''),
             "min_point_num": args.min_point_num,
@@ -202,6 +203,7 @@ def build_mts_config(args: argparse.Namespace) -> Dict[str, Any]:
             "output_dir": args.output_dir,
             "ratios": args.ratios,
             "surface_conditions": args.surface,
+            "hull_conditions": args.hull,
             "version_tag": getattr(args, 'version_tag', ''),
             "min_point_num": args.min_point_num,
             "max_point_num": args.max_point_num,
@@ -578,7 +580,7 @@ def setup_ans_subcommand(subparsers) -> None:
     _add_subcommand(
         subparsers, "ans",
         opts.COMMON, opts.TRAIN_TEST, opts.RATIOS, opts.DOT_LAYOUT,
-        opts.ANS_SPECIFIC, opts.SEPARATED_LAYOUT, opts.SURFACE, opts.TASKS_CSV,
+        opts.ANS_SPECIFIC, opts.SEPARATED_LAYOUT, opts.SURFACE, opts.HULL, opts.TASKS_CSV,
         opts.VISUAL_PROPERTIES,
         help="Generate ANS (Approximate Number System) dot arrays with two colours",
         description="Generate two-colour dot array images for approximate number system tasks. Classes are based on dominant colour.",
@@ -605,7 +607,7 @@ def setup_mts_subcommand(subparsers) -> None:
     _add_subcommand(
         subparsers, "match-to-sample",
         opts.COMMON, opts.TRAIN_TEST, opts.RATIOS, opts.DOT_LAYOUT,
-        opts.MTS_SPECIFIC, opts.SURFACE, opts.TASKS_CSV, opts.VISUAL_PROPERTIES,
+        opts.MTS_SPECIFIC, opts.SURFACE, opts.HULL, opts.TASKS_CSV, opts.VISUAL_PROPERTIES,
         help="Generate match-to-sample dot array pairs",
         description="Generate sample/match image pairs for match-to-sample tasks with controlled total surface.",
         epilog="Example: cogstim match-to-sample --ratios easy --train-num 50 --test-num 20",

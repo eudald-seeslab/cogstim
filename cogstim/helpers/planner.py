@@ -12,7 +12,10 @@ from cogstim.helpers.constants import (
     SMALL_NUMEROSITY,
     SURFACE_CONDITIONS,
     DEFAULT_SURFACE_CONDITIONS,
+    HULL_CONDITIONS,
+    DEFAULT_HULL_CONDITIONS,
 )
+from cogstim.helpers.hull_control import unreachable_hull_pairs
 
 
 class GenerationTask:
@@ -26,7 +29,7 @@ class GenerationTask:
             task_type: Type of task ('ans', 'mts', 'one_colour', 'shapes', 'lines')
             rep: Repetition/iteration number
             **params: Task-specific parameters:
-                - For ans/mts: n1, n2, surface
+                - For ans/mts: n1, n2, surface, hull
                 - For one_colour: n
                 - For shapes: shape, color, surface
                 - For lines: angle, num_stripes
@@ -66,6 +69,7 @@ class GenerationPlan:
                  num_repeats: int = 1,
                  ratios: Optional[List[float]] = None,
                  surface_conditions: Optional[List[str]] = None,
+                 hull_conditions: Optional[List[str]] = None,
                  # Shapes-specific params
                  shapes: Optional[List[str]] = None,
                  colors: Optional[List[str]] = None,
@@ -87,6 +91,8 @@ class GenerationPlan:
             ratios: List of ratios for ANS/MTS tasks
             surface_conditions: Surface conditions each ANS/MTS pair is generated
                 in, from SURFACE_CONDITIONS (default: random and equal)
+            hull_conditions: Hull conditions each ANS/MTS pair is generated in,
+                combined with every surface condition (default: random)
             shapes: List of shape names (for shapes tasks)
             colors: List of color names (for shapes tasks)
             min_surface: Minimum surface area (for shapes tasks)
@@ -104,6 +110,10 @@ class GenerationPlan:
         self.surface_conditions = (
             list(surface_conditions) if surface_conditions is not None
             else list(DEFAULT_SURFACE_CONDITIONS)
+        )
+        self.hull_conditions = (
+            list(hull_conditions) if hull_conditions is not None
+            else list(DEFAULT_HULL_CONDITIONS)
         )
         # Shapes params
         self.shapes = shapes or []
@@ -147,8 +157,8 @@ class GenerationPlan:
         """
         Expand ANS two-colour tasks for a given (n, m) pair.
 
-        Both colour orders, (n, m) and (m, n), once per surface condition:
-        four tasks with the default random and equal conditions.
+        Both colour orders, (n, m) and (m, n), once per combination of
+        surface and hull condition: four tasks with the defaults.
 
         Args:
             n: First point count
@@ -156,16 +166,17 @@ class GenerationPlan:
             rep: Repetition number
         """
         for surface in self.surface_conditions:
-            self.tasks.append(GenerationTask("ans", rep, n1=n, n2=m, surface=surface))
-            self.tasks.append(GenerationTask("ans", rep, n1=m, n2=n, surface=surface))
+            for hull in self.hull_conditions:
+                self.tasks.append(GenerationTask("ans", rep, n1=n, n2=m, surface=surface, hull=hull))
+                self.tasks.append(GenerationTask("ans", rep, n1=m, n2=n, surface=surface, hull=hull))
     
     def expand_mts_tasks(self, n: int, m: int, rep: int) -> None:
         """
         Expand match-to-sample tasks for a given (n, m) pair.
 
-        Per surface condition, four tasks balanced 50/50 match against
-        non-match: (n, m) and (m, n), then (n, n) and (m, m). That is eight
-        tasks with the default random and equal conditions.
+        Per combination of surface and hull condition, four tasks balanced
+        50/50 match against non-match: (n, m) and (m, n), then (n, n) and
+        (m, m). That is eight tasks with the defaults.
 
         Args:
             n: First point count
@@ -173,10 +184,11 @@ class GenerationPlan:
             rep: Repetition number
         """
         for surface in self.surface_conditions:
-            self.tasks.append(GenerationTask("mts", rep, n1=n, n2=m, surface=surface))
-            self.tasks.append(GenerationTask("mts", rep, n1=m, n2=n, surface=surface))
-            self.tasks.append(GenerationTask("mts", rep, n1=n, n2=n, surface=surface))
-            self.tasks.append(GenerationTask("mts", rep, n1=m, n2=m, surface=surface))
+            for hull in self.hull_conditions:
+                for n1, n2 in ((n, m), (m, n), (n, n), (m, m)):
+                    self.tasks.append(
+                        GenerationTask("mts", rep, n1=n1, n2=n2, surface=surface, hull=hull)
+                    )
     
     def expand_one_colour_tasks(self, n: int, rep: int) -> None:
         """
@@ -275,8 +287,8 @@ class GenerationPlan:
         """
         Build MTS task list from a CSV file.
 
-        CSV must have columns: sample, match, surface.
-        Each row defines one (n1, n2, surface) task.
+        CSV must have columns: sample, match, surface and, optionally, hull.
+        Each row defines one (n1, n2, surface, hull) task.
         num_copies repeats the entire distribution that many times (rep 0..num_copies-1).
 
         Args:
@@ -292,7 +304,7 @@ class GenerationPlan:
         self.tasks = []
         task_id = 0
         for copy_idx in range(num_copies):
-            for n1, n2, surface in tasks_spec:
+            for n1, n2, surface, hull in tasks_spec:
                 # Use a unique rep per emitted task so repeated CSV rows do not
                 # overwrite each other when filenames include n1/n2/surface/rep.
                 self.tasks.append(
@@ -302,6 +314,7 @@ class GenerationPlan:
                         n1=n1,
                         n2=n2,
                         surface=surface,
+                        hull=hull,
                         copy_idx=copy_idx,
                     )
                 )
@@ -314,8 +327,8 @@ class GenerationPlan:
         """
         Build ANS task list from a CSV file.
 
-        CSV must have columns: n1, n2, surface.
-        Each row defines one (n1, n2, surface) task.
+        CSV must have columns: n1, n2, surface and, optionally, hull.
+        Each row defines one (n1, n2, surface, hull) task.
         num_copies repeats the entire distribution that many times.
 
         Args:
@@ -331,7 +344,7 @@ class GenerationPlan:
         self.tasks = []
         task_id = 0
         for copy_idx in range(num_copies):
-            for n1, n2, surface in tasks_spec:
+            for n1, n2, surface, hull in tasks_spec:
                 task_type = self.task_type
                 if task_type == "one_colour":
                     self.tasks.append(
@@ -350,6 +363,7 @@ class GenerationPlan:
                             n1=n1,
                             n2=n2,
                             surface=surface,
+                            hull=hull,
                             copy_idx=copy_idx,
                         )
                     )
@@ -423,13 +437,24 @@ class GenerationPlan:
         print(f"Summary written to: {target_path}")
 
 
-def _load_tasks_csv(csv_path, first_column: str, second_column: str) -> List[Tuple[int, int, str]]:
-    """Read a task CSV with two count columns and an optional surface column.
+def _condition(row, column: str, allowed, path, line: int) -> str:
+    """One condition value from a CSV row; random when absent or empty."""
+    value = str(row.get(column) or "random").strip().lower()
+    if value not in allowed:
+        raise ValueError(
+            f"{path}, line {line}: {column} must be one of "
+            f"{', '.join(allowed)}, not '{row[column]}'"
+        )
+    return value
 
-    The surface column takes a value from SURFACE_CONDITIONS, in any case. A
-    missing column or an empty cell means random. The column replaced the
-    earlier boolean ``equalized`` column, which is refused rather than guessed
-    at: its TRUE is now ``equal`` and its FALSE is ``random``.
+
+def _load_tasks_csv(csv_path, first_column: str, second_column: str) -> List[Tuple[int, int, str, str]]:
+    """Read a task CSV with two count columns and optional surface and hull columns.
+
+    Each condition column takes a value from SURFACE_CONDITIONS, in any case. A
+    missing column or an empty cell means random. The surface column replaced
+    the earlier boolean ``equalized`` column, which is refused rather than
+    guessed at: its TRUE is now ``equal`` and its FALSE is ``random``.
     """
     path = Path(csv_path)
     if not path.exists():
@@ -445,42 +470,40 @@ def _load_tasks_csv(csv_path, first_column: str, second_column: str) -> List[Tup
                 "said TRUE and 'random' where it said FALSE."
             )
         for line, row in enumerate(reader, start=2):
-            surface = str(row.get("surface") or "random").strip().lower()
-            if surface not in SURFACE_CONDITIONS:
-                raise ValueError(
-                    f"{path}, line {line}: surface must be one of "
-                    f"{', '.join(SURFACE_CONDITIONS)}, not '{row['surface']}'"
-                )
-            tasks.append((int(row[first_column]), int(row[second_column]), surface))
+            surface = _condition(row, "surface", SURFACE_CONDITIONS, path, line)
+            hull = _condition(row, "hull", HULL_CONDITIONS, path, line)
+            tasks.append((int(row[first_column]), int(row[second_column]), surface, hull))
     return tasks
 
 
-def load_mts_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, str]]:
+def load_mts_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, str, str]]:
     """
     Load match-to-sample task specifications from a CSV file.
 
-    Expected columns: sample, match, surface
+    Expected columns: sample, match, surface, hull
     - sample: number of dots in sample image
     - match: number of dots in match image
     - surface: random, equal or inverse (case-insensitive; random when absent)
+    - hull: random, equal or inverse (case-insensitive; random when absent)
 
     Returns:
-        List of (n1, n2, surface) tuples.
+        List of (n1, n2, surface, hull) tuples.
     """
     return _load_tasks_csv(csv_path, "sample", "match")
 
 
-def load_ans_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, str]]:
+def load_ans_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, str, str]]:
     """
     Load ANS task specifications from a CSV file.
 
-    Expected columns: n1, n2, surface
+    Expected columns: n1, n2, surface, hull
     - n1: number of dots for colour_1
     - n2: number of dots for colour_2 (ignored for one_colour tasks)
     - surface: random, equal or inverse (case-insensitive; random when absent)
+    - hull: random, equal or inverse (case-insensitive; random when absent)
 
     Returns:
-        List of (n1, n2, surface) tuples.
+        List of (n1, n2, surface, hull) tuples.
     """
     return _load_tasks_csv(csv_path, "n1", "n2")
 
@@ -516,6 +539,34 @@ def small_numerosity_warning(plan: "GenerationPlan") -> Optional[str]:
         f"number (Gebuis & Reynvoet, 2011). Use --min-dot-num {SMALL_NUMEROSITY} "
         "to avoid such pairs, or keep them and check the cues post hoc with "
         "--visual-properties."
+    )
+
+
+def unreachable_hull_message(plan: "GenerationPlan", r_min, r_max, field_radius, point_sep) -> Optional[str]:
+    """Explain which planned pairs cannot meet their hull condition, if any.
+
+    One dot extends over nothing but itself, and n dots cannot be placed in a
+    field below a certain size, so for small counts and wide ratios the array
+    with fewer dots cannot extend as far beyond the other as the condition
+    asks. Refusing the plan is better than discovering it image by image: the
+    remedy is a different dot count, ratio, dot size or image size.
+
+    Returns:
+        str or None: The error message, or None when every pair can be met.
+    """
+    pairs = unreachable_hull_pairs(plan.tasks, r_min, r_max, field_radius, point_sep)
+    if not pairs:
+        return None
+    examples = ", ".join(f"{f} vs {m} ({h})" for f, m, h, _, _ in pairs[:4])
+    if len(pairs) > 4:
+        examples += ", ..."
+    fewer, more, hull, field, needed = pairs[0]
+    return (
+        f"{len(pairs)} dot-count pairs cannot meet their hull condition with dots of "
+        f"radius {r_min}-{r_max} px on this canvas: {examples}. For {fewer} vs {more} "
+        f"({hull}), the {more} dots would have to fit in a circle of radius {field:.0f} px, "
+        f"and need one of about {needed:.0f} px. Raise --min-dot-num, use narrower "
+        "--ratios, shrink the dots or enlarge the image."
     )
 
 

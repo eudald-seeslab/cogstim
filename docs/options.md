@@ -24,6 +24,7 @@ Generate two-colour dot array images for approximate number system tasks. Classe
 | `--dot-colour-2` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Second dot colour (default: blue, or its inverse when that matches the background) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--gap` | `40` |  | Pixel gap between halves in separated layout (default: 40) |
+| `--hull` | `random` | `random`, `equal`, `inverse` | Conditions on the area each array extends over (its convex hull), each combined with every surface condition. 'random' leaves the dots where they were placed, so the array with more dots usually extends further; 'equal' moves the dots so both arrays extend over the same area; 'inverse' gives the array with fewer dots the larger area, by the factor the other has more dots. Radii are untouched, so the surface condition still holds (default: random) |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--layout` | `mixed` | `full`, `mixed`, `separated` | Dot placement: 'full' (all dots share the canvas) or 'separated' (colour 1 left, colour 2 right). 'mixed' is a deprecated synonym for 'full'. |
@@ -192,6 +193,7 @@ Generate sample/match image pairs for match-to-sample tasks with controlled tota
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dot-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Dot colour (default: black, or its inverse when that matches the background) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
+| `--hull` | `random` | `random`, `equal`, `inverse` | Conditions on the area each array extends over (its convex hull), each combined with every surface condition. 'random' leaves the dots where they were placed, so the array with more dots usually extends further; 'equal' moves the dots so both arrays extend over the same area; 'inverse' gives the array with fewer dots the larger area, by the factor the other has more dots. Radii are untouched, so the surface condition still holds (default: random) |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--max-dot-num` | `10` |  | Maximum number of dots per colour (default: 10) |

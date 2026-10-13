@@ -1,5 +1,6 @@
 
 from cogstim.helpers.dots_core import DotsCore, PointLayoutError
+from cogstim.helpers import hull_control
 
 
 def equalize_pair(
@@ -100,3 +101,36 @@ def set_pair_area_ratio(
     except PointLayoutError:
         return False, s_points, m_points
     return True, s_scaled, m_scaled
+
+
+def expand_pair_hulls_to_ratio(
+    s_np: DotsCore,
+    s_points,
+    m_np: DotsCore,
+    m_points,
+    target_ratio: float,
+):
+    """Spread sample and match dots so that hull(sample) / hull(match) == target_ratio.
+
+    Each image is scaled outwards about its own centroid inside its canvas
+    field, as DotsCore.expand_hulls_to_ratio does for the two colours of one
+    image. Radii are untouched, so a surface condition applied first still
+    holds. The image that must extend less is expected to have been placed in
+    a reduced field, since spreading alone cannot make a hull smaller.
+
+    Returns:
+        (success, s_points_out, m_points_out); on failure the inputs come back
+        unchanged, and the caller retries with a fresh layout.
+    """
+    moved = hull_control.expand_to_ratio(
+        [p for p, _ in s_points], s_np.hull_fields()["colour_1"],
+        [p for p, _ in m_points], m_np.hull_fields()["colour_1"],
+        target_ratio,
+    )
+    if moved is None:
+        return False, s_points, m_points
+    s_out = [(disc, "colour_1") for disc in moved[0]]
+    m_out = [(disc, "colour_1") for disc in moved[1]]
+    if not s_np.validate_layout(s_out) or not m_np.validate_layout(m_out):
+        return False, s_points, m_points
+    return True, s_out, m_out

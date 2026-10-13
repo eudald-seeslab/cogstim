@@ -123,7 +123,7 @@ cogstim ans --img-size 1024 --train-num 10 --test-num 5
 2. **Equal** (`_equal`; `e`): both arrays cover the same total surface, so surface says nothing about number.
 3. **Inverse** (`_inverse`; `i`): the array with fewer dots covers more surface, so surface contradicts number.
 
-By default half the images are random and half equal; `--surface random equal inverse` adds the third condition so that, over the whole set, surface does not predict number.
+By default half the images are random and half equal; `--surface random equal inverse` adds the third condition so that, over the whole set, surface does not predict number. `_hull_equal` and `_hull_inverse` (a second letter in match-to-sample names) say the same about the area the dots extend over, controlled with `--hull`.
 
 **See also:** [User Guide – ANS](guide.md#surface-conditions) for details.
 

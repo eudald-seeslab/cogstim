@@ -494,19 +494,19 @@ class TestLoadAnsTasksFromCsv:
         csv_path = tmp_path / "tasks.csv"
         csv_path.write_text("n1,n2,surface\n3,5,equal\n2,4,random\n7,7,INVERSE\n")
         tasks = load_ans_tasks_from_csv(csv_path)
-        assert tasks == [(3, 5, "equal"), (2, 4, "random"), (7, 7, "inverse")]
+        assert tasks == [(3, 5, "equal", "random"), (2, 4, "random", "random"), (7, 7, "inverse", "random")]
 
     def test_missing_surface_defaults_to_random(self, tmp_path):
         csv_path = tmp_path / "tasks.csv"
         csv_path.write_text("n1,n2\n3,5\n")
         tasks = load_ans_tasks_from_csv(csv_path)
-        assert tasks == [(3, 5, "random")]
+        assert tasks == [(3, 5, "random", "random")]
 
     def test_empty_surface_defaults_to_random(self, tmp_path):
         csv_path = tmp_path / "tasks.csv"
         csv_path.write_text("n1,n2,surface\n3,5,\n")
         tasks = load_ans_tasks_from_csv(csv_path)
-        assert tasks == [(3, 5, "random")]
+        assert tasks == [(3, 5, "random", "random")]
 
     def test_old_equalized_column_is_refused(self, tmp_path):
         """The boolean column was replaced, not aliased: say so rather than guess."""

@@ -90,8 +90,8 @@ For now, this is supported only for the following tasks, with the CSV specificat
 
 | Task              | Subcommand        | CSV columns              |
 |-------------------|-------------------|--------------------------|
-| Match to sample   | `match-to-sample` | sample, match, surface |
-| ANS dot arrays    | `ans`             | n1, n2, surface        |
+| Match to sample   | `match-to-sample` | sample, match, surface, hull |
+| ANS dot arrays    | `ans`             | n1, n2, surface, hull        |
 
 The `surface` column takes `random`, `equal` or `inverse` per row, so it also controls
 **which** stimuli get each surface condition and **in what proportion**. A CSV of four
@@ -145,7 +145,9 @@ This is based on Halberda et al. (2008).
 By default every dot-count pair is generated in two surface conditions, `random` and
 `equal`. `--surface random equal inverse` adds a third in which the colour with fewer
 dots covers more surface, so that surface contradicts number in a third of the images;
-see [the guide](docs/guide.md#surface-conditions).
+see [the guide](docs/guide.md#surface-conditions). `--hull` does the same for the area each
+colour extends over (its convex hull), by moving dots rather than resizing them, so the
+two can be combined; see [hull conditions](docs/guide.md#hull-conditions).
 
 Add `--visual-properties` to also export, for every array and every pair, the
 visual cues that covary with number (total surface, item size, contour, convex

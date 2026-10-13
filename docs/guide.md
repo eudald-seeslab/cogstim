@@ -310,6 +310,7 @@ cogstim ans --train-num 10 --test-num 5
   - **Custom**: Comma-separated fractions, e.g., `--ratios 1/2,2/3,3/4` (see Advanced Tweak below)
 - `--min-dot-num` / `--max-dot-num` – Range of dots per colour (defaults: 1–10)
 - `--surface` – Surface conditions to generate: `random`, `equal`, `inverse` (default: `random equal`); see [Surface conditions](#surface-conditions)
+- `--hull` – Hull conditions to generate, combined with every surface condition (default: `random`); see [Hull conditions](#hull-conditions)
 - `--dot-colour-1` / `--dot-colour-2` – Dot colours (defaults: `yellow`, `blue`)
 - `--min-dot-radius-px` / `--max-dot-radius-px` – Dot radius range in pixels (defaults: 20–30)
 - `--attempts-limit` – Maximum placement attempts before giving up (default: 10000)
@@ -342,6 +343,53 @@ Each image is generated from an independent random layout, including the differe
 surface conditions of the same dot counts. This is deliberate: reusing a spatial
 configuration across conditions would let participants learn the arrangement rather than
 judge numerosity, which is what per-trial randomization exists to prevent.
+
+### Hull conditions
+
+The area an array extends over, its convex hull, grows with the number of dots when
+they are placed at random: more dots are more likely to reach the edges of the field.
+In CogStim's output the array with more dots has the larger hull in about seven pairs
+out of ten, whatever the surface condition, so "which patch is bigger" answers the task
+without counting. Gebuis and Reynvoet (2011) vary the field each array is placed in;
+CogStim sets the hull itself.
+
+`--hull` takes the same three values as `--surface`, and every dot-count pair is
+generated once per combination of the two:
+
+| Condition | Filename suffix | What it does |
+|---|---|---|
+| `random` | none | Dots stay where they were placed |
+| `equal` | `_hull_equal` | Both arrays extend over the same area |
+| `inverse` | `_hull_inverse` | The array with fewer dots extends over more area, by the factor the other has more dots |
+
+The default is `random`, so nothing changes unless you ask. To meet a condition, the
+array that must extend less, the one with more dots, is placed inside a smaller circle to
+begin with, sized so that the other array can spread past it by the required factor; then
+the dots of each array are moved away from the array's centroid until its hull reaches the
+target. Pulling an already placed array together would stop at the first two dots that
+touch, which with ordinary dot sizes is almost at once, so the smaller field does that
+work instead. Radii are never touched, so a surface condition applied to the same image
+still holds exactly, and the two factors combine freely: `--surface equal --hull inverse`
+gives images whose colours cover the same surface while the colour with fewer dots spreads
+over more area. Dots stay inside the field they were placed in, the canvas circle or the
+colour's half in the separated layout, so no layout appears that random placement could
+not have produced.
+
+Not every pair can meet a hull condition: a single dot extends over nothing but itself,
+and n dots cannot be placed inside a circle below a certain size. CogStim checks this when
+it plans, including under `--dry-run`, and refuses the run naming the pairs that cannot be
+met; raise `--min-dot-num`, narrow `--ratios`, shrink the dots or enlarge the image. With
+the default dot radius of 20–30 px on a 512 px canvas, `inverse` is possible for ratios of
+about 2:3 and closer; smaller dots, for instance `--min-dot-radius-px 8 --max-dot-radius-px
+12`, allow it down to 1:2 from 4 dots up, and are what the separated layout needs, since
+its halves are small. This is the limit described in the
+[note on small numerosities](#note-on-small-numerosities).
+
+In the full layout the two colours share one field, so a hull difference means that one
+colour is clustered inside the other's spread. The hull conditions are meant for arrays that occupy separate fields,
+as in Gebuis and Reynvoet's experiments: `--layout separated`, and `match-to-sample`, whose
+filenames carry a second letter for the hull condition when it is not random
+(`mts_00000_ri_a_5.png` is random surface, inverse hull).
 
 ### Note on small numerosities
 
@@ -389,12 +437,13 @@ train/yellow/img_5_4_3.png
 | `n1` | Dots of the first colour |
 | `n2` | Dots of the second colour |
 | `surface` | `random`, `equal` or `inverse`: the [surface condition](#surface-conditions) of the image; random when the column is absent |
+| `hull` | `random`, `equal` or `inverse`: the [hull condition](#hull-conditions) of the image; random when the column is absent |
 
 `--tasks-copies N` repeats the whole distribution N times. When `--tasks-csv` is set,
 `--ratios`, `--min-dot-num` and `--max-dot-num` are ignored, since the file already says
 exactly what to generate.
 
-Match-to-sample takes the same approach with columns `sample,match,surface`.
+Match-to-sample takes the same approach with columns `sample,match,surface,hull`.
 
 ### Advanced Tweak: Controlling Difficulty with Ratios
 
@@ -439,6 +488,7 @@ This generates a large dataset with only easy ratios and 5–15 dots per colour.
 |------|---------|---------|-------------|
 | `--ratios` | Ratio difficulty set | `all` | Use `easy` for simpler tasks, `hard` for difficult discrimination |
 | `--surface` | Surface conditions | `random equal` | Add `inverse` so that surface contradicts number in some images |
+| `--hull` | Hull conditions | `random` | `equal` or `inverse` to control the area each colour extends over |
 | `--min-dot-num` | Min dots per colour | `1` | To set quantity range |
 | `--max-dot-num` | Max dots per colour | `10` | To set quantity range |
 | `--dot-colour-1` | First dot colour | `yellow` | To customize colours |
@@ -523,6 +573,7 @@ cogstim match-to-sample --train-num 10 --test-num 5
 - `--ratios` – Ratio set: `easy`, `hard`, or `all` (default: `all`)
 - `--min-dot-num` / `--max-dot-num` – Range of dot quantities (defaults: 1–10)
 - `--surface` – Surface conditions to generate: `random`, `equal`, `inverse` (default: `random equal`); see [Surface conditions](#surface-conditions)
+- `--hull` – Hull conditions to generate, combined with every surface condition (default: `random`); see [Hull conditions](#hull-conditions)
 - `--dot-colour-1` – Dot colour (default: `black`)
 - `--min-dot-radius-px` / `--max-dot-radius-px` – Dot radius range (defaults: 5–15)
 - `--tolerance` – Relative tolerance for area equalization (default: 0.01, i.e., 1%)
@@ -538,6 +589,7 @@ the reason given in the [note on small numerosities](#note-on-small-numerosities
 Filenames are self-described and sort by trial then role: `mts_{trial_id:05d}_{r|e|i}_{a|b}_{n_dots}[_version].png`, where:
 - `trial_id` = zero-padded trial index (pairs share this id)
 - `r` = random dot sizes, `e` = equal surface, `i` = inverse surface (see [Surface conditions](#surface-conditions))
+- a second letter, present only when the hull condition is not random, gives it in the same code (see [Hull conditions](#hull-conditions))
 - `a` = match image, `b` = sample image (alphabetical order: match then sample)
 - `n_dots` = number of dots in that image
 - Optional `_version` tag may follow.
@@ -573,6 +625,7 @@ This generates yellow dot array pairs with easy ratios and controlled surface eq
 |------|---------|---------|-------------|
 | `--ratios` | Ratio difficulty set | `all` | Use `easy` for simpler discrimination |
 | `--surface` | Surface conditions | `random equal` | Add `inverse` so that surface contradicts number in some trials |
+| `--hull` | Hull conditions | `random` | `equal` or `inverse` to control the area each image's dots extend over |
 | `--min-dot-num` | Min number of dots | `1` | To set quantity range |
 | `--max-dot-num` | Max number of dots | `10` | To set quantity range |
 | `--dot-colour-1` | Dot colour | `black` | To customize colour |

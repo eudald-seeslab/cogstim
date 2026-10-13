@@ -3,9 +3,15 @@ import math
 from random import randint
 import numpy as np
 
+from cogstim.helpers import hull_control
+
 
 class PointLayoutError(ValueError):
     pass
+
+
+class HullLayoutError(PointLayoutError):
+    """A layout that cannot meet its hull condition; another draw may."""
 
 
 class DotsCore:
@@ -49,20 +55,35 @@ class DotsCore:
         self.max_point_radius = max_point_radius
         self.attempts_limit = attempts_limit
 
-    def _create_random_point(self):
-        radius = randint(self.min_point_radius, self.max_point_radius)
-        limit = self.boundary_width + radius + self.point_sep
+    def field_radius(self):
+        """Radius of the circle every dot stays within by default."""
+        return self.init_size / 2 - self.boundary_width
 
-        # Change mental coordinate system to the center of the square
-        rad = int(self.init_size / 2 - limit)
+    def _create_random_point(self, centre=None, field_radius=None):
+        """Generate a random dot inside a circular field.
+
+        By default the field is the canvas circle, keeping boundary_width
+        clear of the edge. A smaller field, concentric or not, is how the hull
+        conditions confine the array that must extend less.
+        """
+        radius = randint(self.min_point_radius, self.max_point_radius)
+        if field_radius is None:
+            field_radius = self.field_radius()
+        if centre is None:
+            centre = (self.init_size / 2, self.init_size / 2)
+
+        # Change mental coordinate system to the centre of the field
+        rad = int(field_radius - radius - self.point_sep)
+        if rad <= 0:
+            raise PointLayoutError("The field is too small for a dot")
         rx = randint(-rad, rad)
         # Make sure we are always inside the circle
-        max_ = int(np.sqrt((self.init_size / 2 - limit) ** 2 - rx ** 2))
+        max_ = int(np.sqrt(rad ** 2 - rx ** 2))
         ry = randint(-max_, max_)
 
         # Transform to coordinates with origin on the upper left quadrant
-        x = rx + self.init_size / 2
-        y = ry + self.init_size / 2
+        x = rx + centre[0]
+        y = ry + centre[1]
 
         return x, y, radius
 
@@ -86,7 +107,7 @@ class DotsCore:
 
         return dist > point[2] + new_point[2] + self.point_sep
 
-    def design_n_points(self, n, colour, point_array=None, region=None):
+    def design_n_points(self, n, colour, point_array=None, region=None, field=None):
         """Place *n* non-overlapping dots for *colour*.
 
         Args:
@@ -96,6 +117,8 @@ class DotsCore:
             region: Optional ``(x_min, x_max, y_min, y_max)`` rectangle that
                 constrains placement.  When *None*, the default circular
                 placement covering the full canvas is used.
+            field: Optional ``(centre, radius)`` circle to place within
+                instead, used by the hull conditions.
         """
         if point_array is None:
             point_array = []
@@ -103,6 +126,9 @@ class DotsCore:
         if region is not None:
             def point_fn():
                 return self._create_random_point_in_rect(*region)
+        elif field is not None:
+            def point_fn():
+                return self._create_random_point(*field)
         else:
             point_fn = self._create_random_point
 
@@ -244,6 +270,61 @@ class DotsCore:
                 "Setting the area ratio pushed a dot off the canvas or into a neighbour"
             )
         return scaled
+
+    def hull_fields(self, regions=None):
+        """The field each colour may spread over: its region, or the canvas circle."""
+        fields = {}
+        for colour in ("colour_1", "colour_2"):
+            if regions and colour in regions:
+                fields[colour] = hull_control.RectField(*regions[colour], margin=self.point_sep)
+            else:
+                fields[colour] = hull_control.CircleField(
+                    (self.init_size / 2, self.init_size / 2),
+                    self.field_radius() - self.point_sep,
+                )
+        return fields
+
+    def expand_hulls_to_ratio(self, point_array, target_ratio, regions=None):
+        """Spread the dots so that hull(colour_1) / hull(colour_2) == target_ratio.
+
+        Each colour's centres are scaled outwards about that colour's centroid;
+        no radius changes and no dot moves inwards, so a surface condition
+        already applied still holds and no dot of one colour runs into another
+        of the same colour. The colour that must extend less is expected to
+        have been placed in a reduced field (see hull_control), since spreading
+        alone cannot make a hull smaller.
+
+        Args:
+            point_array: Placed dots, as ((x, y, r), colour) pairs.
+            target_ratio: Required hull(colour_1) / hull(colour_2).
+            regions: Optional {colour: (x_min, x_max, y_min, y_max)} rectangles
+                the colours were confined to; the canvas circle otherwise.
+
+        Raises:
+            HullLayoutError: if this layout cannot reach the ratio by spreading
+                inside its fields, or spreading makes the two colours overlap.
+            PointLayoutError: if either colour has no dots.
+        """
+        discs = {
+            colour: [p for p, c in point_array if c == colour]
+            for colour in ("colour_1", "colour_2")
+        }
+        if not discs["colour_1"] or not discs["colour_2"]:
+            raise PointLayoutError("Both colours need dots to set a hull ratio")
+
+        fields = self.hull_fields(regions)
+        moved = hull_control.expand_to_ratio(
+            discs["colour_1"], fields["colour_1"],
+            discs["colour_2"], fields["colour_2"],
+            target_ratio,
+        )
+        if moved is None:
+            raise HullLayoutError("This layout cannot reach the hull ratio by spreading")
+
+        result = [(disc, "colour_1") for disc in moved[0]] + [(disc, "colour_2") for disc in moved[1]]
+        if not self.validate_layout(result):
+            raise HullLayoutError("Spreading the dots to the hull ratio made the colours overlap")
+        return result
 
     def _check_within_boundaries(self, point):
         """True if the dot's rasterised extent fits inside the canvas.

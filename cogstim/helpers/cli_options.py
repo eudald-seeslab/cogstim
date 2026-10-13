@@ -33,6 +33,8 @@ from cogstim.helpers.constants import (
     CLI_DEFAULTS,
     SURFACE_CONDITIONS,
     DEFAULT_SURFACE_CONDITIONS,
+    HULL_CONDITIONS,
+    DEFAULT_HULL_CONDITIONS,
 )
 
 # The colours a stimulus or background may take. Only these names are accepted;
@@ -278,6 +280,18 @@ SURFACE = [
                  "arrays; 'inverse' gives the array with fewer dots more surface, by "
                  "the factor the other has more dots, so surface contradicts number "
                  "(default: random equal)")),
+]
+
+HULL = [
+    Option("--hull", nargs="+", choices=HULL_CONDITIONS,
+           default=list(DEFAULT_HULL_CONDITIONS),
+           help=("Conditions on the area each array extends over (its convex hull), "
+                 "each combined with every surface condition. 'random' leaves the "
+                 "dots where they were placed, so the array with more dots usually "
+                 "extends further; 'equal' moves the dots so both arrays extend over "
+                 "the same area; 'inverse' gives the array with fewer dots the larger "
+                 "area, by the factor the other has more dots. Radii are untouched, "
+                 "so the surface condition still holds (default: random)")),
 ]
 
 VISUAL_PROPERTIES = [

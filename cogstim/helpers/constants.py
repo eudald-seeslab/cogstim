@@ -110,6 +110,12 @@ SMALL_NUMEROSITY = 4
 SURFACE_CONDITIONS = ("random", "equal", "inverse")
 DEFAULT_SURFACE_CONDITIONS = ("random", "equal")
 
+# The same three conditions for the area each array extends over (its convex
+# hull), which random placement leaves correlated with number. Not controlled
+# unless asked for, since not every dot-count pair can meet it.
+HULL_CONDITIONS = SURFACE_CONDITIONS
+DEFAULT_HULL_CONDITIONS = ("random",)
+
 # Shape generation defaults
 SHAPE_DEFAULTS = {
     "min_surface": 10000,

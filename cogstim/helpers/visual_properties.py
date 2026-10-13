@@ -39,6 +39,15 @@ PROPERTY_NAMES = [
 
 PROPERTY_FIELDS = ["image", "colour", "n_dots", *PROPERTY_NAMES]
 
+# The same lengths and areas in degrees of visual angle, when the viewing
+# geometry is known.
+DEGREE_FIELDS = [
+    "mean_diameter_deg",
+    "total_surface_deg2",
+    "total_circumference_deg",
+    "convex_hull_deg2",
+]
+
 PAIR_FIELDS = [
     "image_1", "colour_1", "n_1",
     "image_2", "colour_2", "n_2",
@@ -143,6 +152,28 @@ def image_property_records(image_name: str, scene) -> List[dict]:
     return [
         {"image": image_name, "colour": colour, **group_properties(discs)}
         for colour, discs in discs_by_colour.items()
+    ]
+
+
+def with_degrees(records: Iterable[dict], geometry) -> List[dict]:
+    """The records with their lengths and areas also in degrees of visual angle.
+
+    Args:
+        records: Records from image_property_records().
+        geometry: A ViewingGeometry.
+
+    Returns:
+        list: Copies of the records with DEGREE_FIELDS added.
+    """
+    return [
+        {
+            **record,
+            "mean_diameter_deg": geometry.length_deg(record["mean_diameter_px"]),
+            "total_surface_deg2": geometry.area_deg2(record["total_surface_px"]),
+            "total_circumference_deg": record["total_circumference_px"] / geometry.px_per_deg,
+            "convex_hull_deg2": geometry.area_deg2(record["convex_hull_px"]),
+        }
+        for record in records
     ]
 
 

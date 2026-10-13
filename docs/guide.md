@@ -140,6 +140,35 @@ SVG is rendered from the recorded shapes rather than traced from pixels, so it
 scales without loss. Pixel-based options such as `--min-dot-radius-px` still
 describe the drawing; they set the coordinates written into the SVG.
 
+## Sizes in degrees of visual angle
+
+This is in beta: the conversions have been tested in code but not yet against a real
+display and viewing set-up, so check what one degree comes to on your screen before
+relying on them.
+
+Psychophysics reports sizes as the angle they subtend at the eye; Gebuis and Reynvoet
+(2011), for instance, give their dot diameters as 0.11 to 0.79 degrees at 57 cm. A pixel
+is only an angle once the viewing distance and the display's pixel density are known, so
+give both and sizes can be stated in degrees:
+
+```bash
+cogstim ans --viewing-distance-cm 57 --pixels-per-cm 38 \
+  --img-size-deg 12 --min-dot-radius-deg 0.2 --max-dot-radius-deg 0.4
+```
+
+`--pixels-per-cm` is the screen's width in pixels divided by its width in centimetres.
+A length of θ degrees spans 2 × distance × tan(θ/2) on the screen; a radius given in
+degrees is half a diameter of twice that angle. The degree options override their pixel
+counterparts and are turned into whole pixels before anything is drawn, so pixels remain
+the unit inside the package and in every export; the run summary states what one degree
+came to. With the geometry given, `--visual-properties` also writes `mean_diameter_deg`,
+`total_surface_deg2`, `total_circumference_deg` and `convex_hull_deg2`, the areas using
+the size of one degree squared, which is exact for small angles.
+
+Degrees are accepted for the image size on every task and for the dot radii of `ans`,
+`one-colour` and `match-to-sample`. The shape, stripe and fixation sizes are pixel-only
+for now and would follow the same pattern.
+
 ## Table of Contents
 
 - [Shapes – Shape Discrimination](#shapes--shape-discrimination)
@@ -836,6 +865,7 @@ These options are available across all tasks:
 
 - `--output-dir PATH` – Custom output directory (default varies by task)
 - `--img-size SIZE` – Image size in pixels (default: 512)
+- `--img-size-deg`, `--viewing-distance-cm`, `--pixels-per-cm` – Sizes in degrees of visual angle; see [above](#sizes-in-degrees-of-visual-angle)
 - `--background-colour COLOUR` – Background colour (default: `white`)
 - `--seed SEED` – Random seed for reproducible generation
 - `--demo` – Generate a small preview with 8 training sets

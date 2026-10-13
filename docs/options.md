@@ -27,13 +27,17 @@ Generate two-colour dot array images for approximate number system tasks. Classe
 | `--hull` | `random` | `random`, `equal`, `inverse` | Conditions on the area each array extends over (its convex hull), each combined with every surface condition. 'random' leaves the dots where they were placed, so the array with more dots usually extends further; 'equal' moves the dots so both arrays extend over the same area; 'inverse' gives the array with fewer dots the larger area, by the factor the other has more dots. Radii are untouched, so the surface condition still holds (default: random) |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
+| `--img-size-deg` | *(pixels unless given)* |  | Image size in degrees of visual angle, overriding --img-size; needs --viewing-distance-cm and --pixels-per-cm |
 | `--layout` | `mixed` | `full`, `mixed`, `separated` | Dot placement: 'full' (all dots share the canvas) or 'separated' (colour 1 left, colour 2 right). 'mixed' is a deprecated synonym for 'full'. |
 | `--max-dot-num` | `10` |  | Maximum number of dots per colour (default: 10) |
+| `--max-dot-radius-deg` | *(pixels unless given)* |  | Maximum dot radius in degrees of visual angle, overriding the pixel value; needs --viewing-distance-cm and --pixels-per-cm |
 | `--max-dot-radius-px` | `30` |  | Maximum dot radius in pixels (default: 30) |
 | `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-dot-num` | `1` |  | Minimum number of dots per colour (default: 1) |
+| `--min-dot-radius-deg` | *(pixels unless given)* |  | Minimum dot radius in degrees of visual angle, overriding the pixel value; needs --viewing-distance-cm and --pixels-per-cm |
 | `--min-dot-radius-px` | `20` |  | Minimum dot radius in pixels (default: 20) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
+| `--pixels-per-cm` | *(none)* |  | Pixel density of the screen: its width in pixels divided by its width in centimetres |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--ratios` | `all` |  | Ratio set: 'easy', 'hard', 'all', or comma-separated fractions (e.g., '1/2,2/3,3/4') (default: all) |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
@@ -44,6 +48,7 @@ Generate two-colour dot array images for approximate number system tasks. Classe
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--viewing-distance-cm` | *(none)* |  | Distance from the eye to the screen, which with --pixels-per-cm lets sizes be given in degrees of visual angle and reported so |
 | `--visual-properties` | off |  | Also export the visual properties of every dot array (total surface, mean diameter, total circumference, convex hull, density) and, for each pair, the numerical distance and the difference in each property, so that visual cues can be checked against number post hoc (Gebuis & Reynvoet, 2011) |
 
 ## `cogstim colours`
@@ -57,6 +62,7 @@ Generate images of the same shape in different colours for colour recognition ta
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
+| `--img-size-deg` | *(pixels unless given)* |  | Image size in degrees of visual angle, overriding --img-size; needs --viewing-distance-cm and --pixels-per-cm |
 | `--max-rotation` | `360` |  | Maximum rotation angle in degrees (default: 360) |
 | `--max-surface` | `20000` |  | Maximum shape surface area in px² (default: 20000) |
 | `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
@@ -64,6 +70,7 @@ Generate images of the same shape in different colours for colour recognition ta
 | `--min-surface` | `10000` |  | Minimum shape surface area in px² (default: 10000) |
 | `--no-jitter` | off |  | Disable positional jitter |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
+| `--pixels-per-cm` | *(none)* |  | Pixel density of the screen: its width in pixels divided by its width in centimetres |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--random-rotation` | off |  | Enable random rotation of shapes |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
@@ -74,6 +81,7 @@ Generate images of the same shape in different colours for colour recognition ta
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--viewing-distance-cm` | *(none)* |  | Distance from the eye to the screen, which with --pixels-per-cm lets sizes be given in degrees of visual angle and reported so |
 
 ## `cogstim custom`
 
@@ -86,6 +94,7 @@ Generate images with custom combinations of shapes and colours.
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
+| `--img-size-deg` | *(pixels unless given)* |  | Image size in degrees of visual angle, overriding --img-size; needs --viewing-distance-cm and --pixels-per-cm |
 | `--max-rotation` | `360` |  | Maximum rotation angle in degrees (default: 360) |
 | `--max-surface` | `20000` |  | Maximum shape surface area in px² (default: 20000) |
 | `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
@@ -93,6 +102,7 @@ Generate images with custom combinations of shapes and colours.
 | `--min-surface` | `10000` |  | Minimum shape surface area in px² (default: 10000) |
 | `--no-jitter` | off |  | Disable positional jitter |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
+| `--pixels-per-cm` | *(none)* |  | Pixel density of the screen: its width in pixels divided by its width in centimetres |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--random-rotation` | off |  | Enable random rotation of shapes |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
@@ -103,6 +113,7 @@ Generate images with custom combinations of shapes and colours.
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--viewing-distance-cm` | *(none)* |  | Distance from the eye to the screen, which with --pixels-per-cm lets sizes be given in degrees of visual angle and reported so |
 
 ## `cogstim fixation`
 
@@ -119,15 +130,18 @@ Generate fixation target images with different element combinations.
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
+| `--img-size-deg` | *(pixels unless given)* |  | Image size in degrees of visual angle, overriding --img-size; needs --viewing-distance-cm and --pixels-per-cm |
 | `--jitter-px` | `0` |  | Maximum positional jitter in pixels (default: 0) |
 | `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
+| `--pixels-per-cm` | *(none)* |  | Pixel density of the screen: its width in pixels divided by its width in centimetres |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
 | `--symbol-colour` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Fixation symbol colour (default: black, or its inverse when that matches the background) |
 | `--types` | `A B C AB AC BC ABC` | `A`, `B`, `C`, `AB`, `AC`, `BC`, `ABC` | Fixation target types to generate |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--viewing-distance-cm` | *(none)* |  | Distance from the eye to the screen, which with --pixels-per-cm lets sizes be given in degrees of visual angle and reported so |
 
 ## `cogstim lines`
 
@@ -141,6 +155,7 @@ Generate images with rotated stripe patterns at different angles.
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
+| `--img-size-deg` | *(pixels unless given)* |  | Image size in degrees of visual angle, overriding --img-size; needs --viewing-distance-cm and --pixels-per-cm |
 | `--line-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Stripe colour (default: black, or its inverse when that matches the background) |
 | `--max-line-thickness-px` | `30` |  | Maximum stripe thickness in pixels (default: 30) |
 | `--max-stripe-num` | `10` |  | Maximum number of stripes per image |
@@ -149,12 +164,14 @@ Generate images with rotated stripe patterns at different angles.
 | `--min-line-thickness-px` | `10` |  | Minimum stripe thickness in pixels (default: 10) |
 | `--min-stripe-num` | `2` |  | Minimum number of stripes per image |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
+| `--pixels-per-cm` | *(none)* |  | Pixel density of the screen: its width in pixels divided by its width in centimetres |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
 | `--test-num` | `0` |  | Number of test SETS to generate, not images (default: 0) |
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--viewing-distance-cm` | *(none)* |  | Distance from the eye to the screen, which with --pixels-per-cm lets sizes be given in degrees of visual angle and reported so |
 
 ## `cogstim mask`
 
@@ -170,16 +187,19 @@ Generate N mask images filled with overlapping dots of varying sizes. Useful as 
 | `--gap` | `40` |  | Pixel gap between halves in separated layout (default: 40) |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
+| `--img-size-deg` | *(pixels unless given)* |  | Image size in degrees of visual angle, overriding --img-size; needs --viewing-distance-cm and --pixels-per-cm |
 | `--layout` | `full` | `full`, `mixed`, `separated` | 'full' fills the entire canvas; 'separated' splits it into two halves with a gap. 'mixed' is a deprecated synonym for 'full'. |
 | `--mask-num` | `5` |  | Number of mask variants to generate (default: 5) |
 | `--max-dot-radius-px` | `25` |  | Maximum dot radius in pixels (default: 25) |
 | `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-dot-radius-px` | `3` |  | Minimum dot radius in pixels (default: 3) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
+| `--pixels-per-cm` | *(none)* |  | Pixel density of the screen: its width in pixels divided by its width in centimetres |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--viewing-distance-cm` | *(none)* |  | Distance from the eye to the screen, which with --pixels-per-cm lets sizes be given in degrees of visual angle and reported so |
 
 ## `cogstim match-to-sample`
 
@@ -196,12 +216,16 @@ Generate sample/match image pairs for match-to-sample tasks with controlled tota
 | `--hull` | `random` | `random`, `equal`, `inverse` | Conditions on the area each array extends over (its convex hull), each combined with every surface condition. 'random' leaves the dots where they were placed, so the array with more dots usually extends further; 'equal' moves the dots so both arrays extend over the same area; 'inverse' gives the array with fewer dots the larger area, by the factor the other has more dots. Radii are untouched, so the surface condition still holds (default: random) |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
+| `--img-size-deg` | *(pixels unless given)* |  | Image size in degrees of visual angle, overriding --img-size; needs --viewing-distance-cm and --pixels-per-cm |
 | `--max-dot-num` | `10` |  | Maximum number of dots per colour (default: 10) |
+| `--max-dot-radius-deg` | *(pixels unless given)* |  | Maximum dot radius in degrees of visual angle, overriding the pixel value; needs --viewing-distance-cm and --pixels-per-cm |
 | `--max-dot-radius-px` | `15` |  | Maximum dot radius in pixels (default: 15) |
 | `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-dot-num` | `1` |  | Minimum number of dots per colour (default: 1) |
+| `--min-dot-radius-deg` | *(pixels unless given)* |  | Minimum dot radius in degrees of visual angle, overriding the pixel value; needs --viewing-distance-cm and --pixels-per-cm |
 | `--min-dot-radius-px` | `5` |  | Minimum dot radius in pixels (default: 5) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
+| `--pixels-per-cm` | *(none)* |  | Pixel density of the screen: its width in pixels divided by its width in centimetres |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--ratios` | `all` |  | Ratio set: 'easy', 'hard', 'all', or comma-separated fractions (e.g., '1/2,2/3,3/4') (default: all) |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
@@ -213,6 +237,7 @@ Generate sample/match image pairs for match-to-sample tasks with controlled tota
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--viewing-distance-cm` | *(none)* |  | Distance from the eye to the screen, which with --pixels-per-cm lets sizes be given in degrees of visual angle and reported so |
 | `--visual-properties` | off |  | Also export the visual properties of every dot array (total surface, mean diameter, total circumference, convex hull, density) and, for each pair, the numerical distance and the difference in each property, so that visual cues can be checked against number post hoc (Gebuis & Reynvoet, 2011) |
 
 ## `cogstim one-colour`
@@ -228,18 +253,23 @@ Generate single-colour dot array images. Classes are based on quantity without c
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
+| `--img-size-deg` | *(pixels unless given)* |  | Image size in degrees of visual angle, overriding --img-size; needs --viewing-distance-cm and --pixels-per-cm |
 | `--max-dot-num` | `10` |  | Maximum number of dots per colour (default: 10) |
+| `--max-dot-radius-deg` | *(pixels unless given)* |  | Maximum dot radius in degrees of visual angle, overriding the pixel value; needs --viewing-distance-cm and --pixels-per-cm |
 | `--max-dot-radius-px` | `30` |  | Maximum dot radius in pixels (default: 30) |
 | `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
 | `--min-dot-num` | `1` |  | Minimum number of dots per colour (default: 1) |
+| `--min-dot-radius-deg` | *(pixels unless given)* |  | Minimum dot radius in degrees of visual angle, overriding the pixel value; needs --viewing-distance-cm and --pixels-per-cm |
 | `--min-dot-radius-px` | `20` |  | Minimum dot radius in pixels (default: 20) |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
+| `--pixels-per-cm` | *(none)* |  | Pixel density of the screen: its width in pixels divided by its width in centimetres |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
 | `--test-num` | `0` |  | Number of test SETS to generate, not images (default: 0) |
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--viewing-distance-cm` | *(none)* |  | Distance from the eye to the screen, which with --pixels-per-cm lets sizes be given in degrees of visual angle and reported so |
 | `--visual-properties` | off |  | Also export the visual properties of every dot array (total surface, mean diameter, total circumference, convex hull, density) and, for each pair, the numerical distance and the difference in each property, so that visual cues can be checked against number post hoc (Gebuis & Reynvoet, 2011) |
 
 ## `cogstim run`
@@ -261,6 +291,7 @@ Generate images of different shapes in the same colour for shape recognition tas
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
+| `--img-size-deg` | *(pixels unless given)* |  | Image size in degrees of visual angle, overriding --img-size; needs --viewing-distance-cm and --pixels-per-cm |
 | `--max-rotation` | `360` |  | Maximum rotation angle in degrees (default: 360) |
 | `--max-surface` | `20000` |  | Maximum shape surface area in px² (default: 20000) |
 | `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
@@ -268,6 +299,7 @@ Generate images of different shapes in the same colour for shape recognition tas
 | `--min-surface` | `10000` |  | Minimum shape surface area in px² (default: 10000) |
 | `--no-jitter` | off |  | Disable positional jitter |
 | `--output-dir` | *(chosen automatically)* |  | Root output directory (default varies by task) |
+| `--pixels-per-cm` | *(none)* |  | Pixel density of the screen: its width in pixels divided by its width in centimetres |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--random-rotation` | off |  | Enable random rotation of shapes |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
@@ -278,6 +310,7 @@ Generate images of different shapes in the same colour for shape recognition tas
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
+| `--viewing-distance-cm` | *(none)* |  | Distance from the eye to the screen, which with --pixels-per-cm lets sizes be given in degrees of visual angle and reported so |
 
 ## Renamed options
 

@@ -116,8 +116,9 @@ def test_pixel_options_declare_their_unit(name):
             continue
         if not re.search(r"(radius|thickness|spacing|arm|jitter)", flag):
             continue
-        assert flag.endswith("-px"), (
-            f"{name}{flag} measures pixels but does not say so; it should end in -px"
+        assert flag.endswith(("-px", "-deg")), (
+            f"{name}{flag} measures a length but does not say in what; it should "
+            "end in -px or -deg"
         )
 
 

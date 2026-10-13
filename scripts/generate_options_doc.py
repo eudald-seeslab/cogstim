@@ -40,9 +40,13 @@ images a particular command would write.
 """
 
 
-def format_value(value):
+def format_value(value, dest=""):
     """Render a default value for a documentation table."""
     if value is None:
+        if dest.endswith("_deg"):
+            return "*(pixels unless given)*"
+        if dest in ("viewing_distance_cm", "pixels_per_cm"):
+            return "*(none)*"
         return "*(chosen automatically)*"
     if value == "":
         return "*(empty)*"
@@ -77,7 +81,7 @@ def subcommand_sections(parser):
             )
             help_text = (action.help or "").replace("|", "\\|")
             lines.append(
-                f"| `{flag}` | {format_value(action.default)} | {choices} | {help_text} |"
+                f"| `{flag}` | {format_value(action.default, action.dest)} | {choices} | {help_text} |"
             )
         yield "\n".join(lines) + "\n"
 

@@ -19,11 +19,14 @@ from cogstim.helpers.annotations import (
     write_annotations_json,
 )
 from cogstim.helpers.image_utils import to_hex
+from cogstim.helpers.visual_angle import ViewingGeometry
 from cogstim.helpers.visual_properties import (
+    DEGREE_FIELDS,
     PAIR_FIELDS,
     PROPERTY_FIELDS,
     image_property_records,
     pair_property_records,
+    with_degrees,
     write_properties_csv,
 )
 
@@ -71,6 +74,10 @@ class BaseGenerator(ABC):
         # pair, exported once the run finishes.
         self._visual_properties = []
         self._property_pairs = []
+
+        # How the stimuli will be viewed, when known: exports then report
+        # degrees of visual angle as well as pixels.
+        self.viewing_geometry = ViewingGeometry.from_config(config)
         
         if 'output_dir' not in config:
             raise ValueError(
@@ -273,7 +280,11 @@ class BaseGenerator(ABC):
             return []
 
         path = os.path.join(self.output_dir, "visual_properties.csv")
-        write_properties_csv(path, self._visual_properties, PROPERTY_FIELDS)
+        if self.viewing_geometry is not None:
+            records = with_degrees(self._visual_properties, self.viewing_geometry)
+            write_properties_csv(path, records, PROPERTY_FIELDS + DEGREE_FIELDS)
+        else:
+            write_properties_csv(path, self._visual_properties, PROPERTY_FIELDS)
         written = [path]
 
         pairs = pair_property_records(self._visual_properties, self._property_pairs)

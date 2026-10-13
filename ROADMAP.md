@@ -82,9 +82,12 @@ video, not just adding a generator.
   a table.
 - **Perceptual colour control**, so that colour-discrimination stimuli can be
   specified in a perceptually uniform space rather than by name.
-- **Degrees of visual angle** as an alternative to pixels, given a viewing
-  distance and display size. This would touch every size option, so it needs a
-  clear design before it starts.
+- **Degrees of visual angle for the remaining size options.** Given
+  `--viewing-distance-cm` and `--pixels-per-cm`, the image size and the dot
+  radii already take degrees and the visual properties export reports them;
+  degrees are converted to pixels at the command line, so pixels stay the unit
+  inside the package. The shape surfaces, stripe sizes and fixation sizes still
+  take pixels only and would gain `-deg` twins the same way.
 - **Export presets** for common downstream tools — COCO-format annotations for
   object detection, and ready-made import structures for Qualtrics or jsPsych.
 

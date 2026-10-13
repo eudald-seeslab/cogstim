@@ -28,6 +28,7 @@ GENERAL_CONFIG = {
     "max_point_radius": DOT_DEFAULTS["max_point_radius"],
     "layout": DOT_DEFAULTS["layout"],
     "gap": DOT_DEFAULTS["gap"],
+    "init_size": IMAGE_DEFAULTS["init_size"],
 }
 
 
@@ -108,7 +109,7 @@ class DotsANSGenerator(BaseGenerator):
         colour_1, colour_2 = self.dot_colours
 
         number_points = DotsCore(
-            init_size=IMAGE_DEFAULTS["init_size"],
+            init_size=self.config["init_size"],
             colour_1=colour_1,
             colour_2=colour_2,
             bg_colour=self.config["background_colour"],
@@ -124,7 +125,7 @@ class DotsANSGenerator(BaseGenerator):
         if layout == "separated" and two_colours:
             gap = self.config.get("gap", DOT_DEFAULTS["gap"])
             left_region, right_region = self._compute_separated_regions(
-                IMAGE_DEFAULTS["init_size"], number_points.boundary_width, gap
+                self.config["init_size"], number_points.boundary_width, gap
             )
             regions = {"colour_1": left_region, "colour_2": right_region}
 
@@ -256,7 +257,7 @@ class DotsANSGenerator(BaseGenerator):
         The separated layout confines each colour to a half; the circle
         inscribed in it is what the hull placement uses.
         """
-        size = IMAGE_DEFAULTS["init_size"]
+        size = self.config["init_size"]
         boundary = DotsCore.boundary_width
         if self.config.get("layout") == "separated" and not self.config["ONE_COLOUR"]:
             gap = self.config.get("gap", DOT_DEFAULTS["gap"])

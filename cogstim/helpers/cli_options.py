@@ -189,6 +189,15 @@ COMMON = [
            help="Root output directory (default varies by task)"),
     Option("--img-size", type=int, default=IMAGE_DEFAULTS["init_size"],
            help=f"Image size in pixels (default: {IMAGE_DEFAULTS['init_size']})"),
+    Option("--img-size-deg", type=float,
+           help=("Image size in degrees of visual angle, overriding --img-size; "
+                 "needs --viewing-distance-cm and --pixels-per-cm")),
+    Option("--viewing-distance-cm", type=float,
+           help=("Distance from the eye to the screen, which with --pixels-per-cm "
+                 "lets sizes be given in degrees of visual angle and reported so")),
+    Option("--pixels-per-cm", type=float,
+           help=("Pixel density of the screen: its width in pixels divided by its "
+                 "width in centimetres")),
     Option("--img-format", type=str, default=IMAGE_DEFAULTS["img_format"],
            choices=IMAGE_FORMAT_CHOICES,
            help=f"Image file format (default: {IMAGE_DEFAULTS['img_format']})"),
@@ -253,6 +262,12 @@ def dot_size_options(defaults):
         Option("--max-dot-radius-px", dest="max_point_radius", type=int,
                default=defaults["max_point_radius"], aliases=("--max-point-radius",),
                help=f"Maximum dot radius in pixels (default: {defaults['max_point_radius']})"),
+        Option("--min-dot-radius-deg", dest="min_point_radius_deg", type=float,
+               help=("Minimum dot radius in degrees of visual angle, overriding the "
+                     "pixel value; needs --viewing-distance-cm and --pixels-per-cm")),
+        Option("--max-dot-radius-deg", dest="max_point_radius_deg", type=float,
+               help=("Maximum dot radius in degrees of visual angle, overriding the "
+                     "pixel value; needs --viewing-distance-cm and --pixels-per-cm")),
         Option("--attempts-limit", type=int, default=defaults["attempts_limit"],
                help=f"Maximum attempts for dot placement (default: {defaults['attempts_limit']})"),
     ]

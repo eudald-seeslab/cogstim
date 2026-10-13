@@ -80,6 +80,8 @@ Most tasks accept these options:
 
 > **Note**: All CLI arguments use British spelling.
 
+> **Beta**: Give `--viewing-distance-cm` and `--pixels-per-cm` to state the image size and the dot radii in degrees of visual angle (`--img-size-deg`, `--min-dot-radius-deg`, `--max-dot-radius-deg`) and to get degree columns in the visual properties export; see [the guide](docs/guide.md#sizes-in-degrees-of-visual-angle). This is new and has not yet been checked against a real display and viewing set-up, so treat the conversions as provisional until it leaves beta.
+
 > **Note**: Use `--seed SEED` (where SEED is an integer) to make generation deterministic and reproducible. Without a seed, each run will produce different random variations.
 
 ### Task specification from CSV

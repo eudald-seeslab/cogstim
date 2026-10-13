@@ -36,6 +36,7 @@ from cogstim.helpers.constants import (
 )
 from cogstim.helpers import cli_options as opts
 from cogstim.helpers.cli_options import add_options, parse_ratios
+from cogstim.helpers.visual_angle import ViewingGeometry
 from cogstim.helpers.run_config import (
     argv_from_config,
     write_run_config,
@@ -131,6 +132,7 @@ def build_ans_config(args: argparse.Namespace) -> Dict[str, Any]:
             "surface_conditions": args.surface,
             "hull_conditions": args.hull,
             "ONE_COLOUR": False,
+            "init_size": args.img_size,
             "version_tag": getattr(args, 'version_tag', ''),
             "min_point_num": args.min_point_num,
             "max_point_num": args.max_point_num,
@@ -173,6 +175,7 @@ def build_one_colour_config(args: argparse.Namespace) -> Dict[str, Any]:
             "output_dir": args.output_dir,
             "ratios": getattr(args, 'ratios', 'all'),
             "ONE_COLOUR": True,
+            "init_size": args.img_size,
             "version_tag": getattr(args, 'version_tag', ''),
             "min_point_num": args.min_point_num,
             "max_point_num": args.max_point_num,
@@ -348,6 +351,8 @@ def execute(args, config, generator, note: str = "") -> None:
         report_dry_run(args, config, generator, note)
         return
 
+    geometry = viewing_geometry_from_args(args)
+    generator.viewing_geometry = geometry
     generator.generate_images()
 
     annotation_paths = generator.write_annotations()
@@ -371,6 +376,12 @@ def execute(args, config, generator, note: str = "") -> None:
             print(f"  Stimulus annotations written to {path}")
         for path in property_paths:
             print(f"  Visual properties written to {path}")
+        if geometry:
+            print(
+                f"  Viewing geometry: 1° of visual angle = {geometry.px_per_deg:.1f} px "
+                f"at {args.viewing_distance_cm:g} cm and {args.pixels_per_cm:g} px/cm; "
+                f"the image spans {geometry.length_deg(args.img_size):.2f}°"
+            )
         if config_path:
             print(f"  Options used were written to {config_path}")
             print(f"  Reproduce this run with: cogstim run {config_path}")
@@ -776,9 +787,52 @@ def validate_stimulus_arity(args: argparse.Namespace) -> None:
             )
 
 
+# Options given in degrees of visual angle, and the pixel option each sets.
+DEGREE_OPTIONS = {
+    "img_size_deg": ("img_size", "length"),
+    "min_point_radius_deg": ("min_point_radius", "radius"),
+    "max_point_radius_deg": ("max_point_radius", "radius"),
+}
+
+
+def viewing_geometry_from_args(args: argparse.Namespace):
+    """The viewing geometry the arguments describe, or None when none was given."""
+    return ViewingGeometry.from_config({
+        "viewing_distance_cm": getattr(args, "viewing_distance_cm", None),
+        "pixels_per_cm": getattr(args, "pixels_per_cm", None),
+    })
+
+
+def apply_visual_angle(args: argparse.Namespace) -> None:
+    """Turn sizes given in degrees into the pixels everything else works in.
+
+    Pixels stay the unit inside the package; degrees are converted once, here,
+    so that every generator, export and recorded configuration agrees on the
+    size that was drawn. A degree option overrides its pixel counterpart.
+    """
+    geometry = viewing_geometry_from_args(args)
+    given = {
+        name: getattr(args, name)
+        for name in DEGREE_OPTIONS
+        if getattr(args, name, None) is not None
+    }
+    if not given:
+        return
+    if geometry is None:
+        raise ValueError(
+            f"{', '.join('--' + name.replace('_', '-') for name in given)} need "
+            "--viewing-distance-cm and --pixels-per-cm to be turned into pixels"
+        )
+    for name, degrees in given.items():
+        target, kind = DEGREE_OPTIONS[name]
+        pixels = geometry.radius_px(degrees) if kind == "radius" else geometry.length_px(degrees)
+        setattr(args, target, max(1, round(pixels)))
+
+
 def validate_and_adjust_args(args: argparse.Namespace) -> None:
     """Validate arguments and apply demo mode adjustments."""
     validate_stimulus_arity(args)
+    apply_visual_angle(args)
 
     # 'mixed' was the ans spelling of what mask called 'full'. Both are accepted;
     # normalise so logs and filenames use one word for one thing.

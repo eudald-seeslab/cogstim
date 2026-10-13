@@ -220,6 +220,35 @@ images/shapes/
 
 ---
 
+## Recipe 9: A Set in Which No Visual Cue Predicts Number
+
+**Goal:** Generate ANS arrays in which neither the total surface nor the area the dots extend over tells a participant which colour has more dots, following Gebuis and Reynvoet (2011), and export the visual properties to check it.
+
+```bash
+cogstim ans \
+  --min-dot-num 4 --max-dot-num 10 \
+  --ratios 1/2,2/3,3/4,4/5 \
+  --min-dot-radius-px 8 --max-dot-radius-px 12 \
+  --surface random equal inverse \
+  --hull random equal inverse \
+  --visual-properties \
+  --train-num 5 --seed 1234
+```
+
+**Expected output:**
+```
+images/ans/
+  ├── train/
+  │   ├── yellow/  (one image per pair, colour order, surface and hull condition)
+  │   └── blue/
+  ├── visual_properties.csv
+  └── visual_property_pairs.csv
+```
+
+**Note:** Each dot-count pair appears once per combination of the three surface and the three hull conditions, so over the set the colour with more dots covers more surface, the same surface or less surface in a third of the images each, and likewise for the area it extends over. The small dots leave room for the inverse conditions; with the default 20–30 px dots the plan is refused for the wider ratios. To confirm that no cue predicts number, regress `numerical_distance` on each `_diff` column of `visual_property_pairs.csv`, as Gebuis and Reynvoet did for their own stimuli.
+
+---
+
 ## Tips for All Recipes
 
 1. **Always use `--seed`** for reproducibility in experiments (e.g., `--seed 1234`).

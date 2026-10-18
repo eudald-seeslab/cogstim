@@ -18,8 +18,9 @@
 <article-id pub-id-type="publisher-id">0</article-id>
 <article-id pub-id-type="doi">N/A</article-id>
 <title-group>
-<article-title>CogStim: Reproducible visual stimulus generation for
-cognitive science, neuroscience, and vision research</article-title>
+<article-title>CogStim: Reproducible generation of controlled visual
+stimuli for numerical cognition, psychophysics and computer
+vision</article-title>
 </title-group>
 <contrib-group>
 <contrib contrib-type="author">
@@ -69,227 +70,217 @@ a Creative Commons Attribution 4.0 International License (CC BY
 <body>
 <sec id="summary">
   <title>Summary</title>
-  <p>CogStim is an open‑source Python library for reproducible,
-  parameterized offline generation of visual stimuli for psychology,
-  neuroscience, and computer vision. It produces PNG/JPEG/SVG assets for
-  common paradigms (two‑colour ANS arrays, match‑to‑sample pairs with
-  optional total‑area equalization, single‑colour dot arrays, geometric
-  shapes, oriented lines/stripes, and fixation targets). Deterministic
-  seeding and robust geometric routines enforce non‑overlap, boundary
-  validity, and equalization to minimise perceptual confounds. A compact
-  Python API and command‑line interface make the tool accessible to both
-  programmers and non‑programmers, enabling quick creation of controlled
-  stimuli without special setup.</p>
+  <p>CogStim is an open-source Python package for generating visual
+  stimuli used in numerical cognition, psychophysics and computer vision
+  research. It produces dot arrays for numerosity perception tasks,
+  geometric shapes, oriented stripe patterns and fixation targets, and
+  writes them as standard image files that any experiment software or
+  machine-learning pipeline can load. The package is designed so that
+  researchers can easily set every parameter of a stimulus set to meet
+  the requirements of their study, from the number, size and colour of
+  the elements to the conditions the set is balanced across and the
+  correlated visual properties, such as total surface, figure placement,
+  or convex hull. Every run records its parameters and random seed, so a
+  set can be regenerated exactly and exported for model training. The
+  package can be used from the command line or as a Python library.</p>
 </sec>
 <sec id="statement-of-need">
   <title>Statement of need</title>
-  <p>Designing visual stimuli is a routine requirement in psychology,
-  neuroscience, and vision research. It requires precise control over
-  numerosity, size, spacing, color, and layout, alongside reproducible
-  randomization and strict study dependent constraints. When built ad
-  hoc, these demands make stimulus creation tedious and can introduce
-  small inconsistencies that affect comparisons across studies and model
-  evaluations. Researchers therefore benefit from a simple way to
-  generate controlled stimuli offline as standard image assets ready to
-  use wherever needed.</p>
-  <p>CogStim addresses this need by providing an offline, parameterized
-  generator for a range of paradigms: Approximate Number System (ANS)
+  <p>Many experiments in psychology, neuroscience and vision research
+  need large sets of images whose visual properties are controlled: how
+  many items each image holds, their size, position and colour. In
+  numerosity tasks, for instance, adding dots also increases the surface
+  they cover and the area they spread over, and participants can use
+  those cues instead of number
+  (<xref alt="Gebuis &amp; Reynvoet, 2011" rid="ref-gebuis_generating_2011" ref-type="bibr">Gebuis
+  &amp; Reynvoet, 2011</xref>). Laboratories usually write their own
+  scripts for this. Such scripts are rarely published, the controls they
+  apply are hard to state precisely, and their stimuli cannot be
+  regenerated once the script is lost, which makes results hard to
+  compare across studies and across model evaluations.</p>
+  <p>To make such stimuli easy to produce and to reproduce, we built
+  CogStim, which generates them offline, as ordinary image files, for
+  the paradigms our own work needed: two-colour dot arrays for the
+  Approximate Number System (ANS)
   (<xref alt="Halberda et al., 2008" rid="ref-halberda_individual_2008" ref-type="bibr">Halberda
-  et al., 2008</xref>), Match‑To‑Sample (MTS)
+  et al., 2008</xref>), sample and match pairs for enumeration
   (<xref alt="Sella et al., 2013" rid="ref-sella_enumeration_2013" ref-type="bibr">Sella
-  et al., 2013</xref>), geometric shapes, oriented lines
+  et al., 2013</xref>), single-colour dot arrays, and the simpler
+  stimuli that accompany them in a test battery or a model benchmark:
+  geometric shapes, oriented stripes
   (<xref alt="Srinivasan, 2021" rid="ref-srinivasan_vision_2021" ref-type="bibr">Srinivasan,
-  2021</xref>), and fixation targets
+  2021</xref>) and fixation targets
   (<xref alt="Thaler et al., 2013" rid="ref-thaler_what_2013" ref-type="bibr">Thaler
-  et al., 2013</xref>). It produces images in any major image format
-  (e.g. PNG, JPEG, SVG) that can be dropped into experiment builders,
-  web or desktop presentation software, and computer‑vision pipelines
-  without heavy setup. A Python API and a command‑line interface enable
-  both quick prototyping and large batch generation; deterministic seeds
-  ensure the same configuration yields identical outputs; and built‑in
-  algorithms enforce non‑overlap and allow total‑area equalization when
-  required. In this way the library serves dual needs: controlled
-  stimuli for behavioral and neuro‑cognitive experiments, and
-  well‑specified synthetic datasets for model development and
-  evaluation.</p>
+  et al., 2013</xref>). Dots never overlap or leave the canvas, and the
+  total surface of the two arrays in a pair can be left random, matched,
+  or made to contradict the numerical ratio. Experimenters load the PNG,
+  JPEG or SVG files into presentation software such as PsychoPy or
+  jsPsych. Researchers who train or evaluate vision models can also
+  request a CSV or JSON file giving the position, bounding box, size and
+  colour of every element in every image.</p>
 </sec>
 <sec id="state-of-the-field">
   <title>State of the field</title>
-  <p>Several established frameworks dominate the landscape of behavioral
-  research: <monospace>PsychoPy</monospace>
+  <p>Experiments in behavioural research are usually built with an
+  experiment engine: PsychoPy
   (<xref alt="Peirce et al., 2019" rid="ref-peirce_psychopy2_2019" ref-type="bibr">Peirce
-  et al., 2019</xref>) is the standard Python library for experiment
-  creation, offering precise timing and a vast array of stimuli;
-  <monospace>Psychtoolbox</monospace>
+  et al., 2019</xref>) in Python, Psychtoolbox
   (<xref alt="Brainard, 1997" rid="ref-brainard_psychophysics_1997" ref-type="bibr">Brainard,
-  1997</xref>) provides similar capabilities within the MATLAB/C
-  environment with a focus on low-level hardware control; and
-  <monospace>jsPsych</monospace>
+  1997</xref>) in MATLAB, jsPsych
   (<xref alt="Leeuw, 2015" rid="ref-de_leeuw_jspsych_2015" ref-type="bibr">Leeuw,
-  2015</xref>) has become the de facto standard for web-based behavioral
-  experiments. These tools are designed primarily as runtime engines:
-  they generate and render stimuli in real-time during the experimental
-  loop, coupling the stimulus generation logic with the display
-  backend.</p>
-  <p>CogStim was built rather than contributing to these existing
-  projects for several strategic reasons. First, it decouples generation
-  from presentation. While engines like PsychoPy are powerful,
-  automating them to batch-export thousands of static images for
-  external use (e.g., training a neural network or loading onto a
-  tablet) often requires hacking the windowing system or running
-  “headless” modes that are resource-intensive. CogStim is lightweight
-  and backend-agnostic by design, treating file export as a first-class
-  citizen. Second, CogStim fills a specific niche regarding algorithmic
-  validity: it prioritizes the construction logic of the stimulus (e.g.,
-  ensuring area equalization in ANS arrays or preventing overlap in
-  crowded scenes) over the rendering speed required for runtime
-  presentation. Finally, by producing standard assets (PNG/SVG) rather
-  than experiment code, it ensures interoperability; the resulting
-  datasets can be deployed across different platforms, from a custom web
-  app to machine learning pipelines, making CogStim a more versatile
-  tool for researchers.</p>
+  2015</xref>) in the web browser, and PsyToolkit
+  (<xref alt="Stoet, 2010" rid="ref-stoet_psytoolkit_2010" ref-type="bibr">Stoet,
+  2010</xref>,
+  <xref alt="2017" rid="ref-stoet_psytoolkit_2017" ref-type="bibr">2017</xref>).
+  All of them can draw dot arrays, shapes and gratings, and they draw
+  them while the experiment runs, inside the trial loop. That is what
+  precise timing, adaptive procedures and gaze-contingent displays
+  require, but it also ties each stimulus to the engine and the
+  experiment that draws it. The images are usually drawn anew in each
+  session, so checking them before participants see them means running
+  the experiment or adding code to capture the screen, and the set as a
+  whole is rarely inspected. Their construction is written in each
+  experiment’s own code, so another study or another engine cannot reuse
+  it. And any constraint that concerns the whole set, such as presenting
+  every ratio equally often, has to be programmed by hand in the trial
+  logic.</p>
+  <p>We built CogStim as a separate tool, rather than as part of one of
+  these engines, for three reasons. First, the stimuli are often needed
+  outside any engine. Psychological and educational test batteries are
+  increasingly run on web platforms and on tablet applications developed
+  in house, both in laboratories and in schools
+  (<xref alt="Anwyl-Irvine et al., 2020" rid="ref-anwyl-irvine_gorilla_2020" ref-type="bibr">Anwyl-Irvine
+  et al., 2020</xref>;
+  <xref alt="Bridges et al., 2020" rid="ref-bridges_timing_2020" ref-type="bibr">Bridges
+  et al., 2020</xref>;
+  <xref alt="Correig-Fraga et al., 2024" rid="ref-correig-fraga_development_2024" ref-type="bibr">Correig-Fraga
+  et al., 2024</xref>), and the same kind of stimuli is used to train
+  and evaluate neural networks
+  (<xref alt="Nasr et al., 2019" rid="ref-nasr_number_2019" ref-type="bibr">Nasr
+  et al., 2019</xref>;
+  <xref alt="Testolin et al., 2020" rid="ref-testolin_visual_2020" ref-type="bibr">Testolin
+  et al., 2020</xref>). Exporting thousands of images from an engine
+  means running its window system without a screen, whereas our package
+  directly writes the files. Second, a stimulus set should be checked
+  before anyone sees it. Many designs need every image to be correct and
+  the set as a whole to be balanced: dots that never overlap or leave
+  the canvas, two arrays whose total surface is matched when the design
+  requires it, and every count and ratio represented equally often.
+  Because our package builds the whole set before the experiment and
+  writes it to disk, these constraints are verified while the set is
+  built, anything that could not be produced is reported, and the
+  researcher can inspect every image, or analyse the set as a whole,
+  before the first participant sees it. Third, a stimulus set should be
+  part of the research record. Every run writes its options and random
+  seed next to the images, so the same set can be regenerated, inspected
+  and reused by other studies whatever software they present it with, as
+  reproducible research requires.</p>
+  <p>A second group of tools generates numerosity stimuli specifically:
+  the program of Gebuis and Reynvoet
+  (<xref alt="Gebuis &amp; Reynvoet, 2011" rid="ref-gebuis_generating_2011" ref-type="bibr">Gebuis
+  &amp; Reynvoet, 2011</xref>), CUSTOM
+  (<xref alt="De Marco &amp; Cutini, 2020" rid="ref-de_marco_introducing_2020" ref-type="bibr">De
+  Marco &amp; Cutini, 2020</xref>), NASCO
+  (<xref alt="Guillaume et al., 2020" rid="ref-guillaume_nasco_2020" ref-type="bibr">Guillaume
+  et al., 2020</xref>) and GeNEsIS
+  (<xref alt="Zanon et al., 2022" rid="ref-zanon_towards_2022" ref-type="bibr">Zanon
+  et al., 2022</xref>). They control the continuous visual properties of
+  dot arrays in detail and are the closest relatives of our dot tasks,
+  but all four are written in MATLAB, so running or modifying them
+  requires a commercial licence. By contrast, CogStim is a Python
+  package: it is open source and runs on any computer with a free Python
+  installation, which makes it available to any laboratory, school or
+  student regardless of the software they can pay for. It also records
+  each run so that it can be regenerated, exports the position of every
+  element for model training, and produces the other stimuli of a
+  battery, such as shapes, stripes and fixation targets, alongside the
+  dot arrays.</p>
 </sec>
 <sec id="software-design">
   <title>Software design</title>
-  <p>CogStim architecture prioritizes modularity and simplicity to
-  remain accessible to researchers with varying programming expertise.
-  We adopted a template method pattern where a base generator class
-  handles infrastructure concerns—such as file I/O, directory structure,
-  and random seed management—while specialized subclasses focus solely
-  on the geometric logic of specific stimuli. This design decouples the
-  “how” of file management from the “what” of stimulus creation,
-  allowing researchers to extend the library with new generators without
-  navigating complex boilerplate code.</p>
-  <p>To ensure efficiency and maintainability, we minimized external
-  dependencies, relying only on NumPy for vectorised geometric
-  calculations and Pillow for rasterization. This lightweight footprint
-  enables headless execution on servers or CI/CD pipelines, a trade-off
-  we favoured over including heavy GUI dependencies often found in
-  rendering engines.</p>
+  <p>The software architecture prioritizes modularity and simplicity so
+  that adding a stimulus type and changing stimuli details is safe and
+  easy. A base generator class does everything common to all tasks: it
+  builds the list of images a run will produce, creates the output
+  directories, sets the random seed, saves each image in the requested
+  format and records what was drawn. Each stimulus type is a subclass
+  that only decides what a set contains and how one image is drawn,
+  decoupling the new stimulus creation from the inner workings of the
+  package.</p>
+  <p>Users choose a stimulus set through options, which we designed so
+  that one set of rules covers every task. Each option is declared once
+  and shared by every task that uses it. Names follow an
+  easy-to-understand pattern, with the unit in the name
+  (<monospace>--min-dot-radius-px</monospace>) and colours numbered
+  (<monospace>--dot-colour-1</monospace>), and every default is shown in
+  the help. Before generating anything, each run builds the list of
+  images it will produce: <monospace>--dry-run</monospace> prints how
+  many there will be, and the message at the end of a run reports how
+  many were actually written. Each option is declared in a registry, so
+  that it cannot fall out of step with the program.</p>
+  <p>For reporting and reproducibility, each run writes its options and
+  seed to a <monospace>cogstim_config.yaml</monospace> file beside the
+  images, and <monospace>cogstim run</monospace> takes that file as
+  input. The file is both the record of a set and the way to produce it
+  again: researchers who prefer configuration files can write one
+  directly, and those who prefer the command line still end up with
+  one.</p>
+  <p>The package needs only Python 3.10 or later
+  (<xref alt="Python Software Foundation, 2026" rid="ref-python" ref-type="bibr">Python
+  Software Foundation, 2026</xref>), Pillow
+  (<xref alt="Clark &amp; Pillow contributors, 2015" rid="ref-clark2015pillow" ref-type="bibr">Clark
+  &amp; Pillow contributors, 2015</xref>) for drawing, NumPy
+  (<xref alt="Harris et al., 2020" rid="ref-harris2020array" ref-type="bibr">Harris
+  et al., 2020</xref>) for geometry, tqdm
+  (<xref alt="Costa-Luis &amp; others, 2022" rid="ref-tqdm" ref-type="bibr">Costa-Luis
+  &amp; others, 2022</xref>) for progress bars and PyYAML for
+  configuration files. All of them install with
+  <monospace>pip</monospace>, and none needs a display, so it runs
+  unchanged on a laptop, a server or a batch job. We chose this over
+  building on the drawing layer of an experiment engine, accepting that
+  it cannot present stimuli or record responses.</p>
 </sec>
 <sec id="research-impact-statement">
   <title>Research impact statement</title>
-  <p>CogStim has demonstrated its utility in diverse research contexts,
-  bridging behavioral science and computational modeling. It has been
-  used to generate stimuli for psychometric assessments in educational
-  settings
-  (<xref alt="Correig-Fraga et al., 2025" rid="ref-correig-fraga_interplay_2025" ref-type="bibr">Correig-Fraga
-  et al., 2025</xref>;
-  <xref alt="E. Correig-Fraga et al., 2024" rid="ref-correig-fraga_development_2024" ref-type="bibr">E.
-  Correig-Fraga et al., 2024</xref>) and to create synthetic datasets
-  for evaluating visual computation models in neuroscience (under
-  review). These applications validate the library’s capability to
-  support both traditional psychological experiments and modern
-  data-driven approaches.</p>
-  <p>To facilitate broad community adoption and ensure long-term
-  reliability, CogStim adheres to rigorous software engineering
-  standards. It includes a comprehensive test suite, continuous
-  integration (CI) pipelines, and is distributed via PyPI under a
-  permissive MIT license. Recognizing the varying technical expertise in
-  the field, the project features a novel documentation strategy: an
-  LLM-optimized manual designed to help non-programmers generate complex
-  CLI commands via natural language prompting. This combination of
-  robust engineering and accessibility effectively democratizes access
-  to rigorous stimulus generation, ensuring that high-quality,
-  reproducible stimuli are available to the wider research
-  community.</p>
-</sec>
-<sec id="software-description">
-  <title>Software description</title>
-  <sec id="design-and-key-features">
-    <title>Design and key features</title>
-    <list list-type="bullet">
-      <list-item>
-        <p><bold>Task coverage</bold>: ANS two-colour dot arrays;
-        single-colour dot arrays; MTS pairs with optional area
-        equalization; geometric shapes (circle, star, triangle, square);
-        oriented line/stripe patterns; fixation targets.</p>
-      </list-item>
-      <list-item>
-        <p><bold>Determinism &amp; reproducibility</bold>: global seed
-        handling for Python/NumPy; same parameters and same seed will
-        yield identical images.</p>
-      </list-item>
-      <list-item>
-        <p><bold>Robust dot engine</bold>:
-        <monospace>DotsCore</monospace> enforces non-overlap, boundary
-        validity, optional area equalization, and (for MTS) pair
-        equalization within tolerances.</p>
-      </list-item>
-      <list-item>
-        <p><bold>Stimulus equalization algorithms</bold>: CogStim
-        implements robust geometric equalization methods that adjust dot
-        radii so that total surface areas are matched either within
-        two-colour ANS arrays or between sample–match pairs. These
-        procedures guarantee perceptually fair stimuli for numerosity
-        and matching tasks, maintaining non-overlap and boundary
-        validity while achieving precise area ratios within configurable
-        tolerances.</p>
-      </list-item>
-      <list-item>
-        <p><bold>CLI &amp; Python API</bold>: consistent configuration
-        via dictionaries in code and ergonomic subcommands in the
-        CLI.</p>
-      </list-item>
-    </list>
-  </sec>
-  <sec id="implementation-and-dependencies">
-    <title>Implementation and dependencies</title>
-    <p>CogStim is implemented in Python (<inline-formula><alternatives>
-    <tex-math><![CDATA[\ge]]></tex-math>
-    <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mo>≥</mml:mo></mml:math></alternatives></inline-formula>
-    3.10)
-    (<xref alt="Python Software Foundation, 2023" rid="ref-python" ref-type="bibr">Python
-    Software Foundation, 2023</xref>) and builds upon a small number of
-    widely used open-source libraries. Image creation and drawing
-    operations are handled through Pillow
-    (<xref alt="Clark, 2015" rid="ref-clark2015pillow" ref-type="bibr">Clark,
-    2015</xref>), while all geometric computations and randomization
-    routines rely on NumPy
-    (<xref alt="Harris et al., 2020" rid="ref-harris2020array" ref-type="bibr">Harris
-    et al., 2020</xref>). The library uses tqdm
-    (<xref alt="Costa-Luis &amp; others, 2022" rid="ref-tqdm" ref-type="bibr">Costa-Luis
-    &amp; others, 2022</xref>) to provide progress bars during
-    generation processes and adopts standard Python modules such as
-    argparse for command-line interfaces and pytest for automated
-    testing.</p>
-    <p>The codebase is organized around a small set of generator classes
-    that call these dependencies through a unified interface. Each
-    generator defines the parameters of a particular task (e.g., ANS,
-    MTS, shapes, lines, fixation) and uses Pillow for rendering, NumPy
-    for geometric calculations, and tqdm for user feedback. This results
-    in a lightweight, portable implementation that can run on any system
-    supporting Python without special dependencies or graphical
-    backends.</p>
-    <p>All dependencies are open source, actively maintained, and
-    available through the Python Package Index (PyPI), ensuring
-    long-term accessibility and compatibility with typical research
-    workflows. The project is licensed under MIT, and available as a Git
-    repository in Github.</p>
-  </sec>
+  <p>Innovamat Education uses CogStim to generate the dot-array stimuli
+  of COSMOS, a cognitive and numerical screening test that it
+  administers twice every school year to about 50,000 children in the
+  first two years of primary school. These stimuli were used in a
+  published study of a response-to-intervention framework in mathematics
+  (<xref alt="Correig-Fraga et al., 2024" rid="ref-correig-fraga_development_2024" ref-type="bibr">Correig-Fraga
+  et al., 2024</xref>). The package also produced the synthetic image
+  datasets of a study of visual computation in the Drosophila visual
+  system
+  (<xref alt="Correig-Fraga et al., 2026" rid="ref-correig-fraga_structure_2026" ref-type="bibr">Correig-Fraga
+  et al., 2026</xref>).</p>
+  <p>The code is released under the MIT licence, so any laboratory,
+  school or company can use it, modify it and redistribute it, including
+  inside their own applications. It is also built to be adapted to each
+  researcher’s needs. Adding a stimulus type means writing one class
+  that states what a set contains and how one image is drawn; file
+  handling, seeding, image counts and the exports come from the base
+  class, and the developer documentation works through a complete
+  example. The same design serves the reproducibility that journals
+  increasingly ask for
+  (<xref alt="Nosek et al., 2015" rid="ref-nosek_promoting_2015" ref-type="bibr">Nosek
+  et al., 2015</xref>). A study can share the configuration file of its
+  stimuli rather than the images or the script that made them, and
+  anyone can regenerate exactly the same set, inspect it, or change one
+  parameter and generate a variant.</p>
 </sec>
 <sec id="example-figures">
   <title>Example figures</title>
   <fig>
-    <caption><p>Representative stimuli generated by
-    CogStim.<styled-content id="figU003Astimuli"></styled-content></p></caption>
+    <caption><p>CogStim stimuli
+    examples.<styled-content id="figU003Astimuli"></styled-content></p></caption>
     <graphic mimetype="image" mime-subtype="png" xlink:href="stimuli_panel.png" />
   </fig>
-  <p><bold>Figure 1.</bold> Representative stimuli generated by CogStim
-  across different task paradigms. <bold>(a, b)</bold> Approximate
-  Number System (ANS) two-colour dot arrays for numerosity
-  discrimination tasks, with (b) showing area-equalized dots between
-  colours. <bold>(c, d)</bold> Single geometric shapes (circle) in
-  different colours, used in shape discrimination tasks. <bold>(e,
-  f)</bold> Single-colour dot arrays suitable for numerosity estimation,
-  match-to-sample (MTS) paradigms, or as components in multi-feature
-  discrimination tasks. <bold>(g, h)</bold> Oriented line/stripe
-  patterns for orientation discrimination experiments. <bold>(i, j,
-  k)</bold> Additional geometric shapes (square, star, triangle) in
-  various colours, demonstrating the library’s shape generation
-  capabilities for categorical perception and visual search tasks.
-  <bold>(l)</bold> Fixation cross stimulus for experimental trial
-  preparation and gaze control.</p>
+  <p><bold>Figure 1.</bold> Example stimuli. <bold>(a, b)</bold>
+  Two-colour dot arrays for ANS tasks, with dot sizes drawn
+  independently (a) or with the same total surface for both colours (b).
+  <bold>(c, d, i-k)</bold> Geometric shapes. <bold>(e, f)</bold>
+  Single-colour dot arrays, as used in match-to-sample tasks. <bold>(g,
+  h)</bold> Oriented stripes. <bold>(l)</bold> Fixation target.</p>
 </sec>
 <sec id="availability">
   <title>Availability</title>
@@ -316,20 +307,22 @@ a Creative Commons Attribution 4.0 International License (CC BY
 </sec>
 <sec id="ai-usage-disclosure">
   <title>AI usage disclosure</title>
-  <p>The core architecture and foundational algorithms of CogStim were
-  developed prior to the widespread adoption of generative AI tools.
-  However, during recent development cycles, AI assistants were utilized
-  to assist in refactoring legacy code, homogenizing interfaces across
-  generator modules, and expanding specific functionalities to ensure
-  consistency. Regarding this manuscript, generative AI tools were
-  employed to review and refine the English language and narrative flow.
-  The authors have manually verified all AI-generated suggestions and
-  retain full responsibility for the accuracy and integrity of both the
-  software and the publication.</p>
+  <p>The core architecture and foundational algorithms were developed
+  prior to the widespread adoption of generative AI. However, during
+  recent development cycles, AI assistants were utilized to assist in
+  refactoring, homogenizing interfaces, and expanding specific
+  functionalities. Cursor’s Composer 2 was used in 2025 for code
+  completion and refactoring; Claude Opus 5 (August 2026) and Claude
+  Fable 5.1 (October 2026) for code, tests and documentation; and Claude
+  Fable 5.1 and Claude Opus 5.5 for drafting revised sections of this
+  paper. The author made the design decisions, reviewed, edited and
+  tested all AI-generated content, and takes full responsibility for the
+  software and the paper.</p>
 </sec>
 <sec id="conflicts-of-interest">
   <title>Conflicts of Interest</title>
-  <p>Authors declare no competing interests.</p>
+  <p>The author is employed by Innovamat Education, which uses CogStim
+  in its assessments.</p>
 </sec>
 </body>
 <back>
@@ -455,11 +448,12 @@ a Creative Commons Attribution 4.0 International License (CC BY
     <element-citation>
       <person-group person-group-type="author">
         <name><surname>Clark</surname><given-names>Alex</given-names></name>
+        <string-name>Pillow contributors</string-name>
       </person-group>
       <article-title>Pillow (PIL fork) documentation</article-title>
       <publisher-name>readthedocs</publisher-name>
       <year iso-8601-date="2015">2015</year>
-      <uri>https://buildmedia.readthedocs.org/media/pdf/pillow/latest/pillow.pdf</uri>
+      <uri>https://pillow.readthedocs.io/</uri>
     </element-citation>
   </ref>
   <ref id="ref-correig-fraga_development_2024">
@@ -482,23 +476,17 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <lpage>19</lpage>
     </element-citation>
   </ref>
-  <ref id="ref-correig-fraga_interplay_2025">
-    <element-citation publication-type="article-journal">
+  <ref id="ref-correig-fraga_structure_2026">
+    <element-citation>
       <person-group person-group-type="author">
-        <name><surname>Correig-Fraga</surname></name>
-        <name><surname>Sales-Pardo</surname></name>
+        <name><surname>Correig-Fraga</surname><given-names>Eudald</given-names></name>
         <name><surname>Guimerà</surname><given-names>Roger</given-names></name>
+        <name><surname>Sales-Pardo</surname><given-names>Marta</given-names></name>
       </person-group>
-      <article-title>Interplay between children’s cognitive profiles and within-school social interactions is nuanced and differs across ages</article-title>
-      <source>Communications psychology</source>
-      <year iso-8601-date="2025-03-20">2025</year><month>03</month><day>20</day>
-      <date-in-citation content-type="access-date"><year iso-8601-date="2025-11-08">2025</year><month>11</month><day>08</day></date-in-citation>
-      <volume>3</volume>
-      <issue>1</issue>
-      <issn>2731-9121</issn>
-      <uri>https://pubmed.ncbi.nlm.nih.gov/40113993/</uri>
-      <pub-id pub-id-type="doi">10.1038/s44271-025-00227-4</pub-id>
-      <pub-id pub-id-type="pmid">40113993</pub-id>
+      <article-title>Structure alone supports efficient visual computation in the drosophila visual system</article-title>
+      <year iso-8601-date="2026">2026</year>
+      <uri>https://arxiv.org/abs/2610.10023</uri>
+      <pub-id pub-id-type="doi">10.48550/arXiv.2610.10023</pub-id>
     </element-citation>
   </ref>
   <ref id="ref-tqdm">
@@ -517,9 +505,9 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <person-group person-group-type="author">
         <string-name>Python Software Foundation</string-name>
       </person-group>
-      <article-title>Python: A programming language for scientific computing</article-title>
+      <article-title>Python: A programming language</article-title>
       <publisher-name>https://www.python.org/</publisher-name>
-      <year iso-8601-date="2023">2023</year>
+      <year iso-8601-date="2026">2026</year>
     </element-citation>
   </ref>
   <ref id="ref-peirce_psychopy2_2019">
@@ -578,6 +566,199 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <pub-id pub-id-type="doi">10.3758/s13428-014-0458-y</pub-id>
       <fpage>1</fpage>
       <lpage>12</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-gebuis_generating_2011">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Gebuis</surname><given-names>Titia</given-names></name>
+        <name><surname>Reynvoet</surname><given-names>Bert</given-names></name>
+      </person-group>
+      <article-title>Generating nonsymbolic number stimuli</article-title>
+      <source>Behavior Research Methods</source>
+      <year iso-8601-date="2011">2011</year>
+      <volume>43</volume>
+      <issue>4</issue>
+      <pub-id pub-id-type="doi">10.3758/s13428-011-0097-5</pub-id>
+      <fpage>981</fpage>
+      <lpage>986</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-de_marco_introducing_2020">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>De Marco</surname><given-names>David</given-names></name>
+        <name><surname>Cutini</surname><given-names>Simone</given-names></name>
+      </person-group>
+      <article-title>Introducing CUSTOM: A customized, ultraprecise, standardization-oriented, multipurpose algorithm for generating nonsymbolic number stimuli</article-title>
+      <source>Behavior Research Methods</source>
+      <year iso-8601-date="2020">2020</year>
+      <volume>52</volume>
+      <issue>4</issue>
+      <pub-id pub-id-type="doi">10.3758/s13428-019-01332-z</pub-id>
+      <fpage>1528</fpage>
+      <lpage>1537</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-guillaume_nasco_2020">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Guillaume</surname><given-names>Mathieu</given-names></name>
+        <name><surname>Schiltz</surname><given-names>Christine</given-names></name>
+        <name><surname>Van Rinsveld</surname><given-names>Amandine</given-names></name>
+      </person-group>
+      <article-title>NASCO: A new method and program to generate dot arrays for non-symbolic number comparison tasks</article-title>
+      <source>Journal of Numerical Cognition</source>
+      <year iso-8601-date="2020">2020</year>
+      <volume>6</volume>
+      <issue>1</issue>
+      <pub-id pub-id-type="doi">10.5964/jnc.v6i1.231</pub-id>
+      <fpage>129</fpage>
+      <lpage>147</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-zanon_towards_2022">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Zanon</surname><given-names>Mirko</given-names></name>
+        <name><surname>Potrich</surname><given-names>Davide</given-names></name>
+        <name><surname>Bortot</surname><given-names>Maria</given-names></name>
+        <name><surname>Vallortigara</surname><given-names>Giorgio</given-names></name>
+      </person-group>
+      <article-title>Towards a standardization of non-symbolic numerical experiments: GeNEsIS, a flexible and user-friendly tool to generate controlled stimuli</article-title>
+      <source>Behavior Research Methods</source>
+      <year iso-8601-date="2022">2022</year>
+      <volume>54</volume>
+      <issue>1</issue>
+      <pub-id pub-id-type="doi">10.3758/s13428-021-01580-y</pub-id>
+      <fpage>146</fpage>
+      <lpage>157</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-stoet_psytoolkit_2010">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Stoet</surname><given-names>Gijsbert</given-names></name>
+      </person-group>
+      <article-title>PsyToolkit: A software package for programming psychological experiments using Linux</article-title>
+      <source>Behavior Research Methods</source>
+      <year iso-8601-date="2010">2010</year>
+      <volume>42</volume>
+      <issue>4</issue>
+      <pub-id pub-id-type="doi">10.3758/brm.42.4.1096</pub-id>
+      <fpage>1096</fpage>
+      <lpage>1104</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-stoet_psytoolkit_2017">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Stoet</surname><given-names>Gijsbert</given-names></name>
+      </person-group>
+      <article-title>PsyToolkit: A novel web-based method for running online questionnaires and reaction-time experiments</article-title>
+      <source>Teaching of Psychology</source>
+      <year iso-8601-date="2017">2017</year>
+      <volume>44</volume>
+      <issue>1</issue>
+      <pub-id pub-id-type="doi">10.1177/0098628316677643</pub-id>
+      <fpage>24</fpage>
+      <lpage>31</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-anwyl-irvine_gorilla_2020">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Anwyl-Irvine</surname><given-names>Alexander L.</given-names></name>
+        <name><surname>Massonnié</surname><given-names>Jessica</given-names></name>
+        <name><surname>Flitton</surname><given-names>Adam</given-names></name>
+        <name><surname>Kirkham</surname><given-names>Natasha</given-names></name>
+        <name><surname>Evershed</surname><given-names>Jo K.</given-names></name>
+      </person-group>
+      <article-title>Gorilla in our midst: An online behavioral experiment builder</article-title>
+      <source>Behavior Research Methods</source>
+      <year iso-8601-date="2020">2020</year>
+      <volume>52</volume>
+      <issue>1</issue>
+      <pub-id pub-id-type="doi">10.3758/s13428-019-01237-x</pub-id>
+      <fpage>388</fpage>
+      <lpage>407</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-bridges_timing_2020">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Bridges</surname><given-names>David</given-names></name>
+        <name><surname>Pitiot</surname><given-names>Alain</given-names></name>
+        <name><surname>MacAskill</surname><given-names>Michael R.</given-names></name>
+        <name><surname>Peirce</surname><given-names>Jonathan W.</given-names></name>
+      </person-group>
+      <article-title>The timing mega-study: Comparing a range of experiment generators, both lab-based and online</article-title>
+      <source>PeerJ</source>
+      <year iso-8601-date="2020">2020</year>
+      <volume>8</volume>
+      <pub-id pub-id-type="doi">10.7717/peerj.9414</pub-id>
+      <fpage>e9414</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-nosek_promoting_2015">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Nosek</surname><given-names>Brian A.</given-names></name>
+        <name><surname>Alter</surname><given-names>George</given-names></name>
+        <name><surname>Banks</surname><given-names>George C.</given-names></name>
+        <name><surname>Borsboom</surname><given-names>Denny</given-names></name>
+        <name><surname>Bowman</surname><given-names>Sara D.</given-names></name>
+        <name><surname>Breckler</surname><given-names>Steven J.</given-names></name>
+        <name><surname>Buck</surname><given-names>Stuart</given-names></name>
+        <name><surname>Chambers</surname><given-names>Christopher D.</given-names></name>
+        <name><surname>Chin</surname><given-names>Gilbert</given-names></name>
+        <name><surname>Christensen</surname><given-names>Garret</given-names></name>
+        <name><surname>others</surname></name>
+      </person-group>
+      <article-title>Promoting an open research culture</article-title>
+      <source>Science</source>
+      <year iso-8601-date="2015">2015</year>
+      <volume>348</volume>
+      <issue>6242</issue>
+      <pub-id pub-id-type="doi">10.1126/science.aab2374</pub-id>
+      <fpage>1422</fpage>
+      <lpage>1425</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-testolin_visual_2020">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Testolin</surname><given-names>Alberto</given-names></name>
+        <name><surname>Dolfi</surname><given-names>Serena</given-names></name>
+        <name><surname>Rochus</surname><given-names>Mathijs</given-names></name>
+        <name><surname>Zorzi</surname><given-names>Marco</given-names></name>
+      </person-group>
+      <article-title>Visual sense of number vs. sense of magnitude in humans and machines</article-title>
+      <source>Scientific Reports</source>
+      <year iso-8601-date="2020">2020</year>
+      <volume>10</volume>
+      <issue>1</issue>
+      <pub-id pub-id-type="doi">10.1038/s41598-020-66838-5</pub-id>
+      <fpage>10045</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-nasr_number_2019">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Nasr</surname><given-names>Khaled</given-names></name>
+        <name><surname>Viswanathan</surname><given-names>Pooja</given-names></name>
+        <name><surname>Nieder</surname><given-names>Andreas</given-names></name>
+      </person-group>
+      <article-title>Number detectors spontaneously emerge in a deep neural network designed for visual object recognition</article-title>
+      <source>Science Advances</source>
+      <year iso-8601-date="2019">2019</year>
+      <volume>5</volume>
+      <issue>5</issue>
+      <pub-id pub-id-type="doi">10.1126/sciadv.aav7903</pub-id>
+      <fpage>eaav7903</fpage>
+      <lpage></lpage>
     </element-citation>
   </ref>
 </ref-list>

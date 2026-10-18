@@ -72,6 +72,8 @@ Most tasks accept these options:
 - `--test-num N` – Number of test image sets (default: 0)
 - `--output-dir PATH` – Output directory (default: `images/<task>`)
 - `--img-size SIZE` – Image size in pixels (default: 512)
+- `--img-format FORMAT` – `png` (default), `jpg`, `bmp`, `tiff` or `svg`; SVG is rendered from the recorded geometry
+- `--metadata csv|json|both` – Also write the position, size and colour of every element
 - `--background-colour COLOUR` – Background colour (default: white)
 - `--seed SEED` – Random seed for reproducible generation
 - `--demo` – Generate a quick preview with 8 training images

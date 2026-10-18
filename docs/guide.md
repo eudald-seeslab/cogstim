@@ -47,6 +47,24 @@ These figures change with the options you pass — a wider `--min-surface`/
 `--max-surface` range or more `--angles` increases them. `--dry-run` always
 reports the figure for the arguments you actually gave.
 
+### File names
+
+Every file name states what the image is, so a set can be read back without its
+generation log. `{tag}` is the optional `--version-tag`.
+
+| Task | Path under the output directory |
+|---|---|
+| `shapes`, `colours`, `custom` | `train/{class}/{shape}_{surface}_{offset}_{angle}_{rotation}_{set}{tag}.png`; the class is the shape, the colour, or `{shape}_{colour}` |
+| `ans` | `train/{dominant colour}/img_{n1}_{n2}_{set}[_equal\|_inverse][_hull_equal\|_hull_inverse][_separated]{tag}.png` |
+| `one-colour` | `train/{colour}/img_{n}_0_{set}{tag}.png` |
+| `match-to-sample` | `train/mts_{trial:05d}_{surface}[{hull}]_{a\|b}_{n}{tag}.png`, letters `r`, `e`, `i`; see [File Naming](#file-naming) |
+| `lines` | `train/{angle}/img_{stripes}_{set}{tag}.png` |
+| `fixation` | `fix_{type}{tag}.png` |
+| `mask` | `mask_{index:04d}[_separated]{tag}.png` |
+
+`test/` mirrors `train/`. Shape images record the surface area in px², the offset
+of the centre from the image centre, the angle of that offset and the rotation.
+
 ## Annotations and vector output
 
 Every task can describe what it drew, and can write vector images instead of
@@ -622,6 +640,21 @@ Filenames are self-described and sort by trial then role: `mts_{trial_id:05d}_{r
 - `a` = match image, `b` = sample image (alphabetical order: match then sample)
 - `n_dots` = number of dots in that image
 - Optional `_version` tag may follow.
+
+### When a pair cannot be generated
+
+Equalizing or inverting a pair can fail for a particular random layout: growing or
+spreading the dots may push one off the canvas or into a neighbour. CogStim retries
+with a fresh layout, up to `--attempts-limit` times for placement and 200 layouts for a
+hull condition. A pair that still cannot be made is left out, the run ends with a warning
+giving the number missing, and their parameters are written to `failed_pairs.csv` in the
+output directory, in the `--tasks-csv` format, so that they can be regenerated directly:
+
+```bash
+cogstim match-to-sample --tasks-csv images/match_to_sample/failed_pairs.csv
+```
+
+The count printed at the end is the number of pairs actually written, not planned.
 
 ### Advanced Tweak: Tighter Equalization Tolerance
 

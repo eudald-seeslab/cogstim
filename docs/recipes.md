@@ -249,6 +249,55 @@ images/ans/
 
 ---
 
+## Recipe 10: Presenting the Images in PsychoPy or jsPsych
+
+**Goal:** Use a generated set in an experiment. CogStim writes files, not experiments; the presentation software loads them. With `--visual-properties`, `visual_property_pairs.csv` lists every image with its dot counts, which is a ready trial list.
+
+```bash
+cogstim ans --ratios easy --min-dot-num 4 --max-dot-num 10 --train-num 2 \
+  --visual-properties --seed 1234 --output-dir stimuli
+```
+
+**PsychoPy** (Python): one trial per row, with the correct answer taken from the counts.
+
+```python
+import csv
+from psychopy import visual, event
+
+win = visual.Window(fullscr=True, units="pix")
+with open("stimuli/visual_property_pairs.csv", newline="") as f:
+    trials = list(csv.DictReader(f))
+
+for trial in trials:
+    stim = visual.ImageStim(win, image="stimuli/" + trial["image_1"])
+    stim.draw()
+    win.flip()
+    key = event.waitKeys(keyList=["f", "j"])[0]   # f: more yellow, j: more blue
+    correct = (int(trial["n_1"]) > int(trial["n_2"])) == (key == "f")
+```
+
+**jsPsych** (JavaScript): the same list as `timeline_variables`, exported once to JSON.
+
+```javascript
+const trials = [ // from visual_property_pairs.csv, e.g. with Python's csv and json modules
+  {stimulus: "stimuli/train/yellow/img_5_4_0.png", n1: 5, n2: 4},
+];
+const procedure = {
+  timeline: [{
+    type: jsPsychImageKeyboardResponse,
+    stimulus: jsPsych.timelineVariable("stimulus"),
+    choices: ["f", "j"],
+    data: {n1: jsPsych.timelineVariable("n1"), n2: jsPsych.timelineVariable("n2")},
+  }],
+  timeline_variables: trials,
+  randomize_order: true,
+};
+```
+
+**Note:** The image paths in the CSV are relative to the output directory. `cogstim_config.yaml` in the same directory records every option used, so the stimuli can be regenerated with `cogstim run stimuli/cogstim_config.yaml`.
+
+---
+
 ## Tips for All Recipes
 
 1. **Always use `--seed`** for reproducibility in experiments (e.g., `--seed 1234`).

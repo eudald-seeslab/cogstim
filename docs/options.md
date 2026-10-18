@@ -7,9 +7,7 @@
 
 Every option of every task, taken directly from the command-line parser.
 
-`--train-num` and `--test-num` count **sets**, not images; see
-[Sets and images](guide.md#sets-and-images). Use `--dry-run` to see how many
-images a particular command would write.
+`--train-num` and `--test-num` count **sets**, not images; see [Sets and images](guide.md#sets-and-images). Use `--dry-run` to see how many images a particular command would write.
 
 ## `cogstim ans`
 
@@ -18,10 +16,10 @@ Generate two-colour dot array images for approximate number system tasks. Classe
 | Option | Default | Choices | Description |
 |---|---|---|---|
 | `--attempts-limit` | `10000` |  | Maximum attempts for dot placement (default: 10000) |
-| `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
+| `--background-colour` | `white` |  | Background colour (default: white) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
-| `--dot-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | First dot colour (default: yellow, or its inverse when that matches the background) |
-| `--dot-colour-2` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Second dot colour (default: blue, or its inverse when that matches the background) |
+| `--dot-colour-1` | *(chosen automatically)* |  | First dot colour (default: yellow, or its inverse when that matches the background) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
+| `--dot-colour-2` | *(chosen automatically)* |  | Second dot colour (default: blue, or its inverse when that matches the background) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--gap` | `40` |  | Pixel gap between halves in separated layout (default: 40) |
 | `--hull` | `random` | `random`, `equal`, `inverse` | Conditions on the area each array extends over (its convex hull), each combined with every surface condition. 'random' leaves the dots where they were placed, so the array with more dots usually extends further; 'equal' moves the dots so both arrays extend over the same area; 'inverse' gives the array with fewer dots the larger area, by the factor the other has more dots. Radii are untouched, so the surface condition still holds (default: random) |
@@ -57,7 +55,7 @@ Generate images of the same shape in different colours for colour recognition ta
 
 | Option | Default | Choices | Description |
 |---|---|---|---|
-| `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
+| `--background-colour` | `white` |  | Background colour (default: white) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
@@ -75,7 +73,7 @@ Generate images of the same shape in different colours for colour recognition ta
 | `--random-rotation` | off |  | Enable random rotation of shapes |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
 | `--shape` | `circle` | `circle`, `star`, `triangle`, `square` | Shape to use for both classes |
-| `--shape-colours` | `yellow blue` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | The two colours to discriminate between |
+| `--shape-colours` | `yellow blue` |  | The two colours to discriminate between Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--surface-step-px` | `100` |  | Gap between consecutive shape surface areas. This sets how many images a set contains: (max - min) / step per shape. Note that the radius is rounded to whole pixels, so a step much below ~400 produces duplicates (default: 100) |
 | `--test-num` | `0` |  | Number of test SETS to generate, not images (default: 0) |
 | `--train-num` | `10` |  | Number of training SETS to generate, not images. One set covers every condition of the paradigm once, so it yields many images; use --dry-run to see how many (default: 10) |
@@ -89,7 +87,7 @@ Generate images with custom combinations of shapes and colours.
 
 | Option | Default | Choices | Description |
 |---|---|---|---|
-| `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
+| `--background-colour` | `white` |  | Background colour (default: white) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
@@ -106,7 +104,7 @@ Generate images with custom combinations of shapes and colours.
 | `--quiet` | off |  | Suppress all non-error output |
 | `--random-rotation` | off |  | Enable random rotation of shapes |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
-| `--shape-colours` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Colours to include (required) |
+| `--shape-colours` | *(chosen automatically)* |  | Colours to include (required) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--shapes` | *(chosen automatically)* | `circle`, `star`, `triangle`, `square` | Shapes to include (required) |
 | `--surface-step-px` | `100` |  | Gap between consecutive shape surface areas. This sets how many images a set contains: (max - min) / step per shape. Note that the radius is rounded to whole pixels, so a step much below ~400 produces duplicates (default: 100) |
 | `--test-num` | `0` |  | Number of test SETS to generate, not images (default: 0) |
@@ -122,7 +120,7 @@ Generate fixation target images with different element combinations.
 | Option | Default | Choices | Description |
 |---|---|---|---|
 | `--all-types` | off |  | Generate all fixation types |
-| `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
+| `--background-colour` | `white` |  | Background colour (default: white) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--cross-arm-px` | `128` |  | Half-length of each cross arm in pixels (default: 128) |
 | `--cross-thickness-px` | `12` |  | Bar thickness for the cross in pixels (default: 12) |
 | `--disk-radius-px` | `48` |  | Radius of the filled disk in pixels (default: 48) |
@@ -137,7 +135,7 @@ Generate fixation target images with different element combinations.
 | `--pixels-per-cm` | *(none)* |  | Pixel density of the screen: its width in pixels divided by its width in centimetres |
 | `--quiet` | off |  | Suppress all non-error output |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
-| `--symbol-colour` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Fixation symbol colour (default: black, or its inverse when that matches the background) |
+| `--symbol-colour` | *(chosen automatically)* |  | Fixation symbol colour (default: black, or its inverse when that matches the background) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--types` | `A B C AB AC BC ABC` | `A`, `B`, `C`, `AB`, `AC`, `BC`, `ABC` | Fixation target types to generate |
 | `--verbose` | off |  | Enable verbose output |
 | `--version-tag` | *(empty)* |  | Optional tag appended to every filename |
@@ -150,13 +148,13 @@ Generate images with rotated stripe patterns at different angles.
 | Option | Default | Choices | Description |
 |---|---|---|---|
 | `--angles` | `0 45 90 135` |  | Rotation angles for stripe patterns |
-| `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
+| `--background-colour` | `white` |  | Background colour (default: white) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
 | `--img-size-deg` | *(pixels unless given)* |  | Image size in degrees of visual angle, overriding --img-size; needs --viewing-distance-cm and --pixels-per-cm |
-| `--line-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Stripe colour (default: black, or its inverse when that matches the background) |
+| `--line-colour-1` | *(chosen automatically)* |  | Stripe colour (default: black, or its inverse when that matches the background) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--max-line-thickness-px` | `30` |  | Maximum stripe thickness in pixels (default: 30) |
 | `--max-stripe-num` | `10` |  | Maximum number of stripes per image |
 | `--metadata` | `none` | `none`, `csv`, `json`, `both` | Also export where every stimulus feature is: bounding box, centre, size and colour of each element, for computer-vision training or eye-tracking analysis (default: none) |
@@ -179,9 +177,9 @@ Generate N mask images filled with overlapping dots of varying sizes. Useful as 
 
 | Option | Default | Choices | Description |
 |---|---|---|---|
-| `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
-| `--dot-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Dot colour (default: black, or its inverse when that matches the background) |
-| `--dot-colour-2` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Optional second dot colour; each dot is randomly assigned one of the two |
+| `--background-colour` | `white` |  | Background colour (default: white) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
+| `--dot-colour-1` | *(chosen automatically)* |  | Dot colour (default: black, or its inverse when that matches the background) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
+| `--dot-colour-2` | *(chosen automatically)* |  | Optional second dot colour; each dot is randomly assigned one of the two Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--dot-num` | `300` |  | Number of dots per mask (default: 300) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--gap` | `40` |  | Pixel gap between halves in separated layout (default: 40) |
@@ -209,9 +207,9 @@ Generate sample/match image pairs for match-to-sample tasks with controlled tota
 |---|---|---|---|
 | `--abs-tolerance` | *(chosen automatically)* |  | Absolute area tolerance in pixels (default: 2) |
 | `--attempts-limit` | `5000` |  | Maximum attempts for dot placement (default: 5000) |
-| `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
+| `--background-colour` | `white` |  | Background colour (default: white) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
-| `--dot-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Dot colour (default: black, or its inverse when that matches the background) |
+| `--dot-colour-1` | *(chosen automatically)* |  | Dot colour (default: black, or its inverse when that matches the background) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--hull` | `random` | `random`, `equal`, `inverse` | Conditions on the area each array extends over (its convex hull), each combined with every surface condition. 'random' leaves the dots where they were placed, so the array with more dots usually extends further; 'equal' moves the dots so both arrays extend over the same area; 'inverse' gives the array with fewer dots the larger area, by the factor the other has more dots. Radii are untouched, so the surface condition still holds (default: random) |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
@@ -247,9 +245,9 @@ Generate single-colour dot array images. Classes are based on quantity without c
 | Option | Default | Choices | Description |
 |---|---|---|---|
 | `--attempts-limit` | `10000` |  | Maximum attempts for dot placement (default: 10000) |
-| `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
+| `--background-colour` | `white` |  | Background colour (default: white) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
-| `--dot-colour-1` | *(chosen automatically)* | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Dot colour (default: yellow, or its inverse when that matches the background) |
+| `--dot-colour-1` | *(chosen automatically)* |  | Dot colour (default: yellow, or its inverse when that matches the background) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
 | `--img-size` | `512` |  | Image size in pixels (default: 512) |
@@ -286,7 +284,7 @@ Generate images of different shapes in the same colour for shape recognition tas
 
 | Option | Default | Choices | Description |
 |---|---|---|---|
-| `--background-colour` | `white` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | Background colour (default: white) |
+| `--background-colour` | `white` |  | Background colour (default: white) Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--demo` | off |  | Generate a small demo dataset (8 training sets) |
 | `--dry-run` | off |  | Report how many images would be generated, and why, without writing any |
 | `--img-format` | `png` | `png`, `jpg`, `jpeg`, `bmp`, `tiff`, `svg` | Image file format (default: png) |
@@ -303,7 +301,7 @@ Generate images of different shapes in the same colour for shape recognition tas
 | `--quiet` | off |  | Suppress all non-error output |
 | `--random-rotation` | off |  | Enable random rotation of shapes |
 | `--seed` | *(chosen automatically)* |  | Random seed; the same seed and options reproduce the same images |
-| `--shape-colours` | `yellow` | `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray` | The single colour both shapes are drawn in |
+| `--shape-colours` | `yellow` |  | The single colour both shapes are drawn in Use yellow, blue, red, green, black, white, gray, or '#RRGGBB'/'#RGB' (quote hex codes). |
 | `--shapes` | `circle star` | `circle`, `star`, `triangle`, `square` | The two shapes to discriminate between |
 | `--surface-step-px` | `100` |  | Gap between consecutive shape surface areas. This sets how many images a set contains: (max - min) / step per shape. Note that the radius is rounded to whole pixels, so a step much below ~400 produces duplicates (default: 100) |
 | `--test-num` | `0` |  | Number of test SETS to generate, not images (default: 0) |
@@ -314,8 +312,7 @@ Generate images of different shapes in the same colour for shape recognition tas
 
 ## Renamed options
 
-These older spellings still work and will keep working, but they emit a
-deprecation warning. Prefer the new name.
+These older spellings still work and will keep working, but they emit a deprecation warning. Prefer the new name.
 
 | Old name | Use instead |
 |---|---|

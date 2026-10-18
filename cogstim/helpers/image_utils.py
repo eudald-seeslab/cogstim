@@ -6,6 +6,7 @@ This module provides a wrapper over PIL Image operations to centralize
 all image creation and drawing functionality. 
 """
 import logging
+import re
 
 from PIL import Image, ImageDraw
 
@@ -23,8 +24,21 @@ _logger = logging.getLogger(__name__)
 
 
 def to_hex(colour):
-    """Resolve a colour name to its hex code, passing hex codes through."""
-    return COLOUR_MAP.get(colour, colour)
+    """Resolve palette names and #RGB/#RRGGBB to lowercase #rrggbb.
+
+    Other Pillow colour values (such as RGB tuples) pass through for existing
+    Python callers. Hex colours are validated before drawing or comparison.
+    """
+    colour = COLOUR_MAP.get(colour, colour)
+    if isinstance(colour, str) and colour.startswith("#"):
+        if not re.fullmatch(r"#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})", colour):
+            raise ValueError(
+                f"Invalid hex colour '{colour}': expected #RGB or #RRGGBB"
+            )
+        if len(colour) == 4:
+            colour = "#" + "".join(channel * 2 for channel in colour[1:])
+        return colour.lower()
+    return colour
 
 
 def _luminance(hex_colour):

@@ -50,10 +50,7 @@ Use `--seed` with an integer value to make your generation deterministic and rep
 cogstim shapes --train-num 10 --test-num 5 --seed 1234
 ```
 
-If you do not pass one, a seed is drawn for you and recorded, so a run is
-reproducible even when you did not plan for it. Every run writes the options it
-used to `cogstim_config.yaml` in the output directory, and you can repeat it
-exactly with:
+If you do not pass one, a seed is drawn for you and recorded, so a run is reproducible even when you did not plan for it. Every run writes the options it used to `cogstim_config.yaml` in the output directory, and you can repeat it exactly with:
 
 ```bash
 cogstim run images/shapes/cogstim_config.yaml
@@ -61,9 +58,7 @@ cogstim run images/shapes/cogstim_config.yaml
 
 ### Understanding Image Sets
 
-The `--train-num` and `--test-num` options specify the number of **sets**, not
-individual images. A set is one sweep of every condition the paradigm defines,
-so a set is many images. With the default options:
+The `--train-num` and `--test-num` options specify the number of **sets**, not individual images. A set is one sweep of every condition the paradigm defines, so a set is many images. With the default options:
 
 - **shapes/colours:** 200 images per set
 - **ans:** 112 images per set
@@ -71,8 +66,7 @@ so a set is many images. With the default options:
 - **lines:** 36 images per set
 - **one-colour:** 10 images per set
 
-These figures change with the options you pass. To see the exact count for a
-command before it writes anything:
+These figures change with the options you pass. To see the exact count for a command before it writes anything:
 
 ```bash
 cogstim shapes --train-num 10 --test-num 5 --dry-run

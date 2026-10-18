@@ -1,17 +1,21 @@
 import logging
 from cogstim.generators.shapes import ShapesGenerator
-from cogstim.helpers.constants import COLOUR_MAP
 import tempfile
 import pytest
 from unittest.mock import patch
 import os
 
 
-def test_draw_shape_circle():
+@pytest.mark.parametrize("colour, expected", [
+    ("yellow", (255, 254, 4)),
+    ("#12aBcD", (18, 171, 205)),
+    ("#AbC", (170, 187, 204)),
+])
+def test_draw_shape_circle(colour, expected):
     with tempfile.TemporaryDirectory() as tmpdir:
         sg = ShapesGenerator(
             shapes=["circle"],
-            colours=["yellow"],
+            colours=[colour],
             task_type="two_shapes",
             output_dir=tmpdir,
             train_num=1,
@@ -26,12 +30,13 @@ def test_draw_shape_circle():
             img_format="png",
         )
         canvas, dist, angle, rotation = sg.draw_shape(
-            "circle", 10000, COLOUR_MAP["yellow"], jitter=False
+            "circle", 10000, sg.colors[colour], jitter=False
         )
 
         # draw_shape returns the canvas, not just the raster, so that the drawn
         # geometry travels with the image for metadata and vector export.
         assert canvas.img.size == (512, 512)
+        assert canvas.img.getpixel((256, 256)) == expected
         assert [e.label for e in canvas.elements] == ["circle"]
         assert 0 <= dist <= 124  # within max jitter range used in code
         assert 0 <= angle <= 360

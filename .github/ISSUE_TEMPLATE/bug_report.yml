@@ -43,7 +43,7 @@ body:
     attributes:
       label: CogStim version
       description: The output of `cogstim --version`.
-      placeholder: cogstim 0.8.1
+      placeholder: cogstim 0.9.1
     validations:
       required: true
 

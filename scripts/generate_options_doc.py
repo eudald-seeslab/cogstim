@@ -34,9 +34,7 @@ HEADER = """# Options reference
 
 Every option of every task, taken directly from the command-line parser.
 
-`--train-num` and `--test-num` count **sets**, not images; see
-[Sets and images](guide.md#sets-and-images). Use `--dry-run` to see how many
-images a particular command would write.
+`--train-num` and `--test-num` count **sets**, not images; see [Sets and images](guide.md#sets-and-images). Use `--dry-run` to see how many images a particular command would write.
 """
 
 
@@ -101,7 +99,7 @@ def deprecated_section():
 
     lines = [
         "\n## Renamed options\n",
-        "These older spellings still work and will keep working, but they emit a",
+        "These older spellings still work and will keep working, but they emit a "
         "deprecation warning. Prefer the new name.\n",
         "| Old name | Use instead |",
         "|---|---|",

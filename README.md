@@ -1,16 +1,12 @@
 # CogStim – Visual Cognitive-Stimulus Generator
 
-[![PyPI version](https://img.shields.io/pypi/v/cogstim.svg)](https://pypi.org/project/cogstim/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/eudald-seeslab/cogstim/workflows/CI/badge.svg)](https://github.com/eudald-seeslab/cogstim/actions)
-[![Coverage Status](https://coveralls.io/repos/github/eudald-seeslab/cogstim/badge.svg?branch=main)](https://coveralls.io/github/eudald-seeslab/cogstim?branch=main)
+[![PyPI version](https://img.shields.io/pypi/v/cogstim.svg)](https://pypi.org/project/cogstim/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![CI](https://github.com/eudald-seeslab/cogstim/workflows/CI/badge.svg)](https://github.com/eudald-seeslab/cogstim/actions) [![Coverage Status](https://coveralls.io/repos/github/eudald-seeslab/cogstim/badge.svg?branch=main)](https://coveralls.io/github/eudald-seeslab/cogstim?branch=main)
 
 CogStim is a small Python toolkit that produces **synthetic image datasets** commonly used in cognitive–neuroscience and psychophysics experiments, such as:
 
 * Shape discrimination (e.g. *circle vs star*).
 * Colour discrimination (e.g. *yellow vs blue* circles).
-* Approximate Number System two-colour dot arrays, as used in the Panamath paradigm
-  ([details](docs/guide.md#ans--approximate-number-system)).
+* Approximate Number System two-colour dot arrays, as used in the Panamath paradigm ([details](docs/guide.md#ans--approximate-number-system)).
 * Single-colour dot arrays for number-discrimination tasks.
 * Custom combinations of geometrical *shapes × colours*.
 * Rotated stripe patterns ("lines" dataset) for orientation discrimination.
@@ -39,8 +35,7 @@ pip install cogstim
 - **[Adding a stimulus type](docs/development/adding-a-generator.md)** – A worked example
 - **[Deprecations](DEPRECATIONS.md)** – What is going away, and what replaces it
 
-Questions and bug reports go to the
-[issue tracker](https://github.com/eudald-seeslab/cogstim/issues).
+Questions and bug reports go to the [issue tracker](https://github.com/eudald-seeslab/cogstim/issues).
 
 ## Command-line interface
 
@@ -82,6 +77,14 @@ Most tasks accept these options:
 
 > **Note**: All CLI arguments use British spelling.
 
+All colour options accept `yellow`, `blue`, `red`, `green`, `black`, `white`, `gray`, or hex RGB codes in `#RRGGBB` and `#RGB` format. Quote hex codes in commands and YAML files so `#` is not treated as a comment:
+
+```bash
+cogstim colours --shape-colours '#0072B2' '#D55E00' --background-colour '#fff' --train-num 1
+```
+
+See [Specifying colours](docs/guide.md#specifying-colours) for formats and examples.
+
 > **Beta**: Give `--viewing-distance-cm` and `--pixels-per-cm` to state the image size and the dot radii in degrees of visual angle (`--img-size-deg`, `--min-dot-radius-deg`, `--max-dot-radius-deg`) and to get degree columns in the visual properties export; see [the guide](docs/guide.md#sizes-in-degrees-of-visual-angle). This is new and has not yet been checked against a real display and viewing set-up, so treat the conversions as provisional until it leaves beta.
 
 > **Note**: Use `--seed SEED` (where SEED is an integer) to make generation deterministic and reproducible. Without a seed, each run will produce different random variations.
@@ -97,11 +100,7 @@ For now, this is supported only for the following tasks, with the CSV specificat
 | Match to sample   | `match-to-sample` | sample, match, surface, hull |
 | ANS dot arrays    | `ans`             | n1, n2, surface, hull        |
 
-The `surface` column takes `random`, `equal` or `inverse` per row, so it also controls
-**which** stimuli get each surface condition and **in what proportion**. A CSV of four
-rows with one `equal` produces three random-size images and one whose two colours cover
-the same surface. See
-[the guide](docs/guide.md#choosing-exactly-which-stimuli-to-generate).
+The `surface` column takes `random`, `equal` or `inverse` per row, so it also controls **which** stimuli get each surface condition and **in what proportion**. A CSV of four rows with one `equal` produces three random-size images and one whose two colours cover the same surface. See [the guide](docs/guide.md#choosing-exactly-which-stimuli-to-generate).
 
 
 
@@ -146,17 +145,9 @@ cogstim ans --ratios easy --train-num 100 --test-num 40
 
 This is based on Halberda et al. (2008).
 
-By default every dot-count pair is generated in two surface conditions, `random` and
-`equal`. `--surface random equal inverse` adds a third in which the colour with fewer
-dots covers more surface, so that surface contradicts number in a third of the images;
-see [the guide](docs/guide.md#surface-conditions). `--hull` does the same for the area each
-colour extends over (its convex hull), by moving dots rather than resizing them, so the
-two can be combined; see [hull conditions](docs/guide.md#hull-conditions).
+By default every dot-count pair is generated in two surface conditions, `random` and `equal`. `--surface random equal inverse` adds a third in which the colour with fewer dots covers more surface, so that surface contradicts number in a third of the images; see [the guide](docs/guide.md#surface-conditions). `--hull` does the same for the area each colour extends over (its convex hull), by moving dots rather than resizing them, so the two can be combined; see [hull conditions](docs/guide.md#hull-conditions).
 
-Add `--visual-properties` to also export, for every array and every pair, the
-visual cues that covary with number (total surface, item size, contour, convex
-hull, density), following Gebuis & Reynvoet (2011); see
-[the guide](docs/guide.md#visual-properties-of-dot-arrays).
+Add `--visual-properties` to also export, for every array and every pair, the visual cues that covary with number (total surface, item size, contour, convex hull, density), following Gebuis & Reynvoet (2011); see [the guide](docs/guide.md#visual-properties-of-dot-arrays).
 
 #### Separated layout
 
@@ -264,14 +255,10 @@ This project is distributed under the **MIT License** – see the `LICENCE` file
 
 Planned work is tracked in the [roadmap](ROADMAP.md). Current rough edges:
 
-- The match-to-sample equalization algorithm grows radii a whole pixel at a
-  time and can fail on an unlucky layout; it retries, and reports any pair it
-  could not produce.
+- The match-to-sample equalization algorithm grows radii a whole pixel at a time and can fail on an unlucky layout; it retries, and reports any pair it could not produce.
 - CSV-based task specification exists for `ans` and `match-to-sample` only.
-- Nothing checks up front that the canvas is large enough for the requested dot
-  sizes and counts; placement fails at generation time instead.
-- Colours are limited to seven names; hex and named-colour formats are under
-  consideration.
+- Nothing checks up front that the canvas is large enough for the requested dot sizes and counts; placement fails at generation time instead.
+- Named colours are limited to seven palette names; use hex RGB codes for other colours. Alpha/transparency and additional HTML/matplotlib names are not supported by the CLI.
 
 
 ## References

@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from cogstim.helpers.constants import COLOUR_MAP, IMAGE_DEFAULTS, SHAPE_DEFAULTS
 from cogstim.helpers.base_generator import BaseGenerator
-from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.image_utils import ImageCanvas, to_hex
 from cogstim.helpers.planner import GenerationPlan
 
 
@@ -87,7 +87,7 @@ class ShapesGenerator(BaseGenerator):
         super().__init__(config)
         
         self.shapes = shapes if isinstance(shapes, list) else [shapes]
-        self.colors = {col: COLOUR_MAP[col] for col in colours}
+        self.colors = {col: to_hex(col) for col in colours}
         self.task_type = task_type
         self.background_colour = background_colour
 

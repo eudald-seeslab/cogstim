@@ -1,22 +1,19 @@
 # Adding a stimulus type
 
-A worked example of adding a new paradigm, using a hypothetical `gratings` task.
-Read [architecture.md](architecture.md) first for the concepts.
+A worked example of adding a new paradigm, using a hypothetical `gratings` task. Read [architecture.md](architecture.md) first for the concepts.
 
-There are five steps. None of them is large, because `BaseGenerator` already
-handles file naming, formats, counting, seeding, annotations and `--dry-run`.
+There are five steps. None of them is large, because `BaseGenerator` already handles file naming, formats, counting, seeding, annotations and `--dry-run`.
 
 ## 1. Declare the options
 
-In `cogstim/helpers/cli_options.py`, add a group. Do not define options inside
-the subcommand — `tests/test_cli_options.py` will fail if you do.
+In `cogstim/helpers/cli_options.py`, add a group. Do not define options inside the subcommand — `tests/test_cli_options.py` will fail if you do.
 
 ```python
 GRATINGS_SPECIFIC = [
-    Option("--grating-colour-1", dest="grating_colour", type=str,
-           choices=COLOUR_CHOICES,
+    Option("--grating-colour-1", dest="grating_colour", type=parse_colour,
+           metavar="COLOUR",
            help="Bar colour (default: black, or its inverse when that "
-                "matches the background)"),
+                "matches the background)" + COLOUR_HELP),
     Option("--min-spatial-frequency-cpd", type=float, default=0.5,
            help="Minimum spatial frequency in cycles per degree"),
     Option("--max-spatial-frequency-cpd", type=float, default=8.0,
@@ -27,12 +24,11 @@ GRATINGS_SPECIFIC = [
 The naming rules are checked automatically:
 
 - Colours are `--<element>-colour[-N]`.
+- Use `parse_colour` and `COLOUR_HELP` so colour options accept and document both palette names and hex RGB codes.
 - A measurement carries its unit: `-px`, `-deg`, `-cpd`.
-- A `--min-X` needs a `--max-X`, unless it is a constraint rather than a range
-  endpoint (add it to `UNPAIRED_MINIMUMS` with a reason if so).
+- A `--min-X` needs a `--max-X`, unless it is a constraint rather than a range endpoint (add it to `UNPAIRED_MINIMUMS` with a reason if so).
 - A flag shared with another task must mean the same thing there.
-- Leave a stimulus colour's default as `None` so the generator can pick one that
-  contrasts with the background.
+- Leave a stimulus colour's default as `None` so the generator can pick one that contrasts with the background.
 
 ## 2. Write the generator
 
@@ -82,10 +78,7 @@ class GratingsGenerator(BaseGenerator):
 
 Two things that matter more than they look:
 
-**Return the canvas from your drawing method, not `canvas.img`.** The canvas
-carries the recorded geometry; the bare image does not. Passing the image to
-`save_image()` silently loses annotations and makes SVG output impossible for
-your task.
+**Return the canvas from your drawing method, not `canvas.img`.** The canvas carries the recorded geometry; the bare image does not. Passing the image to `save_image()` silently loses annotations and makes SVG output impossible for your task.
 
 **Label what you draw.** The label is what appears in the exported annotations.
 
@@ -93,8 +86,7 @@ your task.
 canvas.draw_rectangle(bar_bounds, fill=self.colour, label="grating_bar")
 ```
 
-`GenerationPlan` needs to know how to expand your task type: add an
-`expand_gratings_tasks()` alongside the existing ones and a branch in `build()`.
+`GenerationPlan` needs to know how to expand your task type: add an `expand_gratings_tasks()` alongside the existing ones and a branch in `build()`.
 
 ## 3. Wire up the subcommand
 
@@ -134,14 +126,11 @@ def setup_gratings_subcommand(subparsers):
     )
 ```
 
-`execute()` gives you `--dry-run`, the accurate summary, annotation export and
-the recorded run configuration for free.
+`execute()` gives you `--dry-run`, the accurate summary, annotation export and the recorded run configuration for free.
 
 ## 4. Test it
 
-The shared consistency tests pick up your task automatically once it is
-registered — including the check that its defaults do not produce a blank image
-on either a white or a black background. Add tests for the geometry itself:
+The shared consistency tests pick up your task automatically once it is registered — including the check that its defaults do not produce a blank image on either a white or a black background. Add tests for the geometry itself:
 
 ```python
 def test_bar_count_matches_spatial_frequency(tmp_path):
@@ -162,9 +151,7 @@ python scripts/docs_smoke.py
 
 ## 5. Document it
 
-- Add a section to `docs/guide.md`, with a minimal command and the **measured**
-  number of images per set — get it from `--dry-run`, do not estimate.
-- Add the images-per-set row to the table in
-  [Sets and images](../guide.md#sets-and-images).
+- Add a section to `docs/guide.md`, with a minimal command and the **measured** number of images per set — get it from `--dry-run`, do not estimate.
+- Add the images-per-set row to the table in [Sets and images](../guide.md#sets-and-images).
 - Add a recipe to `docs/recipes.md` if there is an obvious research use.
 - Regenerate `docs/options.md`; a test fails if you forget.

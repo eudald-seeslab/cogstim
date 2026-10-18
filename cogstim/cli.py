@@ -715,8 +715,6 @@ For help on a specific task:
     parser.add_argument(
         "--version",
         action="version",
-        # Read from package metadata rather than hardcoded: the literal here had
-        # drifted to 0.8.0 while pyproject.toml said 0.8.1.
         version=f"cogstim {_package_version()}",
     )
     

@@ -1,10 +1,17 @@
 import itertools
+import math
 from random import randint
 import numpy as np
+
+from cogstim.helpers import hull_control
 
 
 class PointLayoutError(ValueError):
     pass
+
+
+class HullLayoutError(PointLayoutError):
+    """A layout that cannot meet its hull condition; another draw may."""
 
 
 class DotsCore:
@@ -13,6 +20,8 @@ class DotsCore:
     point_sep = 10
     # We consider equal areas if their (r1 - r2) / r1 ratio differs by less than this number:
     area_tolerance = 0.001
+    # Maximum whole-pixel radius increments equalize_areas will apply before giving up
+    equalize_increment_limit = 1000
 
     def __init__(self, init_size, colour_1, colour_2=None, bg_colour=None, mode=None,
                  min_point_radius=None, max_point_radius=None, attempts_limit=None):
@@ -46,20 +55,35 @@ class DotsCore:
         self.max_point_radius = max_point_radius
         self.attempts_limit = attempts_limit
 
-    def _create_random_point(self):
-        radius = randint(self.min_point_radius, self.max_point_radius)
-        limit = self.boundary_width + radius + self.point_sep
+    def field_radius(self):
+        """Radius of the circle every dot stays within by default."""
+        return self.init_size / 2 - self.boundary_width
 
-        # Change mental coordinate system to the center of the square
-        rad = int(self.init_size / 2 - limit)
+    def _create_random_point(self, centre=None, field_radius=None):
+        """Generate a random dot inside a circular field.
+
+        By default the field is the canvas circle, keeping boundary_width
+        clear of the edge. A smaller field, concentric or not, is how the hull
+        conditions confine the array that must extend less.
+        """
+        radius = randint(self.min_point_radius, self.max_point_radius)
+        if field_radius is None:
+            field_radius = self.field_radius()
+        if centre is None:
+            centre = (self.init_size / 2, self.init_size / 2)
+
+        # Change mental coordinate system to the centre of the field
+        rad = int(field_radius - radius - self.point_sep)
+        if rad <= 0:
+            raise PointLayoutError("The field is too small for a dot")
         rx = randint(-rad, rad)
         # Make sure we are always inside the circle
-        max_ = int(np.sqrt((self.init_size / 2 - limit) ** 2 - rx ** 2))
+        max_ = int(np.sqrt(rad ** 2 - rx ** 2))
         ry = randint(-max_, max_)
 
         # Transform to coordinates with origin on the upper left quadrant
-        x = rx + self.init_size / 2
-        y = ry + self.init_size / 2
+        x = rx + centre[0]
+        y = ry + centre[1]
 
         return x, y, radius
 
@@ -83,7 +107,7 @@ class DotsCore:
 
         return dist > point[2] + new_point[2] + self.point_sep
 
-    def design_n_points(self, n, colour, point_array=None, region=None):
+    def design_n_points(self, n, colour, point_array=None, region=None, field=None):
         """Place *n* non-overlapping dots for *colour*.
 
         Args:
@@ -93,6 +117,8 @@ class DotsCore:
             region: Optional ``(x_min, x_max, y_min, y_max)`` rectangle that
                 constrains placement.  When *None*, the default circular
                 placement covering the full canvas is used.
+            field: Optional ``(centre, radius)`` circle to place within
+                instead, used by the hull conditions.
         """
         if point_array is None:
             point_array = []
@@ -100,6 +126,9 @@ class DotsCore:
         if region is not None:
             def point_fn():
                 return self._create_random_point_in_rect(*region)
+        elif field is not None:
+            def point_fn():
+                return self._create_random_point(*field)
         else:
             point_fn = self._create_random_point
 
@@ -126,11 +155,16 @@ class DotsCore:
             fill_colour = self.colour_1
         else:
             fill_colour = self.colour_1 if colour == "colour_1" else self.colour_2
-        self.canvas.draw_ellipse((x1, y1, x2, y2), fill=fill_colour)
+        self.canvas.draw_ellipse((x1, y1, x2, y2), fill=fill_colour, label="dot")
 
     def draw_points(self, point_array):
+        """Draw every dot and return the canvas.
+
+        Returns the canvas rather than the bare PIL image so the recorded
+        geometry reaches save_image, which needs it for annotations and SVG.
+        """
         [self._draw_point(a[0], a[1]) for a in point_array]
-        return self.canvas.img
+        return self.canvas
 
     @staticmethod
     def compute_area(point_array, colour):
@@ -160,7 +194,13 @@ class DotsCore:
         return (point[0][0], point[0][1], new_radius), point[1]
 
     def equalize_areas(self, point_array):
+        """Grow the dots of the smaller-area colour until both colours match in area.
 
+        Raises:
+            PointLayoutError: if equalizing would push a dot past the edge of the
+                canvas, make two dots overlap, or fail to converge. Callers catch
+                this and retry with a fresh layout.
+        """
         # Who is big and who is small
         small, big_area, small_area = self._get_areas(point_array)
 
@@ -168,8 +208,26 @@ class DotsCore:
         # This brings us to this problem: solve a = sum_i^n (x_i^2 + 2r_i*x_i),
         # which is not solvable analytically. Therefore, what we'll do is add
         # pixel after pixel to all points until we are close to the target value
+        increments = 0
         while not self._check_areas_equal(big_area, small_area):
+            # Each pass grows every dot of the smaller colour by a whole pixel, so
+            # the areas can leapfrog past the tolerance and oscillate instead of
+            # converging. Bound the loop rather than hanging the whole run.
+            if increments >= self.equalize_increment_limit:
+                raise PointLayoutError(
+                    f"Areas did not converge within {self.equalize_increment_limit} "
+                    "radius increments"
+                )
             point_array = [self._increase_radius(a) if a[1] == small else a for a in point_array]
+            increments += 1
+
+            # Growing a radius can push a dot past the edge of the canvas. The other
+            # area-adjusting methods all check this; without it here the dot is
+            # silently drawn clipped.
+            for point in point_array:
+                if not self._check_within_boundaries(point[0]):
+                    raise PointLayoutError("Equalized point is outside boundaries")
+
             # Recompute areas after adjustment
             small, big_area, small_area = self._get_areas(point_array)
 
@@ -181,9 +239,111 @@ class DotsCore:
         return point_array
 
     
+    def set_area_ratio(self, point_array, target_ratio):
+        """Rescale both colours so that area(colour_1) / area(colour_2) == target_ratio.
+
+        The inverse surface condition needs the colour with fewer dots to cover
+        more surface. Growing that colour alone would make its dots very large
+        for the wider ratios, so the change is shared: colour_1's radii are
+        multiplied by the fourth root of the required change in area ratio and
+        colour_2's divided by it, which moves the mean dot size as little as
+        possible. A ratio of 1 equalizes the two areas.
+
+        Raises:
+            PointLayoutError: if either colour has no dots, or a grown dot would
+                leave the canvas or overlap a neighbour. Callers retry with a
+                fresh layout.
+        """
+        area_1 = self.compute_area(point_array, "colour_1")
+        area_2 = self.compute_area(point_array, "colour_2")
+        if area_1 == 0 or area_2 == 0:
+            raise PointLayoutError("Both colours need dots to set an area ratio")
+
+        change = target_ratio / (area_1 / area_2)
+        factor_1 = change ** 0.25
+        scaled = [
+            self._set_radius(p, p[0][2] * (factor_1 if p[1] == "colour_1" else 1 / factor_1))
+            for p in point_array
+        ]
+        if not self.validate_layout(scaled):
+            raise PointLayoutError(
+                "Setting the area ratio pushed a dot off the canvas or into a neighbour"
+            )
+        return scaled
+
+    def hull_fields(self, regions=None):
+        """The field each colour may spread over: its region, or the canvas circle."""
+        fields = {}
+        for colour in ("colour_1", "colour_2"):
+            if regions and colour in regions:
+                fields[colour] = hull_control.RectField(*regions[colour], margin=self.point_sep)
+            else:
+                fields[colour] = hull_control.CircleField(
+                    (self.init_size / 2, self.init_size / 2),
+                    self.field_radius() - self.point_sep,
+                )
+        return fields
+
+    def expand_hulls_to_ratio(self, point_array, target_ratio, regions=None):
+        """Spread the dots so that hull(colour_1) / hull(colour_2) == target_ratio.
+
+        Each colour's centres are scaled outwards about that colour's centroid;
+        no radius changes and no dot moves inwards, so a surface condition
+        already applied still holds and no dot of one colour runs into another
+        of the same colour. The colour that must extend less is expected to
+        have been placed in a reduced field (see hull_control), since spreading
+        alone cannot make a hull smaller.
+
+        Args:
+            point_array: Placed dots, as ((x, y, r), colour) pairs.
+            target_ratio: Required hull(colour_1) / hull(colour_2).
+            regions: Optional {colour: (x_min, x_max, y_min, y_max)} rectangles
+                the colours were confined to; the canvas circle otherwise.
+
+        Raises:
+            HullLayoutError: if this layout cannot reach the ratio by spreading
+                inside its fields, or spreading makes the two colours overlap.
+            PointLayoutError: if either colour has no dots.
+        """
+        discs = {
+            colour: [p for p, c in point_array if c == colour]
+            for colour in ("colour_1", "colour_2")
+        }
+        if not discs["colour_1"] or not discs["colour_2"]:
+            raise PointLayoutError("Both colours need dots to set a hull ratio")
+
+        fields = self.hull_fields(regions)
+        moved = hull_control.expand_to_ratio(
+            discs["colour_1"], fields["colour_1"],
+            discs["colour_2"], fields["colour_2"],
+            target_ratio,
+        )
+        if moved is None:
+            raise HullLayoutError("This layout cannot reach the hull ratio by spreading")
+
+        result = [(disc, "colour_1") for disc in moved[0]] + [(disc, "colour_2") for disc in moved[1]]
+        if not self.validate_layout(result):
+            raise HullLayoutError("Spreading the dots to the hull ratio made the colours overlap")
+        return result
+
     def _check_within_boundaries(self, point):
-        return (all([point[i] - point[2] > 0 for i in range(2)]) and 
-                all([point[i] + point[2] < self.init_size for i in range(2)]))
+        """True if the dot's rasterised extent fits inside the canvas.
+
+        The ellipse covers whole pixels from floor(centre - radius) to
+        ceil(centre + radius), so the bounds have to be compared after rounding
+        outwards: a dot at ``centre - radius == 0.5`` satisfies a plain ``> 0``
+        test yet still paints pixel column 0.
+
+        The outermost pixel ring is excluded as well, so that a dot never merely
+        touches the border. A dot painting the edge row is visually
+        indistinguishable from one the canvas has cut off.
+        """
+        radius = point[2]
+        return all(
+            math.floor(centre - radius) >= 1
+            and math.ceil(centre + radius) <= self.init_size - 2
+            for centre in (point[0], point[1])
+        )
 
     
     def fix_total_area(self, point_array, target_area):

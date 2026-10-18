@@ -21,6 +21,9 @@ dependencies    = [
   "Pillow>=9.0.0",
   "numpy>=1.21.0",
   "tqdm>=4.60.0",
+  # Reads and writes the run configuration recorded next to every output, which
+  # is what makes a generation reproducible after the fact.
+  "PyYAML>=6.0",
 ]
 
 [project.urls]

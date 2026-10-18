@@ -200,7 +200,7 @@ class TestPointsGeneratorOneColourMode:
             generator = DotsANSGenerator(config)
             positions = generator.get_positions()
             
-            # Two-colour mode: multiplier = 4 (both orders + equalized/non-equalized)
+            # Two-colour mode: multiplier = 4 (both orders x 2 surface conditions)
             multiplier = 4
             total_images = (generator.train_num + generator.test_num) * len(positions) * multiplier
             assert total_images > 0  # Should generate some images
@@ -260,15 +260,15 @@ class TestPointsGeneratorErrorHandling:
                 mock_np.design_n_points.return_value = []
                 mock_np.draw_points.return_value = MagicMock()
                 
-                result = generator.create_image(2, 0, False)
+                result = generator.create_image(2, 0, "random")
                 
                 # Should call design_n_points twice (once for each colour, even in one-colour mode)
                 assert mock_np.design_n_points.call_count == 2
                 # Should not call equalize_areas in one-colour mode
                 mock_np.equalize_areas.assert_not_called()
 
-    def test_create_image_two_colour_mode_equalized(self):
-        """Test create_image method in two-colour mode with equalization."""
+    def test_create_image_two_colour_mode_equal_surface(self):
+        """Test create_image method in two-colour mode with equal surface."""
         config = {
             **GENERAL_CONFIG,
             "train_num": 1,
@@ -295,11 +295,11 @@ class TestPointsGeneratorErrorHandling:
                 mock_np.equalize_areas.return_value = []
                 mock_np.draw_points.return_value = MagicMock()
                 
-                result = generator.create_image(2, 3, True)
+                result = generator.create_image(2, 3, "equal")
                 
                 # Should call design_n_points twice for both colours
                 assert mock_np.design_n_points.call_count == 2
-                # Should call equalize_areas when equalized=True
+                # Should call equalize_areas when surface is "equal"
                 mock_np.equalize_areas.assert_called_once()
 
 
@@ -397,14 +397,14 @@ class TestSeparatedLayout:
             mock_np.design_n_points.return_value = []
             mock_np.draw_points.return_value = MagicMock()
 
-            generator.create_image(3, 5, equalized=False)
+            generator.create_image(3, 5, surface="random")
 
             calls = mock_np.design_n_points.call_args_list
             assert len(calls) == 2
             for c in calls:
                 assert "region" in c.kwargs and c.kwargs["region"] is not None
 
-    def test_create_image_separated_equalized(self):
+    def test_create_image_separated_equal_surface(self):
         """Equalization should be invoked in separated mode when requested."""
         config = self._base_config()
 
@@ -419,7 +419,7 @@ class TestSeparatedLayout:
             mock_np.equalize_areas.return_value = []
             mock_np.draw_points.return_value = MagicMock()
 
-            generator.create_image(3, 5, equalized=True)
+            generator.create_image(3, 5, surface="equal")
 
             mock_np.equalize_areas.assert_called_once()
 
@@ -431,7 +431,7 @@ class TestSeparatedLayout:
             generator = DotsANSGenerator(config)
 
         with patch.object(generator, 'create_and_save_once') as mock_save:
-            generator.create_and_save(3, 5, equalized=False, phase="train", tag=0)
+            generator.create_and_save(3, 5, surface="random", phase="train", tag=0)
             filename_arg = mock_save.call_args[0][0]
             assert "_separated" in filename_arg
 
@@ -443,7 +443,7 @@ class TestSeparatedLayout:
             generator = DotsANSGenerator(config)
 
         with patch.object(generator, 'create_and_save_once') as mock_save:
-            generator.create_and_save(3, 5, equalized=False, phase="train", tag=0)
+            generator.create_and_save(3, 5, surface="random", phase="train", tag=0)
             filename_arg = mock_save.call_args[0][0]
             assert "_separated" not in filename_arg
 
@@ -460,7 +460,7 @@ class TestSeparatedLayout:
             mock_np.design_n_points.return_value = []
             mock_np.draw_points.return_value = MagicMock()
 
-            generator.create_image(3, 5, equalized=False)
+            generator.create_image(3, 5, surface="random")
 
             calls = mock_np.design_n_points.call_args_list
             assert len(calls) == 2
@@ -480,7 +480,7 @@ class TestSeparatedLayout:
             mock_np.design_n_points.return_value = []
             mock_np.draw_points.return_value = MagicMock()
 
-            generator.create_image(3, 0, equalized=False)
+            generator.create_image(3, 0, surface="random")
 
             calls = mock_np.design_n_points.call_args_list
             for c in calls:
@@ -492,15 +492,34 @@ class TestLoadAnsTasksFromCsv:
 
     def test_basic_loading(self, tmp_path):
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("n1,n2,equalized\n3,5,TRUE\n2,4,FALSE\n7,7,YES\n")
+        csv_path.write_text("n1,n2,surface\n3,5,equal\n2,4,random\n7,7,INVERSE\n")
         tasks = load_ans_tasks_from_csv(csv_path)
-        assert tasks == [(3, 5, True), (2, 4, False), (7, 7, True)]
+        assert tasks == [(3, 5, "equal", "random"), (2, 4, "random", "random"), (7, 7, "inverse", "random")]
 
-    def test_missing_equalized_defaults_false(self, tmp_path):
+    def test_missing_surface_defaults_to_random(self, tmp_path):
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("n1,n2,equalized\n3,5,\n")
+        csv_path.write_text("n1,n2\n3,5\n")
         tasks = load_ans_tasks_from_csv(csv_path)
-        assert tasks == [(3, 5, False)]
+        assert tasks == [(3, 5, "random", "random")]
+
+    def test_empty_surface_defaults_to_random(self, tmp_path):
+        csv_path = tmp_path / "tasks.csv"
+        csv_path.write_text("n1,n2,surface\n3,5,\n")
+        tasks = load_ans_tasks_from_csv(csv_path)
+        assert tasks == [(3, 5, "random", "random")]
+
+    def test_old_equalized_column_is_refused(self, tmp_path):
+        """The boolean column was replaced, not aliased: say so rather than guess."""
+        csv_path = tmp_path / "tasks.csv"
+        csv_path.write_text("n1,n2,equalized\n3,5,TRUE\n")
+        with pytest.raises(ValueError, match="'equalized' column was replaced by 'surface'"):
+            load_ans_tasks_from_csv(csv_path)
+
+    def test_unknown_surface_is_refused(self, tmp_path):
+        csv_path = tmp_path / "tasks.csv"
+        csv_path.write_text("n1,n2,surface\n3,5,matched\n")
+        with pytest.raises(ValueError, match="line 2: surface must be one of"):
+            load_ans_tasks_from_csv(csv_path)
 
     def test_file_not_found(self, tmp_path):
         with pytest.raises(FileNotFoundError):
@@ -512,21 +531,21 @@ class TestBuildFromAnsCsv:
 
     def test_basic_plan(self, tmp_path):
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("n1,n2,equalized\n3,5,TRUE\n2,4,FALSE\n")
+        csv_path.write_text("n1,n2,surface\n3,5,equal\n2,4,random\n")
         plan = GenerationPlan("ans", 1, 10, 1, ratios=[]).build_from_ans_csv(
             csv_path, num_copies=1
         )
         assert len(plan.tasks) == 2
         assert plan.tasks[0].params["n1"] == 3
         assert plan.tasks[0].params["n2"] == 5
-        assert plan.tasks[0].params["equalize"] is True
+        assert plan.tasks[0].params["surface"] == "equal"
         assert plan.tasks[1].params["n1"] == 2
         assert plan.tasks[1].params["n2"] == 4
-        assert plan.tasks[1].params["equalize"] is False
+        assert plan.tasks[1].params["surface"] == "random"
 
     def test_multiple_copies(self, tmp_path):
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("n1,n2,equalized\n6,8,FALSE\n")
+        csv_path.write_text("n1,n2,surface\n6,8,random\n")
         plan = GenerationPlan("ans", 1, 10, 1, ratios=[]).build_from_ans_csv(
             csv_path, num_copies=3
         )
@@ -538,7 +557,7 @@ class TestBuildFromAnsCsv:
 
     def test_duplicate_rows_unique_reps(self, tmp_path):
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("n1,n2,equalized\n4,4,TRUE\n4,4,TRUE\n")
+        csv_path.write_text("n1,n2,surface\n4,4,equal\n4,4,equal\n")
         plan = GenerationPlan("ans", 1, 10, 1, ratios=[]).build_from_ans_csv(
             csv_path, num_copies=1
         )
@@ -547,7 +566,7 @@ class TestBuildFromAnsCsv:
 
     def test_one_colour_csv(self, tmp_path):
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("n1,n2,equalized\n5,0,FALSE\n3,0,FALSE\n")
+        csv_path.write_text("n1,n2,surface\n5,0,random\n3,0,random\n")
         plan = GenerationPlan("one_colour", 1, 10, 1, ratios=[]).build_from_ans_csv(
             csv_path, num_copies=1
         )
@@ -558,7 +577,7 @@ class TestBuildFromAnsCsv:
 
     def test_wrong_task_type_raises(self, tmp_path):
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("n1,n2,equalized\n3,5,TRUE\n")
+        csv_path.write_text("n1,n2,surface\n3,5,equal\n")
         with pytest.raises(ValueError, match="build_from_ans_csv only applies"):
             GenerationPlan("mts", 1, 10, 1, ratios=[]).build_from_ans_csv(csv_path)
 
@@ -587,7 +606,7 @@ class TestAnsGeneratorCsvIntegration:
     def test_generate_images_uses_csv(self, tmp_path):
         """When tasks_csv is set, the plan should be built from CSV."""
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("n1,n2,equalized\n3,5,TRUE\n2,4,FALSE\n")
+        csv_path.write_text("n1,n2,surface\n3,5,equal\n2,4,random\n")
 
         config = self._base_config(
             output_dir=str(tmp_path),
@@ -603,12 +622,12 @@ class TestAnsGeneratorCsvIntegration:
             assert mock_save.call_count == 2
             first_call = mock_save.call_args_list[0]
             assert first_call[0][:2] == (3, 5)
-            assert first_call[1]["equalized"] is True
+            assert first_call[1]["surface"] == "equal"
 
     def test_generate_images_csv_copies(self, tmp_path):
         """tasks_copies multiplies the CSV rows."""
         csv_path = tmp_path / "tasks.csv"
-        csv_path.write_text("n1,n2,equalized\n3,5,FALSE\n")
+        csv_path.write_text("n1,n2,surface\n3,5,random\n")
 
         config = self._base_config(
             output_dir=str(tmp_path),

@@ -5,6 +5,7 @@ real images and checking their properties. Images are saved to test_images/
 directory for manual inspection.
 """
 
+import shutil
 from pathlib import Path
 from PIL import Image
 import numpy as np
@@ -245,8 +246,8 @@ class TestANSImageGeneration:
         generator.generate_images()
 
         output_dir = Path(config["output_dir"])
-        equalized_images = list(output_dir.rglob("*_equalized_separated*.png"))
-        assert len(equalized_images) > 0, "No equalized separated images found"
+        equal_images = list(output_dir.rglob("*_equal_separated*.png"))
+        assert len(equal_images) > 0, "No equal-surface separated images found"
 
 
 class TestMatchToSampleImageGeneration:
@@ -373,6 +374,10 @@ class TestMatchToSampleImageGeneration:
             "img_format": "png",
         }
         
+        # The directory persists between runs; files from an earlier run with
+        # other trial numbering would otherwise be counted alongside this one's.
+        shutil.rmtree(config["output_dir"], ignore_errors=True)
+
         generator = MatchToSampleGenerator(config)
         generator.generate_images()
         
@@ -553,8 +558,8 @@ class TestCLIIntegration:
             "ans",
             "--train-num", "1",
             "--test-num", "1",
-            "--min-point-num", "2",
-            "--max-point-num", "4",
+            "--min-dot-num", "2",
+            "--max-dot-num", "4",
             "--ratios", "easy",
             "--output-dir", str(test_images_dir / "cli_ans"),
             "--version-tag", "",
@@ -593,8 +598,8 @@ class TestCLIIntegration:
             "match-to-sample",
             "--train-num", "1",
             "--test-num", "1",
-            "--min-point-num", "2",
-            "--max-point-num", "4",
+            "--min-dot-num", "2",
+            "--max-dot-num", "4",
             "--ratios", "easy",
             "--output-dir", str(test_images_dir / "cli_mts"),
             "--version-tag", "",
@@ -629,8 +634,8 @@ class TestCLIIntegration:
             "one-colour",
             "--train-num", "1",
             "--test-num", "1",
-            "--min-point-num", "2",
-            "--max-point-num", "4",
+            "--min-dot-num", "2",
+            "--max-dot-num", "4",
             "--output-dir", str(test_images_dir / "cli_one_colour"),
             "--version-tag", "",
             "--img-format", "png",
@@ -1101,8 +1106,8 @@ class TestCLISeedIntegration:
             '--train-num', '1',
             '--test-num', '0',
             '--ratios', 'easy',
-            '--min-point-num', '2',
-            '--max-point-num', '4',
+            '--min-dot-num', '2',
+            '--max-dot-num', '4',
             '--output-dir', output_dir1,
             '--seed', '77',
             '--img-format', 'png'
@@ -1116,8 +1121,8 @@ class TestCLISeedIntegration:
             '--train-num', '1',
             '--test-num', '0',
             '--ratios', 'easy',
-            '--min-point-num', '2',
-            '--max-point-num', '4',
+            '--min-dot-num', '2',
+            '--max-dot-num', '4',
             '--output-dir', output_dir2,
             '--seed', '77',
             '--img-format', 'png'

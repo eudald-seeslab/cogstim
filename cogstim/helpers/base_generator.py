@@ -12,6 +12,23 @@ import logging
 from abc import ABC
 from typing import Dict, Any
 from cogstim.helpers.random_seed import set_seed
+from cogstim.helpers.annotations import (
+    element_records,
+    scene_to_svg,
+    write_annotations_csv,
+    write_annotations_json,
+)
+from cogstim.helpers.image_utils import to_hex
+from cogstim.helpers.visual_angle import ViewingGeometry
+from cogstim.helpers.visual_properties import (
+    DEGREE_FIELDS,
+    PAIR_FIELDS,
+    PROPERTY_FIELDS,
+    image_property_records,
+    pair_property_records,
+    with_degrees,
+    write_properties_csv,
+)
 
 
 class BaseGenerator(ABC):
@@ -43,6 +60,24 @@ class BaseGenerator(ABC):
         """
         self.config = config
         self._logger = logging.getLogger(self.__class__.__name__)
+
+        # Number of files actually written, so summaries can report what landed
+        # on disk rather than what was planned. Every generator saves through
+        # save_image(), which makes this the single authoritative count.
+        self.images_written = 0
+
+        # Geometry of everything drawn, exported once the run finishes.
+        self._annotations = []
+        self._canvas_size = None
+
+        # Visual properties of every dot array drawn, and which arrays form a
+        # pair, exported once the run finishes.
+        self._visual_properties = []
+        self._property_pairs = []
+
+        # How the stimuli will be viewed, when known: exports then report
+        # degrees of visual angle as well as pixels.
+        self.viewing_geometry = ViewingGeometry.from_config(config)
         
         if 'output_dir' not in config:
             raise ValueError(
@@ -54,9 +89,10 @@ class BaseGenerator(ABC):
         self.train_num = config.get("train_num", 0)
         self.test_num = config.get("test_num", 0)
         
-        # Set seed for reproducibility if provided
-        seed = config.get("seed", None)
-        set_seed(seed)
+        # Always seed, drawing one when none was given, so the run can be
+        # reproduced afterwards from the recorded value.
+        self.seed = set_seed(config.get("seed", None))
+        self.config["seed"] = self.seed
     
     @property
     def output_dir(self) -> str:
@@ -110,6 +146,43 @@ class BaseGenerator(ABC):
         """
         return [("train", self.train_num), ("test", self.test_num)]
     
+    # Number of image files each planned task produces. Match-to-sample writes a
+    # sample and a match per task, so it overrides this with 2.
+    images_per_task = 1
+
+    def build_plan(self, phase: str, num_sets: int):
+        """Build the GenerationPlan for one phase.
+
+        Generators that plan their work up front implement this, and both
+        generate_images() and plan_summary() go through it, so a dry run can
+        never disagree with a real run about what would be produced.
+
+        Args:
+            phase: "train" or "test".
+            num_sets: Number of sets requested for this phase.
+
+        Returns:
+            GenerationPlan for the phase.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not build a generation plan; "
+            "override plan_summary() instead."
+        )
+
+    def plan_summary(self):
+        """Report what a real run would produce, without writing anything.
+
+        Returns:
+            list: (phase, num_sets, num_images) tuples, one per non-empty phase.
+        """
+        summary = []
+        for phase, num_sets in self.iter_phases():
+            if num_sets <= 0:
+                continue
+            plan = self.build_plan(phase, num_sets)
+            summary.append((phase, num_sets, len(plan) * self.images_per_task))
+        return summary
+
     def write_summary_if_enabled(self, plan, phase: str):
         """
         Write summary CSV for the given phase if summary is enabled in config.
@@ -143,6 +216,84 @@ class BaseGenerator(ABC):
         """
         return "jpg" if img_format == "jpeg" else img_format
     
+    def _record_annotations(self, relative_name: str, scene) -> None:
+        """Accumulate the geometry of one image for later export."""
+        if self.config.get("metadata", "none") == "none":
+            return
+        self._annotations.extend(element_records(relative_name, scene))
+        if self._canvas_size is None:
+            self._canvas_size = (scene.width, scene.height)
+
+    def write_annotations(self):
+        """Write the accumulated annotations in the requested formats.
+
+        Returns:
+            list: Paths written, empty when annotations were not requested.
+        """
+        wanted = self.config.get("metadata", "none")
+        if wanted == "none" or not self._annotations:
+            return []
+
+        written = []
+        if wanted in ("csv", "both"):
+            path = os.path.join(self.output_dir, "annotations.csv")
+            write_annotations_csv(path, self._annotations)
+            written.append(path)
+        if wanted in ("json", "both"):
+            path = os.path.join(self.output_dir, "annotations.json")
+            write_annotations_json(path, self._annotations, self._canvas_size)
+            written.append(path)
+        return written
+
+    def _record_visual_properties(self, relative_name: str, scene) -> None:
+        """Accumulate the visual properties of the dot arrays in one image."""
+        if not self.config.get("visual_properties", False):
+            return
+        self._visual_properties.extend(image_property_records(relative_name, scene))
+
+    def record_property_pair(self, side_1, side_2) -> None:
+        """Declare two dot arrays a pair whose visual differences are reported.
+
+        A pair is the two colours of one ANS image, or the sample and match
+        images of one match-to-sample trial. Each side is identified by its
+        image and dot colour, since an image may hold more than one array.
+
+        Args:
+            side_1: (image, colour), the image being the path save_image()
+                returned and the colour a name or hex code.
+            side_2: Same, for the other array.
+        """
+        if not self.config.get("visual_properties", False):
+            return
+        self._property_pairs.append(
+            ((side_1[0], to_hex(side_1[1])), (side_2[0], to_hex(side_2[1])))
+        )
+
+    def write_visual_properties(self):
+        """Write the accumulated visual properties, and the pair comparisons.
+
+        Returns:
+            list: Paths written, empty when properties were not requested or
+            no dot array was drawn.
+        """
+        if not self._visual_properties:
+            return []
+
+        path = os.path.join(self.output_dir, "visual_properties.csv")
+        if self.viewing_geometry is not None:
+            records = with_degrees(self._visual_properties, self.viewing_geometry)
+            write_properties_csv(path, records, PROPERTY_FIELDS + DEGREE_FIELDS)
+        else:
+            write_properties_csv(path, self._visual_properties, PROPERTY_FIELDS)
+        written = [path]
+
+        pairs = pair_property_records(self._visual_properties, self._property_pairs)
+        if pairs:
+            path = os.path.join(self.output_dir, "visual_property_pairs.csv")
+            write_properties_csv(path, pairs, PAIR_FIELDS)
+            written.append(path)
+        return written
+
     def save_image(self, img, filename_without_ext: str, *subdirs):
         """
         Save an image to disk with proper path construction and format handling.
@@ -163,6 +314,10 @@ class BaseGenerator(ABC):
                      Example: save_image(img, "file", "train", "5") 
                               → output_dir/train/5/file.png
         
+        Returns:
+            str: The path written, relative to output_dir. Generators pass it
+            to record_property_pair() to say which images form a pair.
+
         Example:
             self.save_image(img, "img_5_0", "train", "yellow")
             # Saves to: output_dir/train/yellow/img_5_0.png
@@ -175,19 +330,46 @@ class BaseGenerator(ABC):
         filename = f"{filename_without_ext}.{ext}"
         path = os.path.join(self.output_dir, *subdirs, filename)
         
-        # Normalize image to PIL Image
+        # Normalize image to PIL Image, keeping the recorded geometry when the
+        # caller passed something that carries it.
+        scene = None
         if hasattr(img, 'canvas') and hasattr(img, 'draw_points'):
             # DotsCore instance
             pil_img = img.canvas.img
+            scene = img.canvas.scene
         elif hasattr(img, '_img'):
             # ImageCanvas wrapper
             pil_img = img._img
+            scene = getattr(img, "scene", None)
         else:
             # Already a PIL Image
             pil_img = img
-        
+
+        relative_name = os.path.join(*subdirs, filename) if subdirs else filename
+
+        if img_format == "svg":
+            if scene is None:
+                raise ValueError(
+                    f"{self.__class__.__name__} cannot produce SVG: it renders "
+                    "straight to pixels without recording the shapes drawn."
+                )
+            os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(scene_to_svg(scene))
+            self.images_written += 1
+            self._record_annotations(relative_name, scene)
+            self._record_visual_properties(relative_name, scene)
+            return relative_name
+
+        if scene is not None:
+            self._record_annotations(relative_name, scene)
+            self._record_visual_properties(relative_name, scene)
+
         # Save with appropriate format
         if img_format in ["jpg", "jpeg"]:
             pil_img.save(path, format="JPEG", quality=95)
         else:
             pil_img.save(path, format=img_format.upper())
+
+        self.images_written += 1
+        return relative_name

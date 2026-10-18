@@ -3,10 +3,11 @@
 import os
 import argparse
 import logging
+import warnings
 import numpy as np
 from tqdm import tqdm
 from cogstim.helpers.base_generator import BaseGenerator
-from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.image_utils import ImageCanvas, resolve_stimulus_colour
 from cogstim.helpers.planner import GenerationPlan
 from cogstim.helpers.constants import IMAGE_DEFAULTS, LINE_DEFAULTS
 
@@ -32,23 +33,33 @@ class LinesGenerator(BaseGenerator):
         self.max_attempts = config["max_attempts"]
         self.tag = config["tag"]
         self.background_colour = config["background_colour"]
+        # Optional so the Python API keeps working with configs written before
+        # the stripe colour was configurable.
+        self.line_colour = resolve_stimulus_colour(
+            config.get("line_colour"),
+            self.background_colour,
+            LINE_DEFAULTS["line_colour"],
+        )
         # Calculate circumscribed size for rotation
         self.c_size = int(self.size / 2 * np.sqrt(2)) * 2
+
+    def build_plan(self, phase, num_sets):
+        """One task per (angle, stripe count) combination, repeated once per set."""
+        return GenerationPlan(
+            task_type="lines",
+            num_repeats=num_sets,
+            angles=self.angles,
+            min_stripes=self.min_stripe_num,
+            max_stripes=self.max_stripe_num
+        ).build()
 
     def generate_images(self):
         """Generate the complete set of images with different angles and stripe counts using unified planner."""
         self.setup_directories()
 
         for phase, num_images in self.iter_phases():
-            # Build generation plan
-            plan = GenerationPlan(
-                task_type="lines",
-                num_repeats=num_images,
-                angles=self.angles,
-                min_stripes=self.min_stripe_num,
-                max_stripes=self.max_stripe_num
-            ).build()
-            
+            plan = self.build_plan(phase, num_images)
+
             self.log_generation_info(f"Generating {len(plan)} images for {phase}...")
 
             # Execute plan
@@ -99,17 +110,26 @@ class LinesGenerator(BaseGenerator):
                 starting_positions[i] + stripe_thickness[i],
                 self.c_size,
             )
-            canvas.draw_rectangle([upper_left, lower_right], fill="white")
+            canvas.draw_rectangle(
+                [upper_left, lower_right], fill=self.line_colour, label="stripe"
+            )
 
-        # Rotate and crop
+        # Rotate and crop. The stripes were drawn upright on an oversized
+        # canvas, so the recorded geometry gets the same transform; otherwise the
+        # exported coordinates would describe the pre-rotation layout.
         rotated_img = canvas.img.rotate(angle)
-        crop_box = (
-            (self.c_size - self.size) // 2,
-            (self.c_size - self.size) // 2,
-            (self.c_size + self.size) // 2,
-            (self.c_size + self.size) // 2,
+        offset = (self.c_size - self.size) // 2
+        crop_box = (offset, offset, offset + self.size, offset + self.size)
+
+        centre = (self.c_size / 2, self.c_size / 2)
+        scene = canvas.scene.transformed(
+            rotation_deg=angle,
+            centre=centre,
+            offset=(offset, offset),
+            width=self.size,
+            height=self.size,
         )
-        return rotated_img.crop(crop_box)
+        return ImageCanvas.from_image(rotated_img.crop(crop_box), scene)
 
     def _generate_valid_positions(self, num_stripes, min_start, max_start, thicknesses):
         """Generate non-overlapping positions for stripes."""
@@ -146,7 +166,17 @@ class LinesGenerator(BaseGenerator):
 
 
 def parse_args():
-    """Parse command line arguments."""
+    """DEPRECATED standalone argument parser. Use the `cogstim` CLI.
+
+    Predates the unified CLI and still uses the old option names, so it misses
+    every option added since. Scheduled for removal -- see DEPRECATIONS.md.
+    """
+    warnings.warn(
+        "Running cogstim.generators.lines directly is deprecated; "
+        "use 'cogstim lines' instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     parser = argparse.ArgumentParser(
         description="Generate images with rotated stripe patterns."
     )

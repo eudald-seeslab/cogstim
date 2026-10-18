@@ -16,22 +16,27 @@ import numpy as np
 from typing import Optional
 
 
-def set_seed(seed: Optional[int]) -> None:
-    """Set the random seed for both random and numpy.
-    
-    This sets the global random seed for both Python's random module and
-    NumPy's random number generator. Call this once at the start of image
-    generation to ensure reproducible results.
-    
+def set_seed(seed: Optional[int]) -> int:
+    """Set the random seed for both random and numpy, and report which was used.
+
+    A run without an explicit seed used to be unreproducible and left no record
+    of what it had done. One is now drawn and returned, so callers can write it
+    alongside the output and reproduce the run afterwards -- which matters for
+    stimuli that end up in an experiment.
+
     Args:
-        seed: Random seed value. If None, no seed is set (random behavior).
-        
+        seed: Random seed value. If None, a seed is drawn.
+
+    Returns:
+        int: The seed actually used.
+
     Example:
-        set_seed(1714)
-        img1 = generator.create_image(n=5)
-        img2 = generator.create_image(n=10)
-        
+        used = set_seed(None)   # draws, applies and reports a seed
+        set_seed(used)          # reproduces that run exactly
     """
-    if seed is not None:
-        random.seed(seed)
-        np.random.seed(seed)
+    if seed is None:
+        seed = random.randrange(2 ** 32)
+
+    random.seed(seed)
+    np.random.seed(seed)
+    return seed

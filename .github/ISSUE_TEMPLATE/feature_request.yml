@@ -1,0 +1,50 @@
+name: Feature request
+description: A stimulus type, option or capability CogStim does not have
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before writing, it is worth checking [the roadmap](https://github.com/eudald-seeslab/cogstim/blob/main/ROADMAP.md) —
+        it lists what is planned, what is under consideration, and what is
+        deliberately out of scope. Saying that you need something already listed
+        is useful too: that is the main signal used to decide what comes next.
+
+  - type: textarea
+    id: need
+    attributes:
+      label: What are you trying to do?
+      description: |
+        The experiment or analysis, not the feature. Knowing the paradigm often
+        reveals a way to get there with what already exists, or a better design
+        for the new thing.
+      placeholder: |
+        I need orientation-discrimination stimuli where spatial frequency varies
+        independently of contrast, for a psychophysics experiment on ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like CogStim to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: How are you doing it now?
+      description: |
+        Optional. Another tool, or one-off code? If there is an established
+        convention in your field for these stimuli, a reference is very helpful.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I would be willing to work on this
+          required: false

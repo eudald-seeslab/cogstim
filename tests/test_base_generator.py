@@ -59,8 +59,8 @@ class TestBaseGeneratorSaving:
             assert os.path.exists(expected_path)
             
             # Check it's a valid image
-            loaded = Image.open(expected_path)
-            assert loaded.size == (100, 100)
+            with Image.open(expected_path) as loaded:
+                assert loaded.size == (100, 100)
 
     def test_save_image_imagecanvas(self):
         """Test save_image with ImageCanvas wrapper."""
@@ -81,8 +81,8 @@ class TestBaseGeneratorSaving:
             assert os.path.exists(expected_path)
             
             # Check it's a valid image
-            loaded = Image.open(expected_path)
-            assert loaded.size == (100, 100)
+            with Image.open(expected_path) as loaded:
+                assert loaded.size == (100, 100)
 
     def test_save_image_dotscore(self):
         """Test save_image with DotsCore instance."""
@@ -111,8 +111,8 @@ class TestBaseGeneratorSaving:
             assert os.path.exists(expected_path)
             
             # Check it's a valid image
-            loaded = Image.open(expected_path)
-            assert loaded.size == (100, 100)
+            with Image.open(expected_path) as loaded:
+                assert loaded.size == (100, 100)
 
     def test_save_image_jpeg_format(self):
         """Test save_image with JPEG format."""
@@ -133,8 +133,8 @@ class TestBaseGeneratorSaving:
             assert os.path.exists(expected_path)
             
             # Check it's a valid JPEG
-            loaded = Image.open(expected_path)
-            assert loaded.format == "JPEG"
+            with Image.open(expected_path) as loaded:
+                assert loaded.format == "JPEG"
 
     def test_save_image_nested_subdirs(self):
         """Test save_image with multiple nested subdirectories."""

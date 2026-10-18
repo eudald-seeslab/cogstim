@@ -9,7 +9,8 @@ CogStim is a small Python toolkit that produces **synthetic image datasets** com
 
 * Shape discrimination (e.g. *circle vs star*).
 * Colour discrimination (e.g. *yellow vs blue* circles).
-* Approximate Number System (Panamath) dot arrays with two colours.
+* Approximate Number System two-colour dot arrays, as used in the Panamath paradigm
+  ([details](docs/guide.md#ans--approximate-number-system)).
 * Single-colour dot arrays for number-discrimination tasks.
 * Custom combinations of geometrical *shapes × colours*.
 * Rotated stripe patterns ("lines" dataset) for orientation discrimination.
@@ -26,12 +27,20 @@ pip install cogstim
 
 - **[Quick Start](docs/index.md)** – Installation and first steps
 - **[User Guide](docs/guide.md)** – Detailed documentation for each task
+- **[Options reference](docs/options.md)** – Every option of every task, generated from the CLI
 - **[Recipes](docs/recipes.md)** – Copy-paste commands for common goals
 - **[FAQ](docs/faq.md)** – Troubleshooting and common questions
 
-### For LLM/AI Agents
+## Contributing and support
 
-- **[LLM Documentation](docs/LLM_DOCUMENTATION.md)** – Single-file comprehensive documentation optimized for feeding to Large Language Models (Context + Architecture + API Reference)
+- **[Contributing](CONTRIBUTING.md)** – Reporting problems, asking questions, sending code
+- **[Roadmap](ROADMAP.md)** – What is covered, what is planned, what is out of scope
+- **[Architecture](docs/development/architecture.md)** – How the package fits together
+- **[Adding a stimulus type](docs/development/adding-a-generator.md)** – A worked example
+- **[Deprecations](DEPRECATIONS.md)** – What is going away, and what replaces it
+
+Questions and bug reports go to the
+[issue tracker](https://github.com/eudald-seeslab/cogstim/issues).
 
 ## Command-line interface
 
@@ -63,6 +72,8 @@ Most tasks accept these options:
 - `--test-num N` – Number of test image sets (default: 0)
 - `--output-dir PATH` – Output directory (default: `images/<task>`)
 - `--img-size SIZE` – Image size in pixels (default: 512)
+- `--img-format FORMAT` – `png` (default), `jpg`, `bmp`, `tiff` or `svg`; SVG is rendered from the recorded geometry
+- `--metadata csv|json|both` – Also write the position, size and colour of every element
 - `--background-colour COLOUR` – Background colour (default: white)
 - `--seed SEED` – Random seed for reproducible generation
 - `--demo` – Generate a quick preview with 8 training images
@@ -71,18 +82,26 @@ Most tasks accept these options:
 
 > **Note**: All CLI arguments use British spelling.
 
+> **Beta**: Give `--viewing-distance-cm` and `--pixels-per-cm` to state the image size and the dot radii in degrees of visual angle (`--img-size-deg`, `--min-dot-radius-deg`, `--max-dot-radius-deg`) and to get degree columns in the visual properties export; see [the guide](docs/guide.md#sizes-in-degrees-of-visual-angle). This is new and has not yet been checked against a real display and viewing set-up, so treat the conversions as provisional until it leaves beta.
+
 > **Note**: Use `--seed SEED` (where SEED is an integer) to make generation deterministic and reproducible. Without a seed, each run will produce different random variations.
 
 ### Task specification from CSV
 
-For some tasks, you can specify exactly which stimuli to generate via a CSV file instead of using ratios or parameter ranges. You can do this with the `--tasks-csv PATH` to point to a CSV (find below the format of the CSV depending on the task). This method allows to create "n" copies of the tasks in the CSV (`--tasks-copies N` (default: 1) to repeat the distribution N times). When `--tasks-csv` is set, `--ratios` and `--min-point-num` / `--max-point-num` are ignored.
+For some tasks, you can specify exactly which stimuli to generate via a CSV file instead of using ratios or parameter ranges. You can do this with the `--tasks-csv PATH` to point to a CSV (find below the format of the CSV depending on the task). This method allows to create "n" copies of the tasks in the CSV (`--tasks-copies N` (default: 1) to repeat the distribution N times). When `--tasks-csv` is set, `--ratios` and `--min-dot-num` / `--max-dot-num` are ignored.
 
 For now, this is supported only for the following tasks, with the CSV specifications
 
-| Task             | CSV columns                 |
-|------------------|-----------------------------|
-| Match to sample  | sample, match, equalized    |
-| Panamath              | n1, n2, equalized           |
+| Task              | Subcommand        | CSV columns              |
+|-------------------|-------------------|--------------------------|
+| Match to sample   | `match-to-sample` | sample, match, surface, hull |
+| ANS dot arrays    | `ans`             | n1, n2, surface, hull        |
+
+The `surface` column takes `random`, `equal` or `inverse` per row, so it also controls
+**which** stimuli get each surface condition and **in what proportion**. A CSV of four
+rows with one `equal` produces three random-size images and one whose two colours cover
+the same surface. See
+[the guide](docs/guide.md#choosing-exactly-which-stimuli-to-generate).
 
 
 
@@ -123,9 +142,21 @@ cogstim ans --ratios easy --train-num 100 --test-num 40
   <td><img src="https://raw.githubusercontent.com/eudald-seeslab/cogstim/main/assets/examples/ans.png" alt="ANS non-equalized" width="220"/></td>
 </tr></table>
 
-> Note that on the left image, total surfaces are equalized, and, on the right image, dot size is random.
+> Note that on the left image, the two colours cover the same total surface, and, on the right image, dot size is random.
 
 This is based on Halberda et al. (2008).
+
+By default every dot-count pair is generated in two surface conditions, `random` and
+`equal`. `--surface random equal inverse` adds a third in which the colour with fewer
+dots covers more surface, so that surface contradicts number in a third of the images;
+see [the guide](docs/guide.md#surface-conditions). `--hull` does the same for the area each
+colour extends over (its convex hull), by moving dots rather than resizing them, so the
+two can be combined; see [hull conditions](docs/guide.md#hull-conditions).
+
+Add `--visual-properties` to also export, for every array and every pair, the
+visual cues that covary with number (total surface, item size, contour, convex
+hull, density), following Gebuis & Reynvoet (2011); see
+[the guide](docs/guide.md#visual-properties-of-dot-arrays).
 
 #### Separated layout
 
@@ -137,7 +168,7 @@ cogstim ans --ratios easy --train-num 100 --test-num 40 --layout separated --gap
 
 - `--layout separated` constrains each colour to its own half of the image.
 - `--gap N` controls the pixel-wide empty strip between the two halves (default: 40).
-- Area equalization still works: the `_equalized` variants are generated as usual.
+- Surface conditions still apply: the `_equal` and `_inverse` variants are generated as usual.
 - One-colour mode (`cogstim one-colour`) ignores `--layout separated` since there is only one colour.
 
 ### Match-to-sample (MTS) – dot arrays (sample/match) with controlled total surface
@@ -145,21 +176,21 @@ cogstim ans --ratios easy --train-num 100 --test-num 40 --layout separated --gap
 cogstim match-to-sample \
   --ratios easy \
   --train-num 50 --test-num 20 \
-  --min-point-num 1 --max-point-num 10 \
-  --dot-colour yellow
+  --min-dot-num 1 --max-dot-num 10 \
+  --dot-colour-1 yellow
 ```
 
 - Generates pairs of images per trial: match (`*_a_*.png`) and sample (`*_b_*.png`).
-- For half of the trials, total dot surface is equalized between sample and match; for the other half, dot sizes are random.
+- By default, half the trials have equal total dot surface between sample and match and half have random dot sizes; `--surface` adds the inverse condition.
 - The target total surface for the match is derived from the sample image of the same trial.
 - Unequal pairs are built from the same ratio set used by ANS, with both orders (n→m and m→n) included, and equal (n=m) trials added to balance labels.
-- Output layout: `images/match_to_sample/{train|test}/mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png` (each image self-described; pairs share trial_id).
+- Output layout: `images/match_to_sample/{train|test}/mts_{trial_id:05d}_{r|e|i}_{a|b}_{n_dots}[_version].png` (each image self-described; pairs share trial_id).
 
 This task is based on Sella et al. (2013).
 
 ### Single-colour dot arrays numbered 1-5, total surface area held constant
 ```bash
-cogstim one-colour --train-num 50 --test-num 20 --min-point-num 1 --max-point-num 5
+cogstim one-colour --train-num 50 --test-num 20 --min-dot-num 1 --max-dot-num 5
 ```
 
 <table><tr>
@@ -169,7 +200,7 @@ cogstim one-colour --train-num 50 --test-num 20 --min-point-num 1 --max-point-nu
 
 ### Custom dataset – green/red triangles & squares
 ```bash
-cogstim custom --shapes triangle square --colours red green --train-num 50 --test-num 20
+cogstim custom --shapes triangle square --shape-colours red green --train-num 50 --test-num 20
 ```
 
 <table><tr>
@@ -179,7 +210,7 @@ cogstim custom --shapes triangle square --colours red green --train-num 50 --tes
 
 ### Lines dataset – rotated stripe patterns
 ```bash
-cogstim lines --train-num 50 --test-num 20 --angles 0 45 90 135 --min-stripes 3 --max-stripes 5
+cogstim lines --train-num 50 --test-num 20 --angles 0 45 90 135 --min-stripe-num 3 --max-stripe-num 5
 ```
 
 <table><tr>
@@ -229,14 +260,23 @@ images/two_shapes/
 
 This project is distributed under the **MIT License** – see the `LICENCE` file for details.
 
-## TODO's
+## Known limitations
 
-- The equalization algorithm of match-to-sample could be improved.
-- Extend CSV-based task specification to other tasks (ANS, one-colour, shapes, etc.).
-- Check that the image is big enough for the parameters set.
+Planned work is tracked in the [roadmap](ROADMAP.md). Current rough edges:
+
+- The match-to-sample equalization algorithm grows radii a whole pixel at a
+  time and can fail on an unlucky layout; it retries, and reports any pair it
+  could not produce.
+- CSV-based task specification exists for `ans` and `match-to-sample` only.
+- Nothing checks up front that the canvas is large enough for the requested dot
+  sizes and counts; placement fails at generation time instead.
+- Colours are limited to seven names; hex and named-colour formats are under
+  consideration.
 
 
 ## References
+
+- Gebuis, T., & Reynvoet, B. (2011). Generating nonsymbolic number stimuli. Behavior Research Methods, 43(4), 981-986. https://doi.org/10.3758/s13428-011-0097-5
 
 - Halberda, J., Mazzocco, M. M. M., & Feigenson, L. (2008). Individual differences in non-verbal number acuity correlate with maths achievement. Nature, 455(7213), 665-668. https://doi.org/10.1038/nature07246
 

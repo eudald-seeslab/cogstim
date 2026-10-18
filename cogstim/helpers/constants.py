@@ -94,10 +94,36 @@ DOT_DEFAULTS = {
     "gap": 40,
 }
 
+# Dot arrays with fewer dots than this cannot have their area extended (convex
+# hull) or total circumference matched to those of a larger array without making
+# the dots themselves bigger: a single dot's hull is the dot. Gebuis & Reynvoet
+# (2011) found the hull explained 28% of the variance in numerical distance with
+# 1-4 dots, against 5% with 4-7. Pairs below this count are warned about.
+SMALL_NUMEROSITY = 4
+
+# How the total dot surface of the two arrays in a pair relates to their counts.
+# 'random' draws every radius independently, so surface grows with number;
+# 'equal' matches the two surfaces; 'inverse' gives the array with fewer dots
+# more surface, by the factor the other has more dots. Gebuis & Reynvoet (2011)
+# argue that a set needs trials where a cue contradicts number as well as
+# trials where it agrees, or a participant can answer from the cue alone.
+SURFACE_CONDITIONS = ("random", "equal", "inverse")
+DEFAULT_SURFACE_CONDITIONS = ("random", "equal")
+
+# The same three conditions for the area each array extends over (its convex
+# hull), which random placement leaves correlated with number. Not controlled
+# unless asked for, since not every dot-count pair can meet it.
+HULL_CONDITIONS = SURFACE_CONDITIONS
+DEFAULT_HULL_CONDITIONS = ("random",)
+
 # Shape generation defaults
 SHAPE_DEFAULTS = {
     "min_surface": 10000,
     "max_surface": 20000,
+    # Governs how many images a shapes set contains. Kept at the historical
+    # value; note that the drawn radius is rounded to whole pixels, so steps
+    # much smaller than this yield visually identical images.
+    "surface_step": 100,
     "random_rotation": False,
     "min_rotation": 0,
     "max_rotation": 360,
@@ -108,6 +134,9 @@ LINE_DEFAULTS = {
     "min_thickness": 10,
     "max_thickness": 30,
     "min_spacing": 5,
+    # Must contrast with IMAGE_DEFAULTS["background_colour"]: the stripe colour
+    # used to be hardcoded white, so the default output was a blank white image.
+    "line_colour": "black",
 }
 
 # Fixation generation defaults
@@ -118,7 +147,9 @@ FIXATION_DEFAULTS = {
     "cross_thickness_px": 12,
     "cross_arm_px": 128,
     "jitter_px": 0,
-    "symbol_colour": "white",
+    # Must contrast with IMAGE_DEFAULTS["background_colour"]; this was white on
+    # white, so `cogstim fixation --all-types` produced blank images.
+    "symbol_colour": "black",
 }
 
 # Mask defaults (dense dot patterns for visual masking)

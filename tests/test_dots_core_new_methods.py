@@ -276,16 +276,106 @@ class TestNumberPointsBoundaryCheck:
         assert self.np._check_within_boundaries(point) is False
 
     def test_check_within_boundaries_edge_case(self):
-        """Test _check_within_boundaries with point exactly on boundary."""
-        point = (10, 10, 10)  # x - radius = 0, y - radius = 0 (on boundary)
-        assert self.np._check_within_boundaries(point) is False  # Boundary is exclusive
-        
-        point = (502, 502, 10)  # x + radius = 512, y + radius = 512 (on boundary)
-        assert self.np._check_within_boundaries(point) is False  # Boundary is exclusive
-        
+        """Test _check_within_boundaries with point exactly on boundary.
+
+        A dot must leave the outermost pixel ring (index 0 and init_size - 1)
+        untouched: one that paints the edge row looks the same as one the canvas
+        has cut off, which is the artefact reported in the JOSS review.
+        """
+        point = (10, 10, 10)  # x - radius = 0, y - radius = 0 (paints pixel 0)
+        assert self.np._check_within_boundaries(point) is False
+
+        point = (502, 502, 10)  # x + radius = 512, past the last pixel
+        assert self.np._check_within_boundaries(point) is False
+
+        point = (501, 501, 10)  # x + radius = 511, paints the last pixel column
+        assert self.np._check_within_boundaries(point) is False
+
         # Test points just inside the boundary
         point = (11, 11, 10)  # x - radius = 1, y - radius = 1 (inside boundary)
         assert self.np._check_within_boundaries(point) is True
-        
-        point = (501, 501, 10)  # x + radius = 511, y + radius = 511 (inside boundary)
+
+        point = (500, 500, 10)  # x + radius = 510, one clear pixel of margin
         assert self.np._check_within_boundaries(point) is True
+
+    def test_check_within_boundaries_rounds_outwards(self):
+        """Fractional bounds must round outwards, not truncate.
+
+        A dot at x - radius == 0.5 passed the old strict "> 0" test but PIL still
+        paints pixel column 0, so the dot appeared clipped.
+        """
+        point = (10.5, 100, 10)  # x - radius = 0.5 -> paints column 0
+        assert self.np._check_within_boundaries(point) is False
+
+        point = (501.5, 100, 10)  # x + radius = 511.5 -> paints column 511
+        assert self.np._check_within_boundaries(point) is False
+
+
+class TestEqualizeAreasBoundaries:
+    """equalize_areas must not grow dots past the edge of the canvas.
+
+    Regression tests for the artefact reported in JOSS review
+    openjournals/joss-reviews#10532 by @et22: equalized ANS images contained
+    dots clipped by the image border. equalize_areas grew the radii of the
+    smaller-area colour in a loop but only re-checked overlap afterwards, never
+    the canvas bounds -- unlike fix_total_area, scale_total_area and
+    scale_by_factor, which all validated both.
+    """
+
+    def setup_method(self):
+        self.core = DotsCore(
+            init_size=512,
+            colour_1=(255, 255, 0),
+            colour_2=(0, 0, 255),
+            bg_colour=(0, 0, 0),
+            min_point_radius=10,
+            max_point_radius=20,
+            attempts_limit=100,
+        )
+
+    def test_raises_instead_of_growing_out_of_bounds(self):
+        """A dot that would be pushed off-canvas raises rather than being clipped."""
+        # colour_2 sits against the top-left corner with almost no room to grow;
+        # colour_1 has a far larger area, so equalization must inflate colour_2.
+        point_array = [
+            ((256, 256, 60), "colour_1"),
+            ((20, 20, 5), "colour_2"),
+        ]
+        with pytest.raises(PointLayoutError):
+            self.core.equalize_areas(point_array)
+
+    def test_equalized_points_stay_within_boundaries(self):
+        """When equalization succeeds, every dot is still fully on the canvas."""
+        point_array = [
+            ((256, 150, 30), "colour_1"),
+            ((256, 350, 20), "colour_2"),
+        ]
+        result = self.core.equalize_areas(point_array)
+        for point, _colour in result:
+            assert self.core._check_within_boundaries(point), (
+                f"Equalized point {point} falls outside the canvas"
+            )
+
+    def test_does_not_mutate_input(self):
+        """Equalizing returns a new array and leaves the caller's copy intact."""
+        point_array = [
+            ((256, 150, 30), "colour_1"),
+            ((256, 350, 20), "colour_2"),
+        ]
+        original = list(point_array)
+        self.core.equalize_areas(point_array)
+        assert point_array == original
+
+    def test_gives_up_instead_of_looping_forever(self):
+        """Areas that cannot converge raise rather than hanging the run.
+
+        Each pass grows every dot of the smaller colour by a whole pixel, so the
+        areas can leapfrog the tolerance and oscillate indefinitely.
+        """
+        self.core.equalize_increment_limit = 5
+        point_array = [
+            ((256, 256, 200), "colour_1"),
+            ((100, 100, 1), "colour_2"),
+        ]
+        with pytest.raises(PointLayoutError):
+            self.core.equalize_areas(point_array)

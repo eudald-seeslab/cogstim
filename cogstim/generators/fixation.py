@@ -4,9 +4,9 @@ import os
 import random
 from typing import List, Tuple
 
-from cogstim.helpers.constants import COLOUR_MAP, IMAGE_DEFAULTS
+from cogstim.helpers.constants import COLOUR_MAP, IMAGE_DEFAULTS, FIXATION_DEFAULTS
 from cogstim.helpers.base_generator import BaseGenerator
-from cogstim.helpers.image_utils import ImageCanvas
+from cogstim.helpers.image_utils import ImageCanvas, resolve_stimulus_colour
 
 
 class FixationGenerator(BaseGenerator):
@@ -39,10 +39,17 @@ class FixationGenerator(BaseGenerator):
         self.jitter_px: int = config.get("jitter_px", 0)
         self.background_colour: str = config["background_colour"]
         # Map user colour name to hex code where applicable
-        symbol_colour_name = config["symbol_colour"]
-        self.symbol_colour: str = COLOUR_MAP.get(symbol_colour_name, symbol_colour_name)
+        self.symbol_colour: str = resolve_stimulus_colour(
+            config.get("symbol_colour"),
+            self.background_colour,
+            FIXATION_DEFAULTS["symbol_colour"],
+        )
         self.tag: str = config.get("tag", "")
         
+    def plan_summary(self):
+        """One image per requested fixation type; no train/test split."""
+        return [("all", 0, len(self.types))]
+
     def generate_images(self) -> None:
         self.setup_directories()
         for t in self.types:
@@ -70,19 +77,29 @@ class FixationGenerator(BaseGenerator):
         # Helper lambdas
         def draw_dot(colour: str):
             r = self.dot_radius
-            canvas.draw_ellipse([(cx - r, cy - r), (cx + r, cy + r)], fill=colour)
+            canvas.draw_ellipse(
+                [(cx - r, cy - r), (cx + r, cy + r)], fill=colour, label="fixation_dot"
+            )
 
         def draw_disk(colour: str):
             r = self.disk_radius
-            canvas.draw_ellipse([(cx - r, cy - r), (cx + r, cy + r)], fill=colour)
+            canvas.draw_ellipse(
+                [(cx - r, cy - r), (cx + r, cy + r)], fill=colour, label="fixation_disk"
+            )
 
         def draw_cross(colour: str):
             t = self.cross_thickness
             a = self.cross_arm
             # Horizontal bar centered at (cx, cy) with half-length a
-            canvas.draw_rectangle([(cx - a, cy - t // 2), (cx + a, cy + t // 2)], fill=colour)
+            canvas.draw_rectangle(
+                [(cx - a, cy - t // 2), (cx + a, cy + t // 2)],
+                fill=colour, label="fixation_cross_bar",
+            )
             # Vertical bar centered at (cx, cy) with half-length a
-            canvas.draw_rectangle([(cx - t // 2, cy - a), (cx + t // 2, cy + a)], fill=colour)
+            canvas.draw_rectangle(
+                [(cx - t // 2, cy - a), (cx + t // 2, cy + a)],
+                fill=colour, label="fixation_cross_bar",
+            )
 
         # Compose according to type
         s_type = s_type.upper()
@@ -111,4 +128,4 @@ class FixationGenerator(BaseGenerator):
         else:
             raise ValueError(f"Unknown fixation type: {s_type}")
 
-        return canvas.img
+        return canvas

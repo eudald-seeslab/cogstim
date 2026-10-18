@@ -1,0 +1,6 @@
+# One author, three commit identities. Maps them to one name so that git log
+# and shortlog credit the same person; GitHub's contributor graph is set from
+# the account each e-mail belongs to, not from this file.
+Eudald Correig-Fraga <eudald@correig.net>
+Eudald Correig-Fraga <eudald@correig.net> <eudald.correig@innovamat.com>
+Eudald Correig-Fraga <eudald@correig.net> <eudald.correig@urv.cat>

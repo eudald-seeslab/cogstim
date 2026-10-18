@@ -8,6 +8,14 @@ replacing the previously duplicated logic in different generators.
 import csv
 from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
+from cogstim.helpers.constants import (
+    SMALL_NUMEROSITY,
+    SURFACE_CONDITIONS,
+    DEFAULT_SURFACE_CONDITIONS,
+    HULL_CONDITIONS,
+    DEFAULT_HULL_CONDITIONS,
+)
+from cogstim.helpers.hull_control import unreachable_hull_pairs
 
 
 class GenerationTask:
@@ -21,7 +29,7 @@ class GenerationTask:
             task_type: Type of task ('ans', 'mts', 'one_colour', 'shapes', 'lines')
             rep: Repetition/iteration number
             **params: Task-specific parameters:
-                - For ans/mts: n1, n2, equalize
+                - For ans/mts: n1, n2, surface, hull
                 - For one_colour: n
                 - For shapes: shape, color, surface
                 - For lines: angle, num_stripes
@@ -60,6 +68,8 @@ class GenerationPlan:
                  max_point_num: int = 0, 
                  num_repeats: int = 1,
                  ratios: Optional[List[float]] = None,
+                 surface_conditions: Optional[List[str]] = None,
+                 hull_conditions: Optional[List[str]] = None,
                  # Shapes-specific params
                  shapes: Optional[List[str]] = None,
                  colors: Optional[List[str]] = None,
@@ -79,6 +89,10 @@ class GenerationPlan:
             max_point_num: Maximum number of points (for ans/mts/one_colour)
             num_repeats: Number of repetitions per combination
             ratios: List of ratios for ANS/MTS tasks
+            surface_conditions: Surface conditions each ANS/MTS pair is generated
+                in, from SURFACE_CONDITIONS (default: random and equal)
+            hull_conditions: Hull conditions each ANS/MTS pair is generated in,
+                combined with every surface condition (default: random)
             shapes: List of shape names (for shapes tasks)
             colors: List of color names (for shapes tasks)
             min_surface: Minimum surface area (for shapes tasks)
@@ -93,6 +107,14 @@ class GenerationPlan:
         self.max_point_num = max_point_num
         self.num_repeats = num_repeats
         self.ratios = ratios if ratios is not None else []
+        self.surface_conditions = (
+            list(surface_conditions) if surface_conditions is not None
+            else list(DEFAULT_SURFACE_CONDITIONS)
+        )
+        self.hull_conditions = (
+            list(hull_conditions) if hull_conditions is not None
+            else list(DEFAULT_HULL_CONDITIONS)
+        )
         # Shapes params
         self.shapes = shapes or []
         self.colors = colors or []
@@ -134,46 +156,39 @@ class GenerationPlan:
     def expand_ans_tasks(self, n: int, m: int, rep: int) -> None:
         """
         Expand ANS two-colour tasks for a given (n, m) pair.
-        
-        Generates 4 variants:
-        - (n, m) non-equalized
-        - (m, n) non-equalized (order swap)
-        - (n, m) equalized
-        - (m, n) equalized (order swap)
-        
+
+        Both colour orders, (n, m) and (m, n), once per combination of
+        surface and hull condition: four tasks with the defaults.
+
         Args:
             n: First point count
             m: Second point count
             rep: Repetition number
         """
-        # Non-equalized orders
-        self.tasks.append(GenerationTask("ans", rep, n1=n, n2=m, equalize=False))
-        self.tasks.append(GenerationTask("ans", rep, n1=m, n2=n, equalize=False))
-        # Equalized orders
-        self.tasks.append(GenerationTask("ans", rep, n1=n, n2=m, equalize=True))
-        self.tasks.append(GenerationTask("ans", rep, n1=m, n2=n, equalize=True))
+        for surface in self.surface_conditions:
+            for hull in self.hull_conditions:
+                self.tasks.append(GenerationTask("ans", rep, n1=n, n2=m, surface=surface, hull=hull))
+                self.tasks.append(GenerationTask("ans", rep, n1=m, n2=n, surface=surface, hull=hull))
     
     def expand_mts_tasks(self, n: int, m: int, rep: int) -> None:
         """
         Expand match-to-sample tasks for a given (n, m) pair.
-        
-        Generates 8 variants (balanced 50/50 match vs non-match):
-        - (n, m) non-equalized, (m, n) non-equalized, (n, m) equalized, (m, n) equalized (4 different)
-        - (n, n) equalized, (n, n) non-equalized, (m, m) equalized, (m, m) non-equalized (4 equal)
-        
+
+        Per combination of surface and hull condition, four tasks balanced
+        50/50 match against non-match: (n, m) and (m, n), then (n, n) and
+        (m, m). That is eight tasks with the defaults.
+
         Args:
             n: First point count
             m: Second point count
             rep: Repetition number
         """
-        self.tasks.append(GenerationTask("mts", rep, n1=n, n2=m, equalize=False))
-        self.tasks.append(GenerationTask("mts", rep, n1=m, n2=n, equalize=False))
-        self.tasks.append(GenerationTask("mts", rep, n1=n, n2=m, equalize=True))
-        self.tasks.append(GenerationTask("mts", rep, n1=m, n2=n, equalize=True))
-        self.tasks.append(GenerationTask("mts", rep, n1=n, n2=n, equalize=True))
-        self.tasks.append(GenerationTask("mts", rep, n1=n, n2=n, equalize=False))
-        self.tasks.append(GenerationTask("mts", rep, n1=m, n2=m, equalize=True))
-        self.tasks.append(GenerationTask("mts", rep, n1=m, n2=m, equalize=False))
+        for surface in self.surface_conditions:
+            for hull in self.hull_conditions:
+                for n1, n2 in ((n, m), (m, n), (n, n), (m, m)):
+                    self.tasks.append(
+                        GenerationTask("mts", rep, n1=n1, n2=n2, surface=surface, hull=hull)
+                    )
     
     def expand_one_colour_tasks(self, n: int, rep: int) -> None:
         """
@@ -272,8 +287,8 @@ class GenerationPlan:
         """
         Build MTS task list from a CSV file.
 
-        CSV must have columns: sample, match, equalized.
-        Each row defines one (n1, n2, equalize) task.
+        CSV must have columns: sample, match, surface and, optionally, hull.
+        Each row defines one (n1, n2, surface, hull) task.
         num_copies repeats the entire distribution that many times (rep 0..num_copies-1).
 
         Args:
@@ -289,16 +304,17 @@ class GenerationPlan:
         self.tasks = []
         task_id = 0
         for copy_idx in range(num_copies):
-            for n1, n2, equalize in tasks_spec:
+            for n1, n2, surface, hull in tasks_spec:
                 # Use a unique rep per emitted task so repeated CSV rows do not
-                # overwrite each other when filenames include n1/n2/equalized/rep.
+                # overwrite each other when filenames include n1/n2/surface/rep.
                 self.tasks.append(
                     GenerationTask(
                         "mts",
                         task_id,
                         n1=n1,
                         n2=n2,
-                        equalize=equalize,
+                        surface=surface,
+                        hull=hull,
                         copy_idx=copy_idx,
                     )
                 )
@@ -311,8 +327,8 @@ class GenerationPlan:
         """
         Build ANS task list from a CSV file.
 
-        CSV must have columns: n1, n2, equalized.
-        Each row defines one (n1, n2, equalize) task.
+        CSV must have columns: n1, n2, surface and, optionally, hull.
+        Each row defines one (n1, n2, surface, hull) task.
         num_copies repeats the entire distribution that many times.
 
         Args:
@@ -328,7 +344,7 @@ class GenerationPlan:
         self.tasks = []
         task_id = 0
         for copy_idx in range(num_copies):
-            for n1, n2, equalize in tasks_spec:
+            for n1, n2, surface, hull in tasks_spec:
                 task_type = self.task_type
                 if task_type == "one_colour":
                     self.tasks.append(
@@ -346,13 +362,29 @@ class GenerationPlan:
                             task_id,
                             n1=n1,
                             n2=n2,
-                            equalize=equalize,
+                            surface=surface,
+                            hull=hull,
                             copy_idx=copy_idx,
                         )
                     )
                 task_id += 1
         return self
     
+    def small_numerosity_pairs(self) -> List[Tuple[int, int]]:
+        """Dot-count pairs that compare fewer than SMALL_NUMEROSITY dots with a different count.
+
+        Returns:
+            list: Sorted (smaller, larger) pairs, each listed once.
+        """
+        pairs = set()
+        for task in self.tasks:
+            n1, n2 = task.params.get("n1"), task.params.get("n2")
+            if n1 is None or n2 is None or n1 == n2:
+                continue
+            if min(n1, n2) < SMALL_NUMEROSITY:
+                pairs.add((min(n1, n2), max(n1, n2)))
+        return sorted(pairs)
+
     def __len__(self):
         """Return the number of tasks in the plan."""
         return len(self.tasks)
@@ -405,60 +437,137 @@ class GenerationPlan:
         print(f"Summary written to: {target_path}")
 
 
-def load_mts_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, bool]]:
+def _condition(row, column: str, allowed, path, line: int) -> str:
+    """One condition value from a CSV row; random when absent or empty."""
+    value = str(row.get(column) or "random").strip().lower()
+    if value not in allowed:
+        raise ValueError(
+            f"{path}, line {line}: {column} must be one of "
+            f"{', '.join(allowed)}, not '{row[column]}'"
+        )
+    return value
+
+
+def _load_tasks_csv(csv_path, first_column: str, second_column: str) -> List[Tuple[int, int, str, str]]:
+    """Read a task CSV with two count columns and optional surface and hull columns.
+
+    Each condition column takes a value from SURFACE_CONDITIONS, in any case. A
+    missing column or an empty cell means random. The surface column replaced
+    the earlier boolean ``equalized`` column, which is refused rather than
+    guessed at: its TRUE is now ``equal`` and its FALSE is ``random``.
+    """
+    path = Path(csv_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Tasks CSV not found: {path}")
+
+    tasks = []
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        if reader.fieldnames and "equalized" in reader.fieldnames:
+            raise ValueError(
+                f"{path}: the 'equalized' column was replaced by 'surface', with "
+                f"values {', '.join(SURFACE_CONDITIONS)}. Write 'equal' where it "
+                "said TRUE and 'random' where it said FALSE."
+            )
+        for line, row in enumerate(reader, start=2):
+            surface = _condition(row, "surface", SURFACE_CONDITIONS, path, line)
+            hull = _condition(row, "hull", HULL_CONDITIONS, path, line)
+            tasks.append((int(row[first_column]), int(row[second_column]), surface, hull))
+    return tasks
+
+
+def load_mts_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, str, str]]:
     """
     Load match-to-sample task specifications from a CSV file.
 
-    Expected columns: sample, match, equalized
+    Expected columns: sample, match, surface, hull
     - sample: number of dots in sample image
     - match: number of dots in match image
-    - equalized: TRUE/FALSE (case-insensitive)
+    - surface: random, equal or inverse (case-insensitive; random when absent)
+    - hull: random, equal or inverse (case-insensitive; random when absent)
 
     Returns:
-        List of (n1, n2, equalize) tuples.
+        List of (n1, n2, surface, hull) tuples.
     """
-    path = Path(csv_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Tasks CSV not found: {path}")
-
-    tasks = []
-    with open(path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            sample = int(row["sample"])
-            match = int(row["match"])
-            eq_val = str(row.get("equalized", "FALSE")).strip().upper()
-            equalize = eq_val in ("TRUE", "1", "YES")
-            tasks.append((sample, match, equalize))
-    return tasks
+    return _load_tasks_csv(csv_path, "sample", "match")
 
 
-def load_ans_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, bool]]:
+def load_ans_tasks_from_csv(csv_path: str | Path) -> List[Tuple[int, int, str, str]]:
     """
     Load ANS task specifications from a CSV file.
 
-    Expected columns: n1, n2, equalized
+    Expected columns: n1, n2, surface, hull
     - n1: number of dots for colour_1
     - n2: number of dots for colour_2 (ignored for one_colour tasks)
-    - equalized: TRUE/FALSE (case-insensitive)
+    - surface: random, equal or inverse (case-insensitive; random when absent)
+    - hull: random, equal or inverse (case-insensitive; random when absent)
 
     Returns:
-        List of (n1, n2, equalize) tuples.
+        List of (n1, n2, surface, hull) tuples.
     """
-    path = Path(csv_path)
-    if not path.exists():
-        raise FileNotFoundError(f"Tasks CSV not found: {path}")
+    return _load_tasks_csv(csv_path, "n1", "n2")
 
-    tasks = []
-    with open(path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            n1 = int(row["n1"])
-            n2 = int(row["n2"])
-            eq_val = str(row.get("equalized", "FALSE")).strip().upper()
-            equalize = eq_val in ("TRUE", "1", "YES")
-            tasks.append((n1, n2, equalize))
-    return tasks
+
+def small_numerosity_warning(plan: "GenerationPlan") -> Optional[str]:
+    """Explain why the plan's smallest arrays confound visual cues with number.
+
+    Gebuis & Reynvoet (2011) found that with arrays of 1-4 dots the area
+    extended alone explained 28% of the variance in numerical distance, against
+    5% once every array had at least 4 dots. Below that, the hull and the
+    contour of an array cannot be matched to a larger array's without making
+    the dots themselves bigger, which is a confound of its own. The only
+    remedies are to avoid such pairs or to check the cues after the fact.
+
+    Args:
+        plan: The GenerationPlan about to be generated.
+
+    Returns:
+        str or None: The warning to log, or None when every compared array has
+        at least SMALL_NUMEROSITY dots.
+    """
+    pairs = plan.small_numerosity_pairs()
+    if not pairs:
+        return None
+    examples = ", ".join(f"{a} vs {b}" for a, b in pairs[:3])
+    if len(pairs) > 3:
+        examples += ", ..."
+    return (
+        f"{len(pairs)} dot-count pairs compare fewer than {SMALL_NUMEROSITY} dots "
+        f"with a larger array ({examples}). Below that count, the area an array "
+        "covers and its total contour cannot be matched to a larger array's "
+        "without making its dots bigger, so these cues stay confounded with "
+        f"number (Gebuis & Reynvoet, 2011). Use --min-dot-num {SMALL_NUMEROSITY} "
+        "to avoid such pairs, or keep them and check the cues post hoc with "
+        "--visual-properties."
+    )
+
+
+def unreachable_hull_message(plan: "GenerationPlan", r_min, r_max, field_radius, point_sep) -> Optional[str]:
+    """Explain which planned pairs cannot meet their hull condition, if any.
+
+    One dot extends over nothing but itself, and n dots cannot be placed in a
+    field below a certain size, so for small counts and wide ratios the array
+    with fewer dots cannot extend as far beyond the other as the condition
+    asks. Refusing the plan is better than discovering it image by image: the
+    remedy is a different dot count, ratio, dot size or image size.
+
+    Returns:
+        str or None: The error message, or None when every pair can be met.
+    """
+    pairs = unreachable_hull_pairs(plan.tasks, r_min, r_max, field_radius, point_sep)
+    if not pairs:
+        return None
+    examples = ", ".join(f"{f} vs {m} ({h})" for f, m, h, _, _ in pairs[:4])
+    if len(pairs) > 4:
+        examples += ", ..."
+    fewer, more, hull, field, needed = pairs[0]
+    return (
+        f"{len(pairs)} dot-count pairs cannot meet their hull condition with dots of "
+        f"radius {r_min}-{r_max} px on this canvas: {examples}. For {fewer} vs {more} "
+        f"({hull}), the {more} dots would have to fit in a circle of radius {field:.0f} px, "
+        f"and need one of about {needed:.0f} px. Raise --min-dot-num, use narrower "
+        "--ratios, shrink the dots or enlarge the image."
+    )
 
 
 def resolve_ratios(ratios, easy_ratios: List[float], hard_ratios: List[float]) -> List[float]:

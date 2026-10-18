@@ -10,22 +10,33 @@ Quick copy-paste commands for common research goals. Each recipe includes contex
 cogstim shapes --train-num 50 --test-num 20 --no-jitter --seed 1234
 ```
 
-**Expected output:**
+**Expected output:** 70 sets = **14 000 images**, at 200 images per set.
 ```
 images/shapes/
   ├── train/
-  │   ├── circle/  (50 image sets × ~100 variations each)
-  │   └── star/    (50 image sets × ~100 variations each)
+  │   ├── circle/  (5000 images)
+  │   └── star/    (5000 images)
   └── test/
-      ├── circle/  (20 image sets × ~100 variations each)
-      └── star/    (20 image sets × ~100 variations each)
+      ├── circle/  (2000 images)
+      └── star/    (2000 images)
 ```
+
+> **Warning:** `--no-jitter` fixes the position, and rotation is off by default,
+> so shape size is the only thing that varies. Surface areas are swept in steps
+> of 100, but the radius they imply is rounded to whole pixels, so neighbouring
+> steps render identically: only about **24 of those 5000 circles are distinct**,
+> each repeated roughly 200 times. CogStim warns you when this happens.
+>
+> Use `--no-jitter` only when you genuinely want repeated identical stimuli. For
+> varied fixed-position stimuli, add `--random-rotation`, or widen
+> `--min-surface`/`--max-surface`. Leaving jitter on (the default) gives 4994
+> distinct images out of 5000.
 
 ---
 
 ## Recipe 2: ANS Easy Ratios – Small Pilot Set
 
-**Goal:** Generate a small approximate number system dataset with easy discrimination ratios. Half the images have equalized total surface (controlling for cumulative area); half use random dot sizes.
+**Goal:** Generate a small approximate number system dataset with easy discrimination ratios. Half the images have equal total surface for the two colours (controlling for cumulative area); half use random dot sizes.
 
 ```bash
 cogstim ans --ratios easy --train-num 20 --test-num 10 --seed 1234
@@ -42,7 +53,7 @@ images/ans/
       └── blue/
 ```
 
-**Note:** Each image set produces ~75 images covering different ratios and quantities. Filenames include `_equalized` for surface-controlled images.
+**Note:** Each image set produces ~75 images covering different ratios and quantities. Filenames include `_equal` for images whose two colours cover the same surface.
 
 **Tip**: You can specify custom ratios for precise control. For example, `--ratios 1/2,3/4` generates only 1:2 and 3:4 ratios.
 
@@ -55,8 +66,8 @@ images/ans/
 ```bash
 cogstim one-colour \
   --train-num 50 --test-num 20 \
-  --min-point-num 1 --max-point-num 10 \
-  --dot-colour yellow \
+  --min-dot-num 1 --max-dot-num 10 \
+  --dot-colour-1 yellow \
   --seed 1234
 ```
 
@@ -75,14 +86,14 @@ images/one-colour/
 
 ## Recipe 4: Match-to-Sample Pairs with Controlled Surface
 
-**Goal:** Generate sample/match dot array pairs for enumeration tasks. Half equalized for surface area; half with random dot sizes. Uses sample/match naming convention.
+**Goal:** Generate sample/match dot array pairs for enumeration tasks. Half with equal total surface; half with random dot sizes. Uses sample/match naming convention.
 
 ```bash
 cogstim match-to-sample \
   --ratios easy \
   --train-num 50 --test-num 20 \
-  --min-point-num 1 --max-point-num 10 \
-  --dot-colour yellow \
+  --min-dot-num 1 --max-dot-num 10 \
+  --dot-colour-1 yellow \
   --seed 1234
 ```
 
@@ -99,7 +110,7 @@ images/match_to_sample/
       └── ... (similar structure)
 ```
 
-**Note:** Each file is named `mts_{trial_id:05d}_{r|e}_{a|b}_{n_dots}[_version].png`; `a` = match, `b` = sample; `r` = random, `e` = equalized.
+**Note:** Each file is named `mts_{trial_id:05d}_{r|e|i}_{a|b}_{n_dots}[_version].png`; `a` = match, `b` = sample; `r` = random, `e` = equal surface, `i` = inverse surface.
 
 ---
 
@@ -111,7 +122,7 @@ images/match_to_sample/
 cogstim lines \
   --train-num 50 --test-num 20 \
   --angles 0 45 90 135 \
-  --min-stripes 3 --max-stripes 5 \
+  --min-stripe-num 3 --max-stripe-num 5 \
   --seed 1234
 ```
 
@@ -139,7 +150,7 @@ images/lines/
 ```bash
 cogstim custom \
   --shapes triangle square \
-  --colours red green \
+  --shape-colours red green \
   --train-num 50 --test-num 20 \
   --seed 1234
 ```
@@ -206,6 +217,84 @@ images/shapes/
 ```
 
 **Note:** `--demo` works with any task and is useful for quick iteration and verification.
+
+---
+
+## Recipe 9: A Set in Which No Visual Cue Predicts Number
+
+**Goal:** Generate ANS arrays in which neither the total surface nor the area the dots extend over tells a participant which colour has more dots, following Gebuis and Reynvoet (2011), and export the visual properties to check it.
+
+```bash
+cogstim ans \
+  --min-dot-num 4 --max-dot-num 10 \
+  --ratios 1/2,2/3,3/4,4/5 \
+  --min-dot-radius-px 8 --max-dot-radius-px 12 \
+  --surface random equal inverse \
+  --hull random equal inverse \
+  --visual-properties \
+  --train-num 5 --seed 1234
+```
+
+**Expected output:**
+```
+images/ans/
+  ├── train/
+  │   ├── yellow/  (one image per pair, colour order, surface and hull condition)
+  │   └── blue/
+  ├── visual_properties.csv
+  └── visual_property_pairs.csv
+```
+
+**Note:** Each dot-count pair appears once per combination of the three surface and the three hull conditions, so over the set the colour with more dots covers more surface, the same surface or less surface in a third of the images each, and likewise for the area it extends over. The small dots leave room for the inverse conditions; with the default 20–30 px dots the plan is refused for the wider ratios. To confirm that no cue predicts number, regress `numerical_distance` on each `_diff` column of `visual_property_pairs.csv`, as Gebuis and Reynvoet did for their own stimuli.
+
+---
+
+## Recipe 10: Presenting the Images in PsychoPy or jsPsych
+
+**Goal:** Use a generated set in an experiment. CogStim writes files, not experiments; the presentation software loads them. With `--visual-properties`, `visual_property_pairs.csv` lists every image with its dot counts, which is a ready trial list.
+
+```bash
+cogstim ans --ratios easy --min-dot-num 4 --max-dot-num 10 --train-num 2 \
+  --visual-properties --seed 1234 --output-dir stimuli
+```
+
+**PsychoPy** (Python): one trial per row, with the correct answer taken from the counts.
+
+```python
+import csv
+from psychopy import visual, event
+
+win = visual.Window(fullscr=True, units="pix")
+with open("stimuli/visual_property_pairs.csv", newline="") as f:
+    trials = list(csv.DictReader(f))
+
+for trial in trials:
+    stim = visual.ImageStim(win, image="stimuli/" + trial["image_1"])
+    stim.draw()
+    win.flip()
+    key = event.waitKeys(keyList=["f", "j"])[0]   # f: more yellow, j: more blue
+    correct = (int(trial["n_1"]) > int(trial["n_2"])) == (key == "f")
+```
+
+**jsPsych** (JavaScript): the same list as `timeline_variables`, exported once to JSON.
+
+```javascript
+const trials = [ // from visual_property_pairs.csv, e.g. with Python's csv and json modules
+  {stimulus: "stimuli/train/yellow/img_5_4_0.png", n1: 5, n2: 4},
+];
+const procedure = {
+  timeline: [{
+    type: jsPsychImageKeyboardResponse,
+    stimulus: jsPsych.timelineVariable("stimulus"),
+    choices: ["f", "j"],
+    data: {n1: jsPsych.timelineVariable("n1"), n2: jsPsych.timelineVariable("n2")},
+  }],
+  timeline_variables: trials,
+  randomize_order: true,
+};
+```
+
+**Note:** The image paths in the CSV are relative to the output directory. `cogstim_config.yaml` in the same directory records every option used, so the stimuli can be regenerated with `cogstim run stimuli/cogstim_config.yaml`.
 
 ---
 

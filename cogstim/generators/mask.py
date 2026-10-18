@@ -4,8 +4,8 @@ from random import randint, choice
 
 from tqdm import tqdm
 
-from cogstim.helpers.image_utils import ImageCanvas, resolve_stimulus_colour
-from cogstim.helpers.constants import MASK_DEFAULTS, IMAGE_DEFAULTS, DOT_DEFAULTS, COLOUR_MAP
+from cogstim.helpers.image_utils import ImageCanvas, resolve_stimulus_colour, to_hex
+from cogstim.helpers.constants import MASK_DEFAULTS, IMAGE_DEFAULTS, DOT_DEFAULTS
 from cogstim.helpers.base_generator import BaseGenerator
 
 
@@ -48,7 +48,7 @@ class MaskGenerator(BaseGenerator):
 
     @staticmethod
     def _resolve_colour(name):
-        return COLOUR_MAP.get(name, name)
+        return to_hex(name)
 
     def _fill_region(self, canvas, n_dots, x_min, x_max, y_min, y_max, colour=None):
         """Draw *n_dots* random circles constrained to a rectangular region.

@@ -6,15 +6,9 @@ This guide provides detailed documentation for each CogStim task, including rele
 
 `--train-num` and `--test-num` count **sets, not images**.
 
-A set is one sweep of every condition the paradigm defines. For `shapes`, that
-means every shape at every surface area in the configured range; for `ans`, every
-valid (n1, n2) dot-count pair in both colour orders and every surface condition. So a
-single set is many images, and asking for 10 training sets produces far more than
-10 files.
+A set is one sweep of every condition the paradigm defines. For `shapes`, that means every shape at every surface area in the configured range; for `ans`, every valid (n1, n2) dot-count pair in both colour orders and every surface condition. So a single set is many images, and asking for 10 training sets produces far more than 10 files.
 
-This is deliberate: what an experimenter controls is the number of replications
-per condition, and the conditions themselves follow from the paradigm. But it
-does mean the file count is not something you can read off the command line.
+This is deliberate: what an experimenter controls is the number of replications per condition, and the conditions themselves follow from the paradigm. But it does mean the file count is not something you can read off the command line.
 
 **Use `--dry-run` to see exactly what you will get before generating anything:**
 
@@ -43,14 +37,11 @@ Images per set for the default options of each task:
 | `fixation` | n/a | no train/test split; one image per requested type |
 | `mask` | n/a | no train/test split; `--mask-num` images |
 
-These figures change with the options you pass — a wider `--min-surface`/
-`--max-surface` range or more `--angles` increases them. `--dry-run` always
-reports the figure for the arguments you actually gave.
+These figures change with the options you pass — a wider `--min-surface`/ `--max-surface` range or more `--angles` increases them. `--dry-run` always reports the figure for the arguments you actually gave.
 
 ### File names
 
-Every file name states what the image is, so a set can be read back without its
-generation log. `{tag}` is the optional `--version-tag`.
+Every file name states what the image is, so a set can be read back without its generation log. `{tag}` is the optional `--version-tag`.
 
 | Task | Path under the output directory |
 |---|---|
@@ -62,14 +53,44 @@ generation log. `{tag}` is the optional `--version-tag`.
 | `fixation` | `fix_{type}{tag}.png` |
 | `mask` | `mask_{index:04d}[_separated]{tag}.png` |
 
-`test/` mirrors `train/`. Shape images record the surface area in px², the offset
-of the centre from the image centre, the angle of that offset and the rotation.
+`test/` mirrors `train/`. Shape images record the surface area in px², the offset of the centre from the image centre, the angle of that offset and the rotation.
+
+## Specifying colours
+
+Every colour option accepts one of CogStim's palette names (`yellow`, `blue`, `red`, `green`, `black`, `white`, `gray`) or a hexadecimal RGB code:
+
+- `#RRGGBB`: six hex digits, for example `#0072B2`.
+- `#RGB`: three hex digits, for example `#abc`, equivalent to `#aabbcc`.
+
+Hex digits can be uppercase or lowercase. The leading `#` is required. Alpha/transparency (`#RGBA`, `#RRGGBBAA`) and additional HTML/matplotlib colour names are not accepted by the CLI. The existing palette is unchanged; in particular, the stimulus colours `yellow` and `blue` resolve to `#fffe04` and `#0003f9`.
+
+This applies to `--background-colour`, `--shape-colours`, `--dot-colour-1`, `--dot-colour-2`, `--line-colour-1` and `--symbol-colour`, including their deprecated aliases. Use one shape colour for `shapes`, two for `colours`, and one or more for `custom`; the other options each take one colour.
+
+**Quote hex codes in the shell and in YAML**, because an unquoted `#` can start a comment:
+
+```bash
+cogstim colours --shape-colours '#0072B2' '#D55E00' --background-colour '#fff' --train-num 1
+cogstim fixation --types ABC --symbol-colour '#abc' --background-colour '#123'
+```
+
+The same values work in a YAML run configuration, loaded with `cogstim run colours.yaml`:
+
+```yaml
+task: ans
+options:
+  train_num: 1
+  test_num: 0
+  seed: 42
+  dot_colour1: '#0072B2'
+  dot_colour2: '#D55E00'
+  background_colour: '#fff'
+```
+
+The saved configuration and colour-based class directories retain the spelling you supplied, such as `train/#0072B2/`. Annotation and SVG colours use lowercase six-digit hex codes. Python generator arguments also accept `#RGB` and `#RRGGBB` strings.
 
 ## Annotations and vector output
 
-Every task can describe what it drew, and can write vector images instead of
-pixels. Both come from the same record of the drawing, so they always agree with
-the raster.
+Every task can describe what it drew, and can write vector images instead of pixels. Both come from the same record of the drawing, so they always agree with the raster.
 
 ### Where each stimulus feature is
 
@@ -79,8 +100,7 @@ the raster.
 cogstim ans --train-num 10 --metadata csv
 ```
 
-This writes `annotations.csv` in the output directory, one row per drawn
-element:
+This writes `annotations.csv` in the output directory, one row per drawn element:
 
 | Column | Meaning |
 |---|---|
@@ -97,19 +117,11 @@ element:
 
 Use `--metadata json` for the same data grouped per image, or `--metadata both`.
 
-This is what makes the output usable for training object detectors, and for
-scoring eye-tracking data against known feature positions. Coordinates describe
-the finished image: for `lines`, which draws upright and then rotates, the
-recorded vertices are the rotated ones.
+This is what makes the output usable for training object detectors, and for scoring eye-tracking data against known feature positions. Coordinates describe the finished image: for `lines`, which draws upright and then rotates, the recorded vertices are the rotated ones.
 
 ### Visual properties of dot arrays
 
-Changing how many dots an array holds changes how it looks: more dots cover
-more surface, spread over a larger area and have a longer total contour. Gebuis
-and Reynvoet (2011) showed that no way of generating arrays removes this for
-every cue at once, and argued that a generator should instead report the visual
-properties of every array, so that an analysis can check afterwards whether
-number or a visual cue explains a result.
+Changing how many dots an array holds changes how it looks: more dots cover more surface, spread over a larger area and have a longer total contour. Gebuis and Reynvoet (2011) showed that no way of generating arrays removes this for every cue at once, and argued that a generator should instead report the visual properties of every array, so that an analysis can check afterwards whether number or a visual cue explains a result.
 
 `--visual-properties` does this for `ans`, `one-colour` and `match-to-sample`:
 
@@ -117,8 +129,7 @@ number or a visual cue explains a result.
 cogstim ans --train-num 10 --visual-properties
 ```
 
-It writes `visual_properties.csv`, one row per dot array (an `ans` image holds
-two, one per colour):
+It writes `visual_properties.csv`, one row per dot array (an `ans` image holds two, one per colour):
 
 | Column | Meaning |
 |---|---|
@@ -131,22 +142,11 @@ two, one per colour):
 | `convex_hull_px` | Area extended: the convex hull around the dots' outlines |
 | `density` | Convex hull divided by total surface, as Gebuis and Reynvoet define it; larger means sparser |
 
-For `ans` and `match-to-sample` it also writes `visual_property_pairs.csv`, one
-row per pair: the two colours of an `ans` image, or the sample and match of a
-`match-to-sample` trial. Each row gives `numerical_distance`, `numerical_ratio`
-and `weber_fraction` (the difference over the larger count), then the `_diff`
-and `_ratio` of every property above, taken as the more numerous array against
-the less numerous one. A positive difference therefore means the cue grows with
-number, which is what a participant could exploit. Regressing
-`numerical_distance` on each `_diff` column is the check Gebuis and Reynvoet
-ran on their own stimuli.
+For `ans` and `match-to-sample` it also writes `visual_property_pairs.csv`, one row per pair: the two colours of an `ans` image, or the sample and match of a `match-to-sample` trial. Each row gives `numerical_distance`, `numerical_ratio` and `weber_fraction` (the difference over the larger count), then the `_diff` and `_ratio` of every property above, taken as the more numerous array against the less numerous one. A positive difference therefore means the cue grows with number, which is what a participant could exploit. Regressing `numerical_distance` on each `_diff` column is the check Gebuis and Reynvoet ran on their own stimuli.
 
-The convex hull is computed from 90 points on each dot's outline, which
-understates the exact hull of the discs by less than 0.1%.
+The convex hull is computed from 90 points on each dot's outline, which understates the exact hull of the discs by less than 0.1%.
 
-Arrays with fewer than 4 dots cannot have their hull or contour matched to a
-larger array's at all; see the
-[note on small numerosities](#note-on-small-numerosities).
+Arrays with fewer than 4 dots cannot have their hull or contour matched to a larger array's at all; see the [note on small numerosities](#note-on-small-numerosities).
 
 ### Vector images
 
@@ -154,38 +154,22 @@ larger array's at all; see the
 cogstim shapes --train-num 10 --img-format svg
 ```
 
-SVG is rendered from the recorded shapes rather than traced from pixels, so it
-scales without loss. Pixel-based options such as `--min-dot-radius-px` still
-describe the drawing; they set the coordinates written into the SVG.
+SVG is rendered from the recorded shapes rather than traced from pixels, so it scales without loss. Pixel-based options such as `--min-dot-radius-px` still describe the drawing; they set the coordinates written into the SVG.
 
 ## Sizes in degrees of visual angle
 
-This is in beta: the conversions have been tested in code but not yet against a real
-display and viewing set-up, so check what one degree comes to on your screen before
-relying on them.
+This is in beta: the conversions have been tested in code but not yet against a real display and viewing set-up, so check what one degree comes to on your screen before relying on them.
 
-Psychophysics reports sizes as the angle they subtend at the eye; Gebuis and Reynvoet
-(2011), for instance, give their dot diameters as 0.11 to 0.79 degrees at 57 cm. A pixel
-is only an angle once the viewing distance and the display's pixel density are known, so
-give both and sizes can be stated in degrees:
+Psychophysics reports sizes as the angle they subtend at the eye; Gebuis and Reynvoet (2011), for instance, give their dot diameters as 0.11 to 0.79 degrees at 57 cm. A pixel is only an angle once the viewing distance and the display's pixel density are known, so give both and sizes can be stated in degrees:
 
 ```bash
 cogstim ans --viewing-distance-cm 57 --pixels-per-cm 38 \
   --img-size-deg 12 --min-dot-radius-deg 0.2 --max-dot-radius-deg 0.4
 ```
 
-`--pixels-per-cm` is the screen's width in pixels divided by its width in centimetres.
-A length of θ degrees spans 2 × distance × tan(θ/2) on the screen; a radius given in
-degrees is half a diameter of twice that angle. The degree options override their pixel
-counterparts and are turned into whole pixels before anything is drawn, so pixels remain
-the unit inside the package and in every export; the run summary states what one degree
-came to. With the geometry given, `--visual-properties` also writes `mean_diameter_deg`,
-`total_surface_deg2`, `total_circumference_deg` and `convex_hull_deg2`, the areas using
-the size of one degree squared, which is exact for small angles.
+`--pixels-per-cm` is the screen's width in pixels divided by its width in centimetres. A length of θ degrees spans 2 × distance × tan(θ/2) on the screen; a radius given in degrees is half a diameter of twice that angle. The degree options override their pixel counterparts and are turned into whole pixels before anything is drawn, so pixels remain the unit inside the package and in every export; the run summary states what one degree came to. With the geometry given, `--visual-properties` also writes `mean_diameter_deg`, `total_surface_deg2`, `total_circumference_deg` and `convex_hull_deg2`, the areas using the size of one degree squared, which is exact for small angles.
 
-Degrees are accepted for the image size on every task and for the dot radii of `ans`,
-`one-colour` and `match-to-sample`. The shape, stripe and fixation sizes are pixel-only
-for now and would follow the same pattern.
+Degrees are accepted for the image size on every task and for the dot radii of `ans`, `one-colour` and `match-to-sample`. The shape, stripe and fixation sizes are pixel-only for now and would follow the same pattern.
 
 ## Table of Contents
 
@@ -329,16 +313,9 @@ This generates red and green stars in fixed positions with reproducible randomne
 
 Generate two-colour dot arrays for approximate number system tasks. Use this for paradigms investigating numerical cognition where participants discriminate quantities by dominant colour. Based on Halberda et al. (2008).
 
-**Relation to Panamath.** This task implements the stimulus side of the two-colour dot
-comparison used by Panamath (Halberda et al., 2008): intermixed yellow and blue dots at
-controlled numerical ratios, with total dot surface optionally matched or inverted between the
-colours so that cumulative area cannot substitute for numerosity. If you have seen this
-paradigm referred to as a Panamath task, this is the subcommand you want.
+**Relation to Panamath.** This task implements the stimulus side of the two-colour dot comparison used by Panamath (Halberda et al., 2008): intermixed yellow and blue dots at controlled numerical ratios, with total dot surface optionally matched or inverted between the colours so that cumulative area cannot substitute for numerosity. If you have seen this paradigm referred to as a Panamath task, this is the subcommand you want.
 
-What it is not: CogStim generates stimuli, it does not administer the test, collect
-responses or estimate a Weber fraction, and it is not affiliated with or validated
-against the Panamath software. Use it to produce the image set, then present it with
-your own experiment software.
+What it is not: CogStim generates stimuli, it does not administer the test, collect responses or estimate a Weber fraction, and it is not affiliated with or validated against the Panamath software. Use it to produce the image set, then present it with your own experiment software.
 
 ### Minimal Command
 
@@ -365,8 +342,7 @@ cogstim ans --train-num 10 --test-num 5
 
 ### Surface conditions
 
-Every dot-count pair is generated once per surface condition, which says how the total
-dot surface of the two colours relates to their counts:
+Every dot-count pair is generated once per surface condition, which says how the total dot surface of the two colours relates to their counts:
 
 | Condition | Filename suffix | What it does |
 |---|---|---|
@@ -374,34 +350,17 @@ dot surface of the two colours relates to their counts:
 | `equal` | `_equal` | The two colours cover the same total surface, so surface says nothing about number |
 | `inverse` | `_inverse` | The colour with fewer dots covers more surface, by the factor the other has more dots: with 4 vs 8 dots, the 4 cover twice the surface of the 8 |
 
-The default, `--surface random equal`, gives half the images of each. Gebuis and Reynvoet
-(2011) note that such a set never contradicts number: a participant answering from
-surface alone is right in the random images and at chance in the equal ones. Adding
-`inverse` (`--surface random equal inverse`) makes surface useless over the set as a
-whole. The `equal` condition grows the colour with less surface; `inverse` rescales both
-colours, the fewer up and the more down by the same factor, so dot sizes leave the
-configured radius range. Which cues each condition leaves congruent with number can be
-read off the [visual properties export](#visual-properties-of-dot-arrays).
+The default, `--surface random equal`, gives half the images of each. Gebuis and Reynvoet (2011) note that such a set never contradicts number: a participant answering from surface alone is right in the random images and at chance in the equal ones. Adding `inverse` (`--surface random equal inverse`) makes surface useless over the set as a whole. The `equal` condition grows the colour with less surface; `inverse` rescales both colours, the fewer up and the more down by the same factor, so dot sizes leave the configured radius range. Which cues each condition leaves congruent with number can be read off the [visual properties export](#visual-properties-of-dot-arrays).
 
-To choose a different proportion, or a condition per image, specify the stimuli directly
-with `--tasks-csv` — see below.
+To choose a different proportion, or a condition per image, specify the stimuli directly with `--tasks-csv` — see below.
 
-Each image is generated from an independent random layout, including the different
-surface conditions of the same dot counts. This is deliberate: reusing a spatial
-configuration across conditions would let participants learn the arrangement rather than
-judge numerosity, which is what per-trial randomization exists to prevent.
+Each image is generated from an independent random layout, including the different surface conditions of the same dot counts. This is deliberate: reusing a spatial configuration across conditions would let participants learn the arrangement rather than judge numerosity, which is what per-trial randomization exists to prevent.
 
 ### Hull conditions
 
-The area an array extends over, its convex hull, grows with the number of dots when
-they are placed at random: more dots are more likely to reach the edges of the field.
-In CogStim's output the array with more dots has the larger hull in about seven pairs
-out of ten, whatever the surface condition, so "which patch is bigger" answers the task
-without counting. Gebuis and Reynvoet (2011) vary the field each array is placed in;
-CogStim sets the hull itself.
+The area an array extends over, its convex hull, grows with the number of dots when they are placed at random: more dots are more likely to reach the edges of the field. In CogStim's output the array with more dots has the larger hull in about seven pairs out of ten, whatever the surface condition, so "which patch is bigger" answers the task without counting. Gebuis and Reynvoet (2011) vary the field each array is placed in; CogStim sets the hull itself.
 
-`--hull` takes the same three values as `--surface`, and every dot-count pair is
-generated once per combination of the two:
+`--hull` takes the same three values as `--surface`, and every dot-count pair is generated once per combination of the two:
 
 | Condition | Filename suffix | What it does |
 |---|---|---|
@@ -409,54 +368,21 @@ generated once per combination of the two:
 | `equal` | `_hull_equal` | Both arrays extend over the same area |
 | `inverse` | `_hull_inverse` | The array with fewer dots extends over more area, by the factor the other has more dots |
 
-The default is `random`, so nothing changes unless you ask. To meet a condition, the
-array that must extend less, the one with more dots, is placed inside a smaller circle to
-begin with, sized so that the other array can spread past it by the required factor; then
-the dots of each array are moved away from the array's centroid until its hull reaches the
-target. Pulling an already placed array together would stop at the first two dots that
-touch, which with ordinary dot sizes is almost at once, so the smaller field does that
-work instead. Radii are never touched, so a surface condition applied to the same image
-still holds exactly, and the two factors combine freely: `--surface equal --hull inverse`
-gives images whose colours cover the same surface while the colour with fewer dots spreads
-over more area. Dots stay inside the field they were placed in, the canvas circle or the
-colour's half in the separated layout, so no layout appears that random placement could
-not have produced.
+The default is `random`, so nothing changes unless you ask. To meet a condition, the array that must extend less, the one with more dots, is placed inside a smaller circle to begin with, sized so that the other array can spread past it by the required factor; then the dots of each array are moved away from the array's centroid until its hull reaches the target. Pulling an already placed array together would stop at the first two dots that touch, which with ordinary dot sizes is almost at once, so the smaller field does that work instead. Radii are never touched, so a surface condition applied to the same image still holds exactly, and the two factors combine freely: `--surface equal --hull inverse` gives images whose colours cover the same surface while the colour with fewer dots spreads over more area. Dots stay inside the field they were placed in, the canvas circle or the colour's half in the separated layout, so no layout appears that random placement could not have produced.
 
-Not every pair can meet a hull condition: a single dot extends over nothing but itself,
-and n dots cannot be placed inside a circle below a certain size. CogStim checks this when
-it plans, including under `--dry-run`, and refuses the run naming the pairs that cannot be
-met; raise `--min-dot-num`, narrow `--ratios`, shrink the dots or enlarge the image. With
-the default dot radius of 20–30 px on a 512 px canvas, `inverse` is possible for ratios of
-about 2:3 and closer; smaller dots, for instance `--min-dot-radius-px 8 --max-dot-radius-px
-12`, allow it down to 1:2 from 4 dots up, and are what the separated layout needs, since
-its halves are small. This is the limit described in the
-[note on small numerosities](#note-on-small-numerosities).
+Not every pair can meet a hull condition: a single dot extends over nothing but itself, and n dots cannot be placed inside a circle below a certain size. CogStim checks this when it plans, including under `--dry-run`, and refuses the run naming the pairs that cannot be met; raise `--min-dot-num`, narrow `--ratios`, shrink the dots or enlarge the image. With the default dot radius of 20–30 px on a 512 px canvas, `inverse` is possible for ratios of about 2:3 and closer; smaller dots, for instance `--min-dot-radius-px 8 --max-dot-radius-px 12`, allow it down to 1:2 from 4 dots up, and are what the separated layout needs, since its halves are small. This is the limit described in the [note on small numerosities](#note-on-small-numerosities).
 
-In the full layout the two colours share one field, so a hull difference means that one
-colour is clustered inside the other's spread. The hull conditions are meant for arrays that occupy separate fields,
-as in Gebuis and Reynvoet's experiments: `--layout separated`, and `match-to-sample`, whose
-filenames carry a second letter for the hull condition when it is not random
-(`mts_00000_ri_a_5.png` is random surface, inverse hull).
+In the full layout the two colours share one field, so a hull difference means that one colour is clustered inside the other's spread. The hull conditions are meant for arrays that occupy separate fields, as in Gebuis and Reynvoet's experiments: `--layout separated`, and `match-to-sample`, whose filenames carry a second letter for the hull condition when it is not random (`mts_00000_ri_a_5.png` is random surface, inverse hull).
 
 ### Note on small numerosities
 
-The defaults (`--min-dot-num 1`, `--ratios all`) include pairs such as 1 vs 5
-and 2 vs 10. Gebuis and Reynvoet (2011) showed that below 4 dots the area an
-array covers (its convex hull) and its total contour cannot be matched to those
-of a larger array: a single dot's hull is the dot itself, and enlarging it until
-it covers what five dots cover makes dot size covary with number instead. In
-their data the hull alone explained 28% of the variance in numerical distance
-with arrays of 1 to 4 dots, against 5% once every array had at least 4.
+The defaults (`--min-dot-num 1`, `--ratios all`) include pairs such as 1 vs 5 and 2 vs 10. Gebuis and Reynvoet (2011) showed that below 4 dots the area an array covers (its convex hull) and its total contour cannot be matched to those of a larger array: a single dot's hull is the dot itself, and enlarging it until it covers what five dots cover makes dot size covary with number instead. In their data the hull alone explained 28% of the variance in numerical distance with arrays of 1 to 4 dots, against 5% once every array had at least 4.
 
-CogStim warns when a plan contains such pairs. Use `--min-dot-num 4` to avoid
-them, or keep them, for instance to cover the subitizing range, and check the
-cues post hoc with [`--visual-properties`](#visual-properties-of-dot-arrays).
-The same applies to `match-to-sample` pairs whose counts differ.
+CogStim warns when a plan contains such pairs. Use `--min-dot-num 4` to avoid them, or keep them, for instance to cover the subitizing range, and check the cues post hoc with [`--visual-properties`](#visual-properties-of-dot-arrays). The same applies to `match-to-sample` pairs whose counts differ.
 
 ### Choosing exactly which stimuli to generate
 
-`--tasks-csv` replaces the ratio sweep with an explicit list, one row per image. This is
-how you control which stimuli get which surface condition, and in what proportion.
+`--tasks-csv` replaces the ratio sweep with an explicit list, one row per image. This is how you control which stimuli get which surface condition, and in what proportion.
 
 ```csv
 n1,n2,surface
@@ -486,9 +412,7 @@ train/yellow/img_5_4_3.png
 | `surface` | `random`, `equal` or `inverse`: the [surface condition](#surface-conditions) of the image; random when the column is absent |
 | `hull` | `random`, `equal` or `inverse`: the [hull condition](#hull-conditions) of the image; random when the column is absent |
 
-`--tasks-copies N` repeats the whole distribution N times. When `--tasks-csv` is set,
-`--ratios`, `--min-dot-num` and `--max-dot-num` are ignored, since the file already says
-exactly what to generate.
+`--tasks-copies N` repeats the whole distribution N times. When `--tasks-csv` is set, `--ratios`, `--min-dot-num` and `--max-dot-num` are ignored, since the file already says exactly what to generate.
 
 Match-to-sample takes the same approach with columns `sample,match,surface,hull`.
 
@@ -628,8 +552,7 @@ cogstim match-to-sample --train-num 10 --test-num 5
 - `--attempts-limit` – Maximum placement attempts (default: 5000)
 - `--seed` – Random seed for reproducibility
 
-Pairs whose counts differ and include fewer than 4 dots are warned about, for
-the reason given in the [note on small numerosities](#note-on-small-numerosities).
+Pairs whose counts differ and include fewer than 4 dots are warned about, for the reason given in the [note on small numerosities](#note-on-small-numerosities).
 
 ### File Naming
 
@@ -643,12 +566,7 @@ Filenames are self-described and sort by trial then role: `mts_{trial_id:05d}_{r
 
 ### When a pair cannot be generated
 
-Equalizing or inverting a pair can fail for a particular random layout: growing or
-spreading the dots may push one off the canvas or into a neighbour. CogStim retries
-with a fresh layout, up to `--attempts-limit` times for placement and 200 layouts for a
-hull condition. A pair that still cannot be made is left out, the run ends with a warning
-giving the number missing, and their parameters are written to `failed_pairs.csv` in the
-output directory, in the `--tasks-csv` format, so that they can be regenerated directly:
+Equalizing or inverting a pair can fail for a particular random layout: growing or spreading the dots may push one off the canvas or into a neighbour. CogStim retries with a fresh layout, up to `--attempts-limit` times for placement and 200 layouts for a hull condition. A pair that still cannot be made is left out, the run ends with a warning giving the number missing, and their parameters are written to `failed_pairs.csv` in the output directory, in the `--tasks-csv` format, so that they can be regenerated directly:
 
 ```bash
 cogstim match-to-sample --tasks-csv images/match_to_sample/failed_pairs.csv

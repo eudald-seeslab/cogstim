@@ -22,6 +22,7 @@ import warnings
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional, Sequence
 
+from cogstim.helpers.image_utils import to_hex
 from cogstim.helpers.constants import (
     IMAGE_DEFAULTS,
     DOT_DEFAULTS,
@@ -37,9 +38,12 @@ from cogstim.helpers.constants import (
     DEFAULT_HULL_CONDITIONS,
 )
 
-# The colours a stimulus or background may take. Only these names are accepted;
-# hex codes and HTML/matplotlib colour names are not supported.
+# The built-in palette; hexadecimal RGB colours are also accepted.
 COLOUR_CHOICES = ["yellow", "blue", "red", "green", "black", "white", "gray"]
+COLOUR_HELP = (
+    " Use " + ", ".join(COLOUR_CHOICES)
+    + ", or '#RRGGBB'/'#RGB' (quote hex codes)."
+)
 
 SHAPE_CHOICES = ["circle", "star", "triangle", "square"]
 
@@ -158,6 +162,19 @@ class Option:
         parser.add_argument(*flags, **kwargs)
 
 
+def parse_colour(value):
+    """Validate a palette name or hex RGB colour, preserving class labels."""
+    if value in COLOUR_CHOICES:
+        return value
+    if value.startswith("#"):
+        try:
+            to_hex(value)
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError(str(exc)) from exc
+        return value
+    raise argparse.ArgumentTypeError(f"Invalid colour '{value}'.{COLOUR_HELP}")
+
+
 def parse_ratios(value):
     """Parse the --ratios argument: a preset name or comma-separated fractions."""
     if value in ["easy", "hard", "all"]:
@@ -201,9 +218,9 @@ COMMON = [
     Option("--img-format", type=str, default=IMAGE_DEFAULTS["img_format"],
            choices=IMAGE_FORMAT_CHOICES,
            help=f"Image file format (default: {IMAGE_DEFAULTS['img_format']})"),
-    Option("--background-colour", type=str,
-           default=IMAGE_DEFAULTS["background_colour"], choices=COLOUR_CHOICES,
-           help=f"Background colour (default: {IMAGE_DEFAULTS['background_colour']})"),
+    Option("--background-colour", type=parse_colour, metavar="COLOUR",
+           default=IMAGE_DEFAULTS["background_colour"],
+           help=f"Background colour (default: {IMAGE_DEFAULTS['background_colour']})" + COLOUR_HELP),
     Option("--seed", type=int,
            help="Random seed; the same seed and options reproduce the same images"),
     Option("--version-tag", type=str, default="",
@@ -357,49 +374,49 @@ SEPARATED_LAYOUT = [
 SHAPES_SPECIFIC = [
     Option("--shapes", nargs="+", choices=SHAPE_CHOICES, default=["circle", "star"],
            help="The two shapes to discriminate between"),
-    Option("--shape-colours", dest="colours", nargs="+", choices=COLOUR_CHOICES,
+    Option("--shape-colours", dest="colours", nargs="+", type=parse_colour, metavar="COLOUR",
            default=["yellow"], aliases=("--colours",),
-           help="The single colour both shapes are drawn in"),
+           help="The single colour both shapes are drawn in" + COLOUR_HELP),
 ]
 
 COLOURS_SPECIFIC = [
     Option("--shape", type=str, choices=SHAPE_CHOICES, default="circle",
            help="Shape to use for both classes"),
-    Option("--shape-colours", dest="colours", nargs="+", choices=COLOUR_CHOICES,
+    Option("--shape-colours", dest="colours", nargs="+", type=parse_colour, metavar="COLOUR",
            default=["yellow", "blue"], aliases=("--colours",),
-           help="The two colours to discriminate between"),
+           help="The two colours to discriminate between" + COLOUR_HELP),
 ]
 
 CUSTOM_SPECIFIC = [
     Option("--shapes", nargs="+", choices=SHAPE_CHOICES,
            help="Shapes to include (required)"),
-    Option("--shape-colours", dest="colours", nargs="+", choices=COLOUR_CHOICES,
-           aliases=("--colours",), help="Colours to include (required)"),
+    Option("--shape-colours", dest="colours", nargs="+", type=parse_colour, metavar="COLOUR",
+           aliases=("--colours",), help="Colours to include (required)" + COLOUR_HELP),
 ]
 
 ANS_SPECIFIC = [
-    Option("--dot-colour-1", dest="dot_colour1", type=str, choices=COLOUR_CHOICES,
+    Option("--dot-colour-1", dest="dot_colour1", type=parse_colour, metavar="COLOUR",
            aliases=("--dot-colour1",),
            help="First dot colour (default: yellow, or its inverse when that "
-                "matches the background)"),
-    Option("--dot-colour-2", dest="dot_colour2", type=str, choices=COLOUR_CHOICES,
+                "matches the background)" + COLOUR_HELP),
+    Option("--dot-colour-2", dest="dot_colour2", type=parse_colour, metavar="COLOUR",
            aliases=("--dot-colour2",),
            help="Second dot colour (default: blue, or its inverse when that "
-                "matches the background)"),
+                "matches the background)" + COLOUR_HELP),
 ]
 
 ONE_COLOUR_SPECIFIC = [
-    Option("--dot-colour-1", dest="dot_colour", type=str, choices=COLOUR_CHOICES,
+    Option("--dot-colour-1", dest="dot_colour", type=parse_colour, metavar="COLOUR",
            aliases=("--dot-colour",),
            help=(f"Dot colour (default: {DOT_DEFAULTS['dot_colour']}, or its "
-                 "inverse when that matches the background)")),
+                 "inverse when that matches the background)" + COLOUR_HELP)),
 ]
 
 MTS_SPECIFIC = [
-    Option("--dot-colour-1", dest="dot_colour", type=str, choices=COLOUR_CHOICES,
+    Option("--dot-colour-1", dest="dot_colour", type=parse_colour, metavar="COLOUR",
            aliases=("--dot-colour",),
            help=(f"Dot colour (default: {MTS_DEFAULTS['dot_colour']}, or its "
-                 "inverse when that matches the background)")),
+                 "inverse when that matches the background)" + COLOUR_HELP)),
     Option("--tolerance", type=float,
            help=f"Relative tolerance for area equalization (default: {MTS_DEFAULTS['tolerance']})"),
     Option("--abs-tolerance", type=int,
@@ -417,12 +434,12 @@ MASK_SPECIFIC = [
     Option("--max-dot-radius-px", dest="max_dot_radius", type=int,
            default=MASK_DEFAULTS["max_dot_radius"], aliases=("--max-dot-radius",),
            help=f"Maximum dot radius in pixels (default: {MASK_DEFAULTS['max_dot_radius']})"),
-    Option("--dot-colour-1", dest="dot_colour", type=str, choices=COLOUR_CHOICES,
+    Option("--dot-colour-1", dest="dot_colour", type=parse_colour, metavar="COLOUR",
            aliases=("--dot-colour",),
            help=(f"Dot colour (default: {MASK_DEFAULTS['dot_colour']}, or its "
-                 "inverse when that matches the background)")),
-    Option("--dot-colour-2", type=str, choices=COLOUR_CHOICES,
-           help="Optional second dot colour; each dot is randomly assigned one of the two"),
+                 "inverse when that matches the background)" + COLOUR_HELP)),
+    Option("--dot-colour-2", type=parse_colour, metavar="COLOUR",
+           help="Optional second dot colour; each dot is randomly assigned one of the two" + COLOUR_HELP),
 ]
 
 MASK_LAYOUT = [
@@ -438,9 +455,9 @@ LINES_SPECIFIC = [
            help="Rotation angles for stripe patterns"),
     # Left unset so the generator can fall back to a colour that contrasts with
     # whatever background was chosen; an explicit value here is always honoured.
-    Option("--line-colour-1", dest="line_colour", type=str, choices=COLOUR_CHOICES,
+    Option("--line-colour-1", dest="line_colour", type=parse_colour, metavar="COLOUR",
            help=(f"Stripe colour (default: {LINE_DEFAULTS['line_colour']}, or its "
-                 "inverse when that matches the background)")),
+                 "inverse when that matches the background)" + COLOUR_HELP)),
     Option("--min-stripe-num", dest="min_stripes", type=int, default=2,
            aliases=("--min-stripes",), help="Minimum number of stripes per image"),
     Option("--max-stripe-num", dest="max_stripes", type=int, default=10,
@@ -462,9 +479,9 @@ FIXATION_SPECIFIC = [
            help="Fixation target types to generate"),
     Option("--all-types", store_true=True, help="Generate all fixation types"),
     # See the note on --line-colour-1.
-    Option("--symbol-colour", type=str, choices=COLOUR_CHOICES,
+    Option("--symbol-colour", type=parse_colour, metavar="COLOUR",
            help=(f"Fixation symbol colour (default: {FIXATION_DEFAULTS['symbol_colour']}, "
-                 "or its inverse when that matches the background)")),
+                 "or its inverse when that matches the background)" + COLOUR_HELP)),
     Option("--dot-radius-px", type=int, default=FIXATION_DEFAULTS["dot_radius_px"],
            help=f"Radius of the central dot in pixels (default: {FIXATION_DEFAULTS['dot_radius_px']})"),
     Option("--disk-radius-px", type=int, default=FIXATION_DEFAULTS["disk_radius_px"],

@@ -21,16 +21,9 @@ images/shapes/
       └── star/    (2000 images)
 ```
 
-> **Warning:** `--no-jitter` fixes the position, and rotation is off by default,
-> so shape size is the only thing that varies. Surface areas are swept in steps
-> of 100, but the radius they imply is rounded to whole pixels, so neighbouring
-> steps render identically: only about **24 of those 5000 circles are distinct**,
-> each repeated roughly 200 times. CogStim warns you when this happens.
+> **Warning:** `--no-jitter` fixes the position, and rotation is off by default, so shape size is the only thing that varies. Surface areas are swept in steps of 100, but the radius they imply is rounded to whole pixels, so neighbouring steps render identically: only about **24 of those 5000 circles are distinct**, each repeated roughly 200 times. CogStim warns you when this happens.
 >
-> Use `--no-jitter` only when you genuinely want repeated identical stimuli. For
-> varied fixed-position stimuli, add `--random-rotation`, or widen
-> `--min-surface`/`--max-surface`. Leaving jitter on (the default) gives 4994
-> distinct images out of 5000.
+> Use `--no-jitter` only when you genuinely want repeated identical stimuli. For varied fixed-position stimuli, add `--random-rotation`, or widen `--min-surface`/`--max-surface`. Leaving jitter on (the default) gives 4994 distinct images out of 5000.
 
 ---
 

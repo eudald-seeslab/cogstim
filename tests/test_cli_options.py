@@ -340,7 +340,10 @@ def test_every_deprecated_alias_still_parses():
                 )
                 if action is None:
                     continue
-                value = str(action.choices[0]) if action.choices else "1"
+                if action.type is opts.parse_colour:
+                    value = "#12aBcD"
+                else:
+                    value = str(action.choices[0]) if action.choices else "1"
                 argv = [name, alias] + ([] if action.nargs == 0 else [value])
                 with warnings.catch_warnings(record=True) as caught:
                     warnings.simplefilter("always")
